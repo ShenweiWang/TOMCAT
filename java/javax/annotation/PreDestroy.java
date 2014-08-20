@@ -24,8 +24,8 @@ import java.lang.annotation.Target;
 /**
  * @since Common Annotations 1.0
  */
-@Target({ElementType.METHOD})
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PreDestroy {
-    // No attributes
+	// No attributes
 }

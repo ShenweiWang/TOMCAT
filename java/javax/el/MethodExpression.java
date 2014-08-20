@@ -22,21 +22,25 @@ package javax.el;
  */
 public abstract class MethodExpression extends Expression {
 
-    private static final long serialVersionUID = 8163925562047324656L;
+	private static final long serialVersionUID = 8163925562047324656L;
 
-    public abstract MethodInfo getMethodInfo(ELContext context) throws NullPointerException, PropertyNotFoundException, MethodNotFoundException, ELException;
-    
-    public abstract Object invoke(ELContext context, Object[] params) throws NullPointerException, PropertyNotFoundException, MethodNotFoundException, ELException;
-    
-    /**
-     * @since EL 2.2
-     * 
-     * Note: The spelling mistake is deliberate.
-     * isParmetersProvided()  - Specification definition
-     * isParametersProvided() - Corrected spelling
-     */
-    public boolean isParmetersProvided() {
-        // Expected to be over-ridden by implementation
-        return false;
-    }
+	public abstract MethodInfo getMethodInfo(ELContext context)
+			throws NullPointerException, PropertyNotFoundException,
+			MethodNotFoundException, ELException;
+
+	public abstract Object invoke(ELContext context, Object[] params)
+			throws NullPointerException, PropertyNotFoundException,
+			MethodNotFoundException, ELException;
+
+	/**
+	 * @since EL 2.2
+	 * 
+	 *        Note: The spelling mistake is deliberate. isParmetersProvided() -
+	 *        Specification definition isParametersProvided() - Corrected
+	 *        spelling
+	 */
+	public boolean isParmetersProvided() {
+		// Expected to be over-ridden by implementation
+		return false;
+	}
 }

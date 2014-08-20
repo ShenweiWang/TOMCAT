@@ -40,122 +40,122 @@ import org.apache.catalina.util.IOTools;
  */
 public class TestFlushableGZIPOutputStream {
 
-    @Test
-    public void testBug52121() throws Exception {
+	@Test
+	public void testBug52121() throws Exception {
 
-        ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
-        OutputStream output = new FlushableGZIPOutputStream(byteOutStream);
+		ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
+		OutputStream output = new FlushableGZIPOutputStream(byteOutStream);
 
-        File sourcesDir = new File("test/org/apache/coyote/http11/filters/");
-        List<byte[]> parts = new ArrayList<byte[]>();
-        byte[] part;
+		File sourcesDir = new File("test/org/apache/coyote/http11/filters/");
+		List<byte[]> parts = new ArrayList<byte[]>();
+		byte[] part;
 
-        part = loadFile(new File(sourcesDir, "bug52121-part1"));
-        parts.add(part);
-        flowBytes(part, output);
-        output.flush();
+		part = loadFile(new File(sourcesDir, "bug52121-part1"));
+		parts.add(part);
+		flowBytes(part, output);
+		output.flush();
 
-        part = loadFile(new File(sourcesDir, "bug52121-part2"));
-        parts.add(part);
-        flowBytes(part, output);
-        output.flush();
+		part = loadFile(new File(sourcesDir, "bug52121-part2"));
+		parts.add(part);
+		flowBytes(part, output);
+		output.flush();
 
-        part = "data2".getBytes("ASCII");
-        parts.add(part);
-        output.write(part);
-        output.flush();
+		part = "data2".getBytes("ASCII");
+		parts.add(part);
+		output.write(part);
+		output.flush();
 
-        output.close();
+		output.close();
 
-        ByteArrayInputStream byteInStream =
-                new ByteArrayInputStream(byteOutStream.toByteArray());
+		ByteArrayInputStream byteInStream = new ByteArrayInputStream(
+				byteOutStream.toByteArray());
 
-        GZIPInputStream inflaterStream = new GZIPInputStream(byteInStream);
-        ByteArrayOutputStream sink = new ByteArrayOutputStream();
-        try {
-            IOTools.flow(inflaterStream, sink);
-        } finally {
-            sink.close();
-        }
+		GZIPInputStream inflaterStream = new GZIPInputStream(byteInStream);
+		ByteArrayOutputStream sink = new ByteArrayOutputStream();
+		try {
+			IOTools.flow(inflaterStream, sink);
+		} finally {
+			sink.close();
+		}
 
-        byte[] decompressedBytes = sink.toByteArray();
-        int originalLength = 0;
-        for (byte[] bytes : parts) {
-            assertArrayEquals(bytes, Arrays.copyOfRange(decompressedBytes,
-                    originalLength, originalLength + bytes.length));
-            originalLength += bytes.length;
-        }
-        assertEquals(originalLength, decompressedBytes.length);
-    }
+		byte[] decompressedBytes = sink.toByteArray();
+		int originalLength = 0;
+		for (byte[] bytes : parts) {
+			assertArrayEquals(bytes, Arrays.copyOfRange(decompressedBytes,
+					originalLength, originalLength + bytes.length));
+			originalLength += bytes.length;
+		}
+		assertEquals(originalLength, decompressedBytes.length);
+	}
 
-    /**
-     * Test for {@code write(int)}.
-     */
-    @Test
-    public void testWriteChar() throws Exception {
-        String phrase = "Apache Tomcat "
-                + "\u0410\u043f\u0430\u0447\u0435 \u0422\u043e\u043c\u043a\u0430\u0442 ";
-        byte[] data = phrase.getBytes("UTF-8");
+	/**
+	 * Test for {@code write(int)}.
+	 */
+	@Test
+	public void testWriteChar() throws Exception {
+		String phrase = "Apache Tomcat "
+				+ "\u0410\u043f\u0430\u0447\u0435 \u0422\u043e\u043c\u043a\u0430\u0442 ";
+		byte[] data = phrase.getBytes("UTF-8");
 
-        ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
-        OutputStream output = new FlushableGZIPOutputStream(byteOutStream);
+		ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
+		OutputStream output = new FlushableGZIPOutputStream(byteOutStream);
 
-        output.write(data);
-        for (int i=0; i<data.length; i++) {
-            output.write(data[i]);
-        }
-        output.flush();
-        for (int i=0; i<data.length; i++) {
-            output.write(data[i]);
-        }
-        output.write(data);
-        output.close();
+		output.write(data);
+		for (int i = 0; i < data.length; i++) {
+			output.write(data[i]);
+		}
+		output.flush();
+		for (int i = 0; i < data.length; i++) {
+			output.write(data[i]);
+		}
+		output.write(data);
+		output.close();
 
-        ByteArrayInputStream byteInStream =
-                new ByteArrayInputStream(byteOutStream.toByteArray());
+		ByteArrayInputStream byteInStream = new ByteArrayInputStream(
+				byteOutStream.toByteArray());
 
-        GZIPInputStream inflaterStream = new GZIPInputStream(byteInStream);
-        ByteArrayOutputStream sink = new ByteArrayOutputStream();
-        try {
-            IOTools.flow(inflaterStream, sink);
-        } finally {
-            sink.close();
-        }
+		GZIPInputStream inflaterStream = new GZIPInputStream(byteInStream);
+		ByteArrayOutputStream sink = new ByteArrayOutputStream();
+		try {
+			IOTools.flow(inflaterStream, sink);
+		} finally {
+			sink.close();
+		}
 
-        byte[] decompressedBytes = sink.toByteArray();
-        assertEquals(data.length * 4, decompressedBytes.length);
-        for (int i = 0; i < 4; i++) {
-            assertArrayEquals(data, Arrays.copyOfRange(decompressedBytes,
-                    data.length * i, data.length * (i + 1)));
-        }
-    }
+		byte[] decompressedBytes = sink.toByteArray();
+		assertEquals(data.length * 4, decompressedBytes.length);
+		for (int i = 0; i < 4; i++) {
+			assertArrayEquals(data, Arrays.copyOfRange(decompressedBytes,
+					data.length * i, data.length * (i + 1)));
+		}
+	}
 
-    /**
-     * Loads file into memory.
-     */
-    private byte[] loadFile(File file) throws IOException {
-        ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
-        FileInputStream input = new FileInputStream(file);
-        try {
-            IOTools.flow(input, byteOutStream);
-        } finally {
-            input.close();
-        }
-        return byteOutStream.toByteArray();
-    }
+	/**
+	 * Loads file into memory.
+	 */
+	private byte[] loadFile(File file) throws IOException {
+		ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
+		FileInputStream input = new FileInputStream(file);
+		try {
+			IOTools.flow(input, byteOutStream);
+		} finally {
+			input.close();
+		}
+		return byteOutStream.toByteArray();
+	}
 
-    /**
-     * Writes data to the stream and returns the size of the file.
-     */
-    private void flowBytes(byte[] bytes, OutputStream output)
-            throws IOException {
-        // Could use output.write(), but IOTools writes in small portions, and
-        // that is more natural
-        ByteArrayInputStream byteInStream = new ByteArrayInputStream(bytes);
-        try {
-            IOTools.flow(byteInStream, output);
-        } finally {
-            byteInStream.close();
-        }
-    }
+	/**
+	 * Writes data to the stream and returns the size of the file.
+	 */
+	private void flowBytes(byte[] bytes, OutputStream output)
+			throws IOException {
+		// Could use output.write(), but IOTools writes in small portions, and
+		// that is more natural
+		ByteArrayInputStream byteInStream = new ByteArrayInputStream(bytes);
+		try {
+			IOTools.flow(byteInStream, output);
+		} finally {
+			byteInStream.close();
+		}
+	}
 }

@@ -36,75 +36,75 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestStandardHostValve extends TomcatBaseTest {
 
-    @Test
-    public void testErrorPageHandling() throws Exception {
-        // Set up a container
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testErrorPageHandling() throws Exception {
+		// Set up a container
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        File docBase = new File(System.getProperty("java.io.tmpdir"));
-        Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
+		// Must have a real docBase - just use temp
+		File docBase = new File(System.getProperty("java.io.tmpdir"));
+		Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
 
-        // Add the error page
-        Tomcat.addServlet(ctx, "error", new ErrorServlet());
-        ctx.addServletMapping("/error", "error");
+		// Add the error page
+		Tomcat.addServlet(ctx, "error", new ErrorServlet());
+		ctx.addServletMapping("/error", "error");
 
-        // Add the error handling page
-        Tomcat.addServlet(ctx, "report", new ReportServlet());
-        ctx.addServletMapping("/report/*", "report");
+		// Add the error handling page
+		Tomcat.addServlet(ctx, "report", new ReportServlet());
+		ctx.addServletMapping("/report/*", "report");
 
-        // And the handling for 500 responses
-        ErrorPage errorPage500 = new ErrorPage();
-        errorPage500.setErrorCode(Response.SC_INTERNAL_SERVER_ERROR);
-        errorPage500.setLocation("/report/500");
-        ctx.addErrorPage(errorPage500);
+		// And the handling for 500 responses
+		ErrorPage errorPage500 = new ErrorPage();
+		errorPage500.setErrorCode(Response.SC_INTERNAL_SERVER_ERROR);
+		errorPage500.setLocation("/report/500");
+		ctx.addErrorPage(errorPage500);
 
-        // And the default error handling
-        ErrorPage errorPageDefault = new ErrorPage();
-        errorPageDefault.setLocation("/report/default");
-        ctx.addErrorPage(errorPageDefault);
+		// And the default error handling
+		ErrorPage errorPageDefault = new ErrorPage();
+		errorPageDefault.setLocation("/report/default");
+		ctx.addErrorPage(errorPageDefault);
 
-        tomcat.start();
+		tomcat.start();
 
-        doTestErrorPageHandling(500, "/500");
-        doTestErrorPageHandling(501, "/default");
-    }
+		doTestErrorPageHandling(500, "/500");
+		doTestErrorPageHandling(501, "/default");
+	}
 
-    private void doTestErrorPageHandling(int error, String report)
-            throws Exception {
+	private void doTestErrorPageHandling(int error, String report)
+			throws Exception {
 
-        // Request a page that triggers an error
-        ByteChunk bc = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/error?errorCode=" + error, bc, null);
+		// Request a page that triggers an error
+		ByteChunk bc = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort() + "/error?errorCode="
+				+ error, bc, null);
 
-        Assert.assertEquals(error, rc);
-        Assert.assertEquals(report, bc.toString());
-    }
+		Assert.assertEquals(error, rc);
+		Assert.assertEquals(report, bc.toString());
+	}
 
-    private static class ErrorServlet extends HttpServlet {
+	private static class ErrorServlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            int error =
-                    Integer.valueOf(req.getParameter("errorCode")).intValue();
-            resp.sendError(error);
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			int error = Integer.valueOf(req.getParameter("errorCode"))
+					.intValue();
+			resp.sendError(error);
+		}
+	}
 
-    private static class ReportServlet extends HttpServlet {
+	private static class ReportServlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            String pathInfo = req.getPathInfo();
-            resp.setContentType("text/plain");
-            resp.getWriter().print(pathInfo);
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			String pathInfo = req.getPathInfo();
+			resp.setContentType("text/plain");
+			resp.getWriter().print(pathInfo);
+		}
+	}
 }

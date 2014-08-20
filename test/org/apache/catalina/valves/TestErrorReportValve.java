@@ -37,185 +37,180 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestErrorReportValve extends TomcatBaseTest {
 
-    @Test
-    public void testBug53071() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53071() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, "errorServlet", new ErrorServlet());
-        ctx.addServletMapping("/", "errorServlet");
+		Tomcat.addServlet(ctx, "errorServlet", new ErrorServlet());
+		ctx.addServletMapping("/", "errorServlet");
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort());
+		ByteChunk res = getUrl("http://localhost:" + getPort());
 
-        Assert.assertTrue(res.toString().contains("<p><b>message</b> <u>" +
-                ErrorServlet.ERROR_TEXT + "</u></p>"));
-    }
+		Assert.assertTrue(res.toString().contains(
+				"<p><b>message</b> <u>" + ErrorServlet.ERROR_TEXT + "</u></p>"));
+	}
 
+	private static final class ErrorServlet extends HttpServlet {
 
-    private static final class ErrorServlet extends HttpServlet {
+		private static final long serialVersionUID = 1L;
+		private static final String ERROR_TEXT = "The wheels fell off.";
 
-        private static final long serialVersionUID = 1L;
-        private static final String ERROR_TEXT = "The wheels fell off.";
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            req.setAttribute(RequestDispatcher.ERROR_EXCEPTION,
-                    new Throwable(ERROR_TEXT));
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			req.setAttribute(RequestDispatcher.ERROR_EXCEPTION, new Throwable(
+					ERROR_TEXT));
+			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
 
+	@Test
+	public void testBug54220DoNotSetNotFound() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-    @Test
-    public void testBug54220DoNotSetNotFound() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		Tomcat.addServlet(ctx, "bug54220", new Bug54220Servlet(false));
+		ctx.addServletMapping("/", "bug54220");
 
-        Tomcat.addServlet(ctx, "bug54220", new Bug54220Servlet(false));
-        ctx.addServletMapping("/", "bug54220");
+		tomcat.start();
 
-        tomcat.start();
+		ByteChunk res = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort(), res, null);
 
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort(), res, null);
+		Assert.assertNull(res.toString());
+		Assert.assertEquals(HttpServletResponse.SC_OK, rc);
+	}
 
-        Assert.assertNull(res.toString());
-        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-    }
+	@Test
+	public void testBug54220SetNotFound() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-    @Test
-    public void testBug54220SetNotFound() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		Tomcat.addServlet(ctx, "bug54220", new Bug54220Servlet(true));
+		ctx.addServletMapping("/", "bug54220");
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		tomcat.start();
 
-        Tomcat.addServlet(ctx, "bug54220", new Bug54220Servlet(true));
-        ctx.addServletMapping("/", "bug54220");
+		ByteChunk res = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort(), res, null);
 
-        tomcat.start();
+		Assert.assertNull(res.toString());
+		Assert.assertEquals(HttpServletResponse.SC_NOT_FOUND, rc);
+	}
 
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort(), res, null);
+	private static final class Bug54220Servlet extends HttpServlet {
 
-        Assert.assertNull(res.toString());
-        Assert.assertEquals(HttpServletResponse.SC_NOT_FOUND, rc);
-    }
+		private static final long serialVersionUID = 1L;
 
+		private boolean setNotFound;
 
-    private static final class Bug54220Servlet extends HttpServlet {
+		private Bug54220Servlet(boolean setNotFound) {
+			this.setNotFound = setNotFound;
+		}
 
-        private static final long serialVersionUID = 1L;
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
 
-        private boolean setNotFound;
+			if (setNotFound) {
+				resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			}
+		}
+	}
 
-        private Bug54220Servlet(boolean setNotFound) {
-            this.setNotFound = setNotFound;
-        }
+	/**
+	 * Custom error/status codes should not result in a blank response.
+	 */
+	@Test
+	public void testBug54536() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-            if (setNotFound) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            }
-        }
-    }
+		Tomcat.addServlet(ctx, "bug54536", new Bug54536Servlet());
+		ctx.addServletMapping("/", "bug54536");
 
+		tomcat.start();
 
-    /**
-     * Custom error/status codes should not result in a blank response.
-     */
-    @Test
-    public void testBug54536() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		ByteChunk res = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort(), res, null);
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		Assert.assertEquals(Bug54536Servlet.ERROR_STATUS, rc);
+		String body = res.toString();
+		Assert.assertNotNull(body);
+		Assert.assertTrue(body, body.contains(Bug54536Servlet.ERROR_MESSAGE));
+	}
 
-        Tomcat.addServlet(ctx, "bug54536", new Bug54536Servlet());
-        ctx.addServletMapping("/", "bug54536");
+	private static final class Bug54536Servlet extends HttpServlet {
 
-        tomcat.start();
+		private static final long serialVersionUID = 1L;
+		private static final int ERROR_STATUS = 999;
+		private static final String ERROR_MESSAGE = "The sky is falling";
 
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort(), res, null);
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.sendError(ERROR_STATUS, ERROR_MESSAGE);
+		}
+	}
 
-        Assert.assertEquals(Bug54536Servlet.ERROR_STATUS, rc);
-        String body = res.toString();
-        Assert.assertNotNull(body);
-        Assert.assertTrue(body, body.contains(Bug54536Servlet.ERROR_MESSAGE));
-    }
+	@Test
+	public void testBug56042() throws Exception {
+		// Setup Tomcat instance
+		Tomcat tomcat = getTomcatInstance();
 
+		// Must have a real docBase - just use temp
+		File docBase = new File(System.getProperty("java.io.tmpdir"));
 
-    private static final class Bug54536Servlet extends HttpServlet {
+		Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
 
-        private static final long serialVersionUID = 1L;
-        private static final int ERROR_STATUS = 999;
-        private static final String ERROR_MESSAGE = "The sky is falling";
+		Bug56042Servlet bug56042Servlet = new Bug56042Servlet();
+		Wrapper wrapper = Tomcat.addServlet(ctx, "bug56042Servlet",
+				bug56042Servlet);
+		wrapper.setAsyncSupported(true);
+		ctx.addServletMapping("/bug56042Servlet", "bug56042Servlet");
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.sendError(ERROR_STATUS, ERROR_MESSAGE);
-        }
-    }
+		tomcat.start();
 
-    @Test
-    public void testBug56042() throws Exception {
-        // Setup Tomcat instance
-        Tomcat tomcat = getTomcatInstance();
+		StringBuilder url = new StringBuilder(48);
+		url.append("http://localhost:");
+		url.append(getPort());
+		url.append("/bug56042Servlet");
 
-        // Must have a real docBase - just use temp
-        File docBase = new File(System.getProperty("java.io.tmpdir"));
+		ByteChunk res = new ByteChunk();
+		int rc = getUrl(url.toString(), res, null);
 
-        Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
+		Assert.assertEquals(HttpServletResponse.SC_BAD_REQUEST, rc);
+	}
 
-        Bug56042Servlet bug56042Servlet = new Bug56042Servlet();
-        Wrapper wrapper =
-            Tomcat.addServlet(ctx, "bug56042Servlet", bug56042Servlet);
-        wrapper.setAsyncSupported(true);
-        ctx.addServletMapping("/bug56042Servlet", "bug56042Servlet");
+	private static class Bug56042Servlet extends HttpServlet {
 
-        tomcat.start();
+		private static final long serialVersionUID = 1L;
 
-        StringBuilder url = new StringBuilder(48);
-        url.append("http://localhost:");
-        url.append(getPort());
-        url.append("/bug56042Servlet");
-
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl(url.toString(), res, null);
-
-        Assert.assertEquals(HttpServletResponse.SC_BAD_REQUEST, rc);
-    }
-
-    private static class Bug56042Servlet extends HttpServlet {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            // Only set the status on the first call (the dispatch will trigger
-            // another call to this Servlet)
-            if (resp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                AsyncContext ac = req.startAsync();
-                ac.dispatch();
-            }
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			// Only set the status on the first call (the dispatch will trigger
+			// another call to this Servlet)
+			if (resp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+				resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				AsyncContext ac = req.startAsync();
+				ac.dispatch();
+			}
+		}
+	}
 }

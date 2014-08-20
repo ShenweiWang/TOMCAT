@@ -37,62 +37,61 @@ import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.websocket.TesterMessageCountClient.TesterEndpoint;
 import org.apache.tomcat.websocket.TesterMessageCountClient.TesterProgrammaticEndpoint;
 
-
 public class TestWsPingPongMessages extends TomcatBaseTest {
 
-    ByteBuffer applicationData = ByteBuffer.wrap(new String("mydata")
-            .getBytes());
+	ByteBuffer applicationData = ByteBuffer.wrap(new String("mydata")
+			.getBytes());
 
-    @Test
-    public void testPingPongMessages() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx = tomcat.addContext("",
-                System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
+	@Test
+	public void testPingPongMessages() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
 
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        tomcat.start();
+		tomcat.start();
 
-        WebSocketContainer wsContainer = ContainerProvider
-                .getWebSocketContainer();
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
 
-        tomcat.start();
+		tomcat.start();
 
-        Session wsSession = wsContainer.connectToServer(
-                TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
-                        .create().build(), new URI("ws://localhost:"
-                        + getPort() + TesterEchoServer.Config.PATH_ASYNC));
+		Session wsSession = wsContainer.connectToServer(
+				TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
+						.create().build(), new URI("ws://localhost:"
+						+ getPort() + TesterEchoServer.Config.PATH_ASYNC));
 
-        CountDownLatch latch = new CountDownLatch(1);
-        TesterEndpoint tep = (TesterEndpoint) wsSession.getUserProperties()
-                .get("endpoint");
-        tep.setLatch(latch);
+		CountDownLatch latch = new CountDownLatch(1);
+		TesterEndpoint tep = (TesterEndpoint) wsSession.getUserProperties()
+				.get("endpoint");
+		tep.setLatch(latch);
 
-        PongMessageHandler handler = new PongMessageHandler(latch);
-        wsSession.addMessageHandler(handler);
-        wsSession.getBasicRemote().sendPing(applicationData);
+		PongMessageHandler handler = new PongMessageHandler(latch);
+		wsSession.addMessageHandler(handler);
+		wsSession.getBasicRemote().sendPing(applicationData);
 
-        boolean latchResult = handler.getLatch().await(10, TimeUnit.SECONDS);
-        Assert.assertTrue(latchResult);
-        Assert.assertArrayEquals(applicationData.array(),
-                (handler.getMessages().peek()).getApplicationData().array());
-    }
+		boolean latchResult = handler.getLatch().await(10, TimeUnit.SECONDS);
+		Assert.assertTrue(latchResult);
+		Assert.assertArrayEquals(applicationData.array(),
+				(handler.getMessages().peek()).getApplicationData().array());
+	}
 
-    public static class PongMessageHandler extends
-            TesterMessageCountClient.BasicHandler<PongMessage> {
-        public PongMessageHandler(CountDownLatch latch) {
-            super(latch);
-        }
+	public static class PongMessageHandler extends
+			TesterMessageCountClient.BasicHandler<PongMessage> {
+		public PongMessageHandler(CountDownLatch latch) {
+			super(latch);
+		}
 
-        @Override
-        public void onMessage(PongMessage message) {
-            getMessages().add(message);
-            if (getLatch() != null) {
-                getLatch().countDown();
-            }
-        }
-    }
+		@Override
+		public void onMessage(PongMessage message) {
+			getMessages().add(message);
+			if (getLatch() != null) {
+				getLatch().countDown();
+			}
+		}
+	}
 }

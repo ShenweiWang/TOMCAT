@@ -23,8 +23,8 @@ import java.lang.annotation.Target;
 
 @Target({})
 @Retention(RetentionPolicy.RUNTIME)
-
 public @interface PersistenceProperty {
-   String name();
-   String value();
+	String name();
+
+	String value();
 }

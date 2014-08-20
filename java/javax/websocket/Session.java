@@ -26,104 +26,103 @@ import java.util.Set;
 
 public interface Session extends Closeable {
 
-    /**
-     * Returns the container that created this session.
-     */
-    WebSocketContainer getContainer();
+	/**
+	 * Returns the container that created this session.
+	 */
+	WebSocketContainer getContainer();
 
-    void addMessageHandler(MessageHandler listener)
-            throws IllegalStateException;
+	void addMessageHandler(MessageHandler listener)
+			throws IllegalStateException;
 
-    Set<MessageHandler> getMessageHandlers();
+	Set<MessageHandler> getMessageHandlers();
 
-    void removeMessageHandler(MessageHandler listener);
+	void removeMessageHandler(MessageHandler listener);
 
-    String getProtocolVersion();
+	String getProtocolVersion();
 
-    String getNegotiatedSubprotocol();
+	String getNegotiatedSubprotocol();
 
-    List<Extension> getNegotiatedExtensions();
+	List<Extension> getNegotiatedExtensions();
 
-    boolean isSecure();
+	boolean isSecure();
 
-    boolean isOpen();
+	boolean isOpen();
 
-    /**
-     * Get the idle timeout for this session in milliseconds. Zero or negative
-     * values indicate an infinite timeout.
-     */
-    long getMaxIdleTimeout();
+	/**
+	 * Get the idle timeout for this session in milliseconds. Zero or negative
+	 * values indicate an infinite timeout.
+	 */
+	long getMaxIdleTimeout();
 
-    /**
-     * Set the idle timeout for this session in milliseconds. Zero or negative
-     * values indicate an infinite timeout.
-     */
-    void setMaxIdleTimeout(long seconds);
+	/**
+	 * Set the idle timeout for this session in milliseconds. Zero or negative
+	 * values indicate an infinite timeout.
+	 */
+	void setMaxIdleTimeout(long seconds);
 
-    /**
-     * Set the current maximum buffer size (in bytes) for binary messages.
-     */
-    void setMaxBinaryMessageBufferSize(int max);
+	/**
+	 * Set the current maximum buffer size (in bytes) for binary messages.
+	 */
+	void setMaxBinaryMessageBufferSize(int max);
 
-    /**
-     * Get the current maximum buffer size (in bytes) for binary messages.
-     */
-    int getMaxBinaryMessageBufferSize();
+	/**
+	 * Get the current maximum buffer size (in bytes) for binary messages.
+	 */
+	int getMaxBinaryMessageBufferSize();
 
-    /**
-     * Set the current maximum buffer size (in characters) for text messages.
-     */
-    void setMaxTextMessageBufferSize(int max);
+	/**
+	 * Set the current maximum buffer size (in characters) for text messages.
+	 */
+	void setMaxTextMessageBufferSize(int max);
 
-    /**
-     * Get the current maximum buffer size (in characters) for text messages.
-     */
-    int getMaxTextMessageBufferSize();
+	/**
+	 * Get the current maximum buffer size (in characters) for text messages.
+	 */
+	int getMaxTextMessageBufferSize();
 
-    RemoteEndpoint.Async getAsyncRemote();
+	RemoteEndpoint.Async getAsyncRemote();
 
-    RemoteEndpoint.Basic getBasicRemote();
+	RemoteEndpoint.Basic getBasicRemote();
 
-    /**
-     * Provides a unique identifier for the session. This identifier should not
-     * be relied upon to be generated from a secure random source.
-     */
-    String getId();
+	/**
+	 * Provides a unique identifier for the session. This identifier should not
+	 * be relied upon to be generated from a secure random source.
+	 */
+	String getId();
 
-    /**
-     * Close the connection to the remote end point using the code
-     * {@link javax.websocket.CloseReason.CloseCodes#NORMAL_CLOSURE} and an
-     * empty reason phrase.
-     *
-     * @throws IOException
-     */
-    @Override
-    void close() throws IOException;
+	/**
+	 * Close the connection to the remote end point using the code
+	 * {@link javax.websocket.CloseReason.CloseCodes#NORMAL_CLOSURE} and an
+	 * empty reason phrase.
+	 *
+	 * @throws IOException
+	 */
+	@Override
+	void close() throws IOException;
 
+	/**
+	 * Close the connection to the remote end point using the specified code and
+	 * reason phrase.
+	 *
+	 * @throws IOException
+	 */
+	void close(CloseReason closeStatus) throws IOException;
 
-    /**
-     * Close the connection to the remote end point using the specified code
-     * and reason phrase.
-     *
-     * @throws IOException
-     */
-    void close(CloseReason closeStatus) throws IOException;
+	URI getRequestURI();
 
-    URI getRequestURI();
+	Map<String, List<String>> getRequestParameterMap();
 
-    Map<String, List<String>> getRequestParameterMap();
+	String getQueryString();
 
-    String getQueryString();
+	Map<String, String> getPathParameters();
 
-    Map<String,String> getPathParameters();
+	Map<String, Object> getUserProperties();
 
-    Map<String,Object> getUserProperties();
+	Principal getUserPrincipal();
 
-    Principal getUserPrincipal();
-
-    /**
-     * Obtain the set of currently open sessions for the local endpoint that
-     * this session is associated with.
-     */
-    Set<Session> getOpenSessions();
+	/**
+	 * Obtain the set of currently open sessions for the local endpoint that
+	 * this session is associated with.
+	 */
+	Set<Session> getOpenSessions();
 }

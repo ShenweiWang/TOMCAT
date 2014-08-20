@@ -31,45 +31,45 @@ import org.apache.naming.resources.FileDirContext;
 
 public class TestVirtualWebappLoader extends TomcatBaseTest {
 
-    @Test
-    public void testModified() throws Exception {
-        WebappLoader loader = new WebappLoader();
-        assertNull(loader.getClassLoader());
-        assertFalse(loader.modified());
-    }
+	@Test
+	public void testModified() throws Exception {
+		WebappLoader loader = new WebappLoader();
+		assertNull(loader.getClassLoader());
+		assertFalse(loader.modified());
+	}
 
-    @Test
-    public void testStartInternal() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        File appDir = new File("test/webapp-3.0");
-        // Must have a real docBase - just use temp
-        StandardContext ctx =
-            (StandardContext)tomcat.addContext("",  appDir.getAbsolutePath());
+	@Test
+	public void testStartInternal() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		File appDir = new File("test/webapp-3.0");
+		// Must have a real docBase - just use temp
+		StandardContext ctx = (StandardContext) tomcat.addContext("",
+				appDir.getAbsolutePath());
 
-        VirtualWebappLoader loader = new VirtualWebappLoader();
+		VirtualWebappLoader loader = new VirtualWebappLoader();
 
-        loader.setContainer(ctx);
-        ctx.setLoader(loader);
-        ctx.setResources(new FileDirContext());
-        ctx.resourcesStart();
-        File dir = new File("test/webapp-3.0-fragments/WEB-INF/lib");
-        loader.setVirtualClasspath(dir.getAbsolutePath() + "/*.jar");
-        loader.start();
-        String[] repos = loader.getRepositories();
-        assertEquals(2,repos.length);
-        loader.stop();
-        // ToDo: Why doesn't remove repositories?
-        repos = loader.getRepositories();
-        assertEquals(2, repos.length);
+		loader.setContainer(ctx);
+		ctx.setLoader(loader);
+		ctx.setResources(new FileDirContext());
+		ctx.resourcesStart();
+		File dir = new File("test/webapp-3.0-fragments/WEB-INF/lib");
+		loader.setVirtualClasspath(dir.getAbsolutePath() + "/*.jar");
+		loader.start();
+		String[] repos = loader.getRepositories();
+		assertEquals(2, repos.length);
+		loader.stop();
+		// ToDo: Why doesn't remove repositories?
+		repos = loader.getRepositories();
+		assertEquals(2, repos.length);
 
-        // no leak
-        loader.start();
-        repos = loader.getRepositories();
-        assertEquals(2,repos.length);
+		// no leak
+		loader.start();
+		repos = loader.getRepositories();
+		assertEquals(2, repos.length);
 
-        // clear loader
-        ctx.setLoader(null);
-        // see tearDown()!
-        tomcat.start();
-    }
+		// clear loader
+		ctx.setLoader(null);
+		// see tearDown()!
+		tomcat.start();
+	}
 }

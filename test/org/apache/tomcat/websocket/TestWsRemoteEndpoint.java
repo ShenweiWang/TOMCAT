@@ -48,135 +48,136 @@ import org.apache.tomcat.websocket.TesterMessageCountClient.TesterProgrammaticEn
 
 public class TestWsRemoteEndpoint extends TomcatBaseTest {
 
-    private static final String SEQUENCE = "ABCDE";
-    private static final int S_LEN = SEQUENCE.length();
-    private static final String TEST_MESSAGE_5K;
+	private static final String SEQUENCE = "ABCDE";
+	private static final int S_LEN = SEQUENCE.length();
+	private static final String TEST_MESSAGE_5K;
 
-    static {
-        StringBuilder sb = new StringBuilder(S_LEN * 1024);
-        for (int i = 0; i < 1024; i++) {
-            sb.append(SEQUENCE);
-        }
-        TEST_MESSAGE_5K = sb.toString();
-    }
+	static {
+		StringBuilder sb = new StringBuilder(S_LEN * 1024);
+		for (int i = 0; i < 1024; i++) {
+			sb.append(SEQUENCE);
+		}
+		TEST_MESSAGE_5K = sb.toString();
+	}
 
-    @Test
-    public void testWriterAnnotation() throws Exception {
-        doTestWriter(TesterAnnotatedEndpoint.class, true);
-    }
+	@Test
+	public void testWriterAnnotation() throws Exception {
+		doTestWriter(TesterAnnotatedEndpoint.class, true);
+	}
 
-    @Test
-    public void testWriterProgrammatic() throws Exception {
-        doTestWriter(TesterProgrammaticEndpoint.class, true);
-    }
+	@Test
+	public void testWriterProgrammatic() throws Exception {
+		doTestWriter(TesterProgrammaticEndpoint.class, true);
+	}
 
-    @Test
-    public void testStreamAnnotation() throws Exception {
-        doTestWriter(TesterAnnotatedEndpoint.class, false);
-    }
+	@Test
+	public void testStreamAnnotation() throws Exception {
+		doTestWriter(TesterAnnotatedEndpoint.class, false);
+	}
 
-    @Test
-    public void testStreamProgrammatic() throws Exception {
-        doTestWriter(TesterProgrammaticEndpoint.class, false);
-    }
+	@Test
+	public void testStreamProgrammatic() throws Exception {
+		doTestWriter(TesterProgrammaticEndpoint.class, false);
+	}
 
-    private void doTestWriter(Class<?> clazz, boolean useWriter) throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+	private void doTestWriter(Class<?> clazz, boolean useWriter)
+			throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(TesterEchoServer.Config.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        WebSocketContainer wsContainer =
-                ContainerProvider.getWebSocketContainer();
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
 
-        tomcat.start();
+		tomcat.start();
 
-        Session wsSession;
-        URI uri = new URI("ws://localhost:" + getPort() +
-                TesterEchoServer.Config.PATH_ASYNC);
-        if (Endpoint.class.isAssignableFrom(clazz)) {
-            @SuppressWarnings("unchecked")
-            Class<? extends Endpoint> endpointClazz =
-                    (Class<? extends Endpoint>) clazz;
-            wsSession = wsContainer.connectToServer(endpointClazz,
-                    Builder.create().build(), uri);
-        } else {
-            wsSession = wsContainer.connectToServer(clazz, uri);
-        }
+		Session wsSession;
+		URI uri = new URI("ws://localhost:" + getPort()
+				+ TesterEchoServer.Config.PATH_ASYNC);
+		if (Endpoint.class.isAssignableFrom(clazz)) {
+			@SuppressWarnings("unchecked")
+			Class<? extends Endpoint> endpointClazz = (Class<? extends Endpoint>) clazz;
+			wsSession = wsContainer.connectToServer(endpointClazz, Builder
+					.create().build(), uri);
+		} else {
+			wsSession = wsContainer.connectToServer(clazz, uri);
+		}
 
-        CountDownLatch latch = new CountDownLatch(1);
-        TesterEndpoint tep =
-                (TesterEndpoint) wsSession.getUserProperties().get("endpoint");
-        tep.setLatch(latch);
-        AsyncHandler<?> handler;
-        if (useWriter) {
-            handler = new AsyncText(latch);
-        } else {
-            handler = new AsyncBinary(latch);
-        }
+		CountDownLatch latch = new CountDownLatch(1);
+		TesterEndpoint tep = (TesterEndpoint) wsSession.getUserProperties()
+				.get("endpoint");
+		tep.setLatch(latch);
+		AsyncHandler<?> handler;
+		if (useWriter) {
+			handler = new AsyncText(latch);
+		} else {
+			handler = new AsyncBinary(latch);
+		}
 
-        wsSession.addMessageHandler(handler);
+		wsSession.addMessageHandler(handler);
 
-        if (useWriter) {
-            Writer w = wsSession.getBasicRemote().getSendWriter();
+		if (useWriter) {
+			Writer w = wsSession.getBasicRemote().getSendWriter();
 
-            for (int i = 0; i < 8; i++) {
-                w.write(TEST_MESSAGE_5K);
-            }
+			for (int i = 0; i < 8; i++) {
+				w.write(TEST_MESSAGE_5K);
+			}
 
-            w.close();
-        } else {
-            OutputStream s = wsSession.getBasicRemote().getSendStream();
+			w.close();
+		} else {
+			OutputStream s = wsSession.getBasicRemote().getSendStream();
 
-            for (int i = 0; i < 8; i++) {
-                s.write(TEST_MESSAGE_5K.getBytes(B2CConverter.UTF_8));
-            }
+			for (int i = 0; i < 8; i++) {
+				s.write(TEST_MESSAGE_5K.getBytes(B2CConverter.UTF_8));
+			}
 
-            s.close();
-        }
+			s.close();
+		}
 
-        boolean latchResult = handler.getLatch().await(10, TimeUnit.SECONDS);
+		boolean latchResult = handler.getLatch().await(10, TimeUnit.SECONDS);
 
-        Assert.assertTrue(latchResult);
+		Assert.assertTrue(latchResult);
 
-        List<String> results = new ArrayList<String>();
-        if (useWriter) {
-            @SuppressWarnings("unchecked")
-            List<String> messages = (List<String>) handler.getMessages();
-            results.addAll(messages);
-        } else {
-            // Take advantage of the fact that the message uses characters that
-            // are represented as a single UTF-8 byte so won't be split across
-            // binary messages
-            @SuppressWarnings("unchecked")
-            List<ByteBuffer> messages = (List<ByteBuffer>) handler.getMessages();
-            for (ByteBuffer message : messages) {
-                byte[] bytes = new byte[message.limit()];
-                message.get(bytes);
-                results.add(new String(bytes, B2CConverter.UTF_8));
-            }
-        }
+		List<String> results = new ArrayList<String>();
+		if (useWriter) {
+			@SuppressWarnings("unchecked")
+			List<String> messages = (List<String>) handler.getMessages();
+			results.addAll(messages);
+		} else {
+			// Take advantage of the fact that the message uses characters that
+			// are represented as a single UTF-8 byte so won't be split across
+			// binary messages
+			@SuppressWarnings("unchecked")
+			List<ByteBuffer> messages = (List<ByteBuffer>) handler
+					.getMessages();
+			for (ByteBuffer message : messages) {
+				byte[] bytes = new byte[message.limit()];
+				message.get(bytes);
+				results.add(new String(bytes, B2CConverter.UTF_8));
+			}
+		}
 
-        int offset = 0;
-        int i = 0;
-        for (String result : results) {
-            // First may be a fragment
-            Assert.assertEquals(SEQUENCE.substring(offset, S_LEN),
-                    result.substring(0, S_LEN - offset));
-            i = S_LEN - offset;
-            while (i + S_LEN < result.length()) {
-                if (!SEQUENCE.equals(result.substring(i, i + S_LEN))) {
-                    Assert.fail();
-                }
-                i += S_LEN;
-            }
-            offset = result.length() - i;
-            if (!SEQUENCE.substring(0, offset).equals(result.substring(i))) {
-                Assert.fail();
-            }
-        }
-    }
+		int offset = 0;
+		int i = 0;
+		for (String result : results) {
+			// First may be a fragment
+			Assert.assertEquals(SEQUENCE.substring(offset, S_LEN),
+					result.substring(0, S_LEN - offset));
+			i = S_LEN - offset;
+			while (i + S_LEN < result.length()) {
+				if (!SEQUENCE.equals(result.substring(i, i + S_LEN))) {
+					Assert.fail();
+				}
+				i += S_LEN;
+			}
+			offset = result.length() - i;
+			if (!SEQUENCE.substring(0, offset).equals(result.substring(i))) {
+				Assert.fail();
+			}
+		}
+	}
 }

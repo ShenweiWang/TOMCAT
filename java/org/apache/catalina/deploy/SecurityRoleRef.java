@@ -15,73 +15,66 @@
  * limitations under the License.
  */
 
-
 package org.apache.catalina.deploy;
 
-
 /**
- * <p>Representation of a security role reference for a web application, as
- * represented in a <code>&lt;security-role-ref&gt;</code> element
- * in the deployment descriptor.</p>
+ * <p>
+ * Representation of a security role reference for a web application, as
+ * represented in a <code>&lt;security-role-ref&gt;</code> element in the
+ * deployment descriptor.
+ * </p>
  *
  * @author Mark Thomas
  * @since Tomcat 5.5
  */
 public class SecurityRoleRef {
 
+	// ------------------------------------------------------------- Properties
 
-    // ------------------------------------------------------------- Properties
+	/**
+	 * The (required) role name.
+	 */
+	private String name = null;
 
+	public String getName() {
+		return (this.name);
+	}
 
-    /**
-     * The (required) role name.
-     */
-    private String name = null;
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getName() {
-        return (this.name);
-    }
+	/**
+	 * The optional role link.
+	 */
+	private String link = null;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public String getLink() {
+		return (this.link);
+	}
 
+	public void setLink(String link) {
+		this.link = link;
+	}
 
-    /**
-     * The optional role link.
-     */
-    private String link = null;
+	// --------------------------------------------------------- Public Methods
 
-    public String getLink() {
-        return (this.link);
-    }
+	/**
+	 * Return a String representation of this object.
+	 */
+	@Override
+	public String toString() {
 
-    public void setLink(String link) {
-        this.link = link;
-    }
+		StringBuilder sb = new StringBuilder("SecurityRoleRef[");
+		sb.append("name=");
+		sb.append(name);
+		if (link != null) {
+			sb.append(", link=");
+			sb.append(link);
+		}
+		sb.append("]");
+		return (sb.toString());
 
-
-
-    // --------------------------------------------------------- Public Methods
-
-
-    /**
-     * Return a String representation of this object.
-     */
-    @Override
-    public String toString() {
-
-        StringBuilder sb = new StringBuilder("SecurityRoleRef[");
-        sb.append("name=");
-        sb.append(name);
-        if (link != null) {
-            sb.append(", link=");
-            sb.append(link);
-        }
-        sb.append("]");
-        return (sb.toString());
-
-    }
-
+	}
 
 }

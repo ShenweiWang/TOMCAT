@@ -36,228 +36,231 @@ import org.apache.tomcat.util.scan.StandardJarScanner;
 
 public class TestCompiler extends TomcatBaseTest {
 
-    @Test
-    public void testBug49726a() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug49726a() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ByteChunk res = new ByteChunk();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+		ByteChunk res = new ByteChunk();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 
-        getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49726a.jsp",
-                res, headers);
+		getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49726a.jsp",
+				res, headers);
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
 
-        // Check content type
-        assertTrue(headers.get("Content-Type").get(0).startsWith("text/html"));
-    }
+		// Check content type
+		assertTrue(headers.get("Content-Type").get(0).startsWith("text/html"));
+	}
 
-    @Test
-    public void testBug49726b() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug49726b() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ByteChunk res = new ByteChunk();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+		ByteChunk res = new ByteChunk();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 
-        getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49726b.jsp",
-                res, headers);
+		getUrl("http://localhost:" + getPort() + "/test/bug49nnn/bug49726b.jsp",
+				res, headers);
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
 
-        // Check content type
-        assertTrue(headers.get("Content-Type").get(0).startsWith("text/plain"));
-    }
+		// Check content type
+		assertTrue(headers.get("Content-Type").get(0).startsWith("text/plain"));
+	}
 
-    @Test
-    public void testBug53257a() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257a() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        // foo;bar.jsp
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo%3bbar.jsp");
+		// foo;bar.jsp
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo%3bbar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257b() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257b() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo&bar.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo&bar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257c() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257c() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        // foo#bar.jsp
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo%23bar.jsp");
+		// foo#bar.jsp
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo%23bar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257d() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257d() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        // foo%bar.jsp
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo%25bar.jsp");
+		// foo%bar.jsp
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo%25bar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257e() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257e() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo+bar.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo+bar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257f() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257f() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo%20bar.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo%20bar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257g() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257g() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo%20bar/foobar.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo%20bar/foobar.jsp");
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
-    }
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
+	}
 
-    @Test
-    public void testBug53257z() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257z() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        // Check that URL decoding is not done twice
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/foo%2525bar.jsp", res, null);
-        assertEquals(404, rc);
-    }
+		// Check that URL decoding is not done twice
+		ByteChunk res = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/foo%2525bar.jsp", res, null);
+		assertEquals(404, rc);
+	}
 
-    @Test
-    public void testBug51584() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug51584() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0-fragments");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        // No further tests required. The bug triggers an infinite loop on
-        // context start so the test will crash before it reaches this point if
-        // it fails
-    }
+		// No further tests required. The bug triggers an infinite loop on
+		// context start so the test will crash before it reaches this point if
+		// it fails
+	}
 
-    @Test
-    public void testBug55807() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug55807() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        Context context = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        ((StandardJarScanner) context.getJarScanner()).setScanAllDirectories(true);
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		Context context = tomcat.addWebapp(null, "/test",
+				appDir.getAbsolutePath());
+		((StandardJarScanner) context.getJarScanner())
+				.setScanAllDirectories(true);
+		tomcat.start();
 
-        ByteChunk res = new ByteChunk();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
+		ByteChunk res = new ByteChunk();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 
-        getUrl("http://localhost:" + getPort() + "/test/bug5nnnn/bug55807.jsp",
-                res, headers);
+		getUrl("http://localhost:" + getPort() + "/test/bug5nnnn/bug55807.jsp",
+				res, headers);
 
-        // Check request completed
-        String result = res.toString();
-        assertEcho(result, "OK");
+		// Check request completed
+		String result = res.toString();
+		assertEcho(result, "OK");
 
-        // Check the dependencies count
-        Assert.assertTrue(result.contains("<p>DependenciesCount: 1</p>"));
+		// Check the dependencies count
+		Assert.assertTrue(result.contains("<p>DependenciesCount: 1</p>"));
 
-        // Check the right timestamp was used in the dependency
-        File tld = new File("test/webapp-3.0/WEB-INF/classes/META-INF/bug55807.tld");
-        String expected = "/WEB-INF/classes/META-INF/bug55807.tld : " +
-                tld.lastModified() + "</p>";
-        Assert.assertTrue(result.contains(expected));
+		// Check the right timestamp was used in the dependency
+		File tld = new File(
+				"test/webapp-3.0/WEB-INF/classes/META-INF/bug55807.tld");
+		String expected = "/WEB-INF/classes/META-INF/bug55807.tld : "
+				+ tld.lastModified() + "</p>";
+		Assert.assertTrue(result.contains(expected));
 
+		// Check content type
+		Assert.assertTrue(headers.get("Content-Type").get(0)
+				.startsWith("text/html"));
+	}
 
-        // Check content type
-        Assert.assertTrue(headers.get("Content-Type").get(0).startsWith("text/html"));
-    }
-
-    /** Assertion for text printed by tags:echo */
-    private static void assertEcho(String result, String expected) {
-        assertTrue(result, result.indexOf("<p>" + expected + "</p>") > 0);
-    }
+	/** Assertion for text printed by tags:echo */
+	private static void assertEcho(String result, String expected) {
+		assertTrue(result, result.indexOf("<p>" + expected + "</p>") > 0);
+	}
 }

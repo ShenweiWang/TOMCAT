@@ -37,232 +37,227 @@ import org.apache.catalina.util.MD5Encoder;
 
 public class TesterDigestAuthenticatorPerformance {
 
-    private static String USER = "user";
-    private static String PWD = "pwd";
-    private static String ROLE = "role";
-    private static String METHOD = "GET";
-    private static String URI = "/protected";
-    private static String CONTEXT_PATH = "/foo";
-    private static String CLIENT_AUTH_HEADER = "authorization";
-    private static String REALM = "TestRealm";
-    private static String QOP = "auth";
+	private static String USER = "user";
+	private static String PWD = "pwd";
+	private static String ROLE = "role";
+	private static String METHOD = "GET";
+	private static String URI = "/protected";
+	private static String CONTEXT_PATH = "/foo";
+	private static String CLIENT_AUTH_HEADER = "authorization";
+	private static String REALM = "TestRealm";
+	private static String QOP = "auth";
 
-    private static final AtomicInteger nonceCount = new AtomicInteger(0);
+	private static final AtomicInteger nonceCount = new AtomicInteger(0);
 
-    private DigestAuthenticator authenticator = new DigestAuthenticator();
+	private DigestAuthenticator authenticator = new DigestAuthenticator();
 
+	@Test
+	public void testSimple() throws Exception {
+		doTest(4, 1000000);
+	}
 
-    @Test
-    public void testSimple() throws Exception {
-        doTest(4, 1000000);
-    }
+	public void doTest(int threadCount, int requestCount) throws Exception {
 
-    public void doTest(int threadCount, int requestCount) throws Exception {
+		TesterRunnable runnables[] = new TesterRunnable[threadCount];
+		Thread threads[] = new Thread[threadCount];
 
-        TesterRunnable runnables[] = new TesterRunnable[threadCount];
-        Thread threads[] = new Thread[threadCount];
+		String nonce = authenticator.generateNonce(new TesterDigestRequest());
 
-        String nonce = authenticator.generateNonce(new TesterDigestRequest());
+		// Create the runnables & threads
+		for (int i = 0; i < threadCount; i++) {
+			runnables[i] = new TesterRunnable(authenticator, nonce,
+					requestCount);
+			threads[i] = new Thread(runnables[i]);
+		}
 
-        // Create the runnables & threads
-        for (int i = 0; i < threadCount; i++) {
-            runnables[i] =
-                    new TesterRunnable(authenticator, nonce, requestCount);
-            threads[i] = new Thread(runnables[i]);
-        }
+		long start = System.currentTimeMillis();
 
-        long start = System.currentTimeMillis();
+		// Start the threads
+		for (int i = 0; i < threadCount; i++) {
+			threads[i].start();
+		}
 
-        // Start the threads
-        for (int i = 0; i < threadCount; i++) {
-            threads[i].start();
-        }
+		// Wait for the threads to finish
+		for (int i = 0; i < threadCount; i++) {
+			threads[i].join();
+		}
+		double wallTime = System.currentTimeMillis() - start;
 
-        // Wait for the threads to finish
-        for (int i = 0; i < threadCount; i++) {
-            threads[i].join();
-        }
-        double wallTime = System.currentTimeMillis() - start;
+		// Gather the results...
+		double totalTime = 0;
+		int totalSuccess = 0;
+		for (int i = 0; i < threadCount; i++) {
+			System.out.println("Thread: " + i + " Success: "
+					+ runnables[i].getSuccess());
+			totalSuccess = totalSuccess + runnables[i].getSuccess();
+			totalTime = totalTime + runnables[i].getTime();
+		}
 
-        // Gather the results...
-        double totalTime = 0;
-        int totalSuccess = 0;
-        for (int i = 0; i < threadCount; i++) {
-            System.out.println("Thread: " + i + " Success: " +
-                    runnables[i].getSuccess());
-            totalSuccess = totalSuccess + runnables[i].getSuccess();
-            totalTime = totalTime + runnables[i].getTime();
-        }
+		System.out.println("Average time per request (user): " + totalTime
+				/ (threadCount * requestCount));
+		System.out.println("Average time per request (wall): " + wallTime
+				/ (threadCount * requestCount));
 
-        System.out.println("Average time per request (user): " +
-                totalTime/(threadCount * requestCount));
-        System.out.println("Average time per request (wall): " +
-                wallTime/(threadCount * requestCount));
+		assertEquals(requestCount * threadCount, totalSuccess);
+	}
 
-        assertEquals(requestCount * threadCount, totalSuccess);
-    }
+	@Before
+	public void setUp() throws Exception {
 
-    @Before
-    public void setUp() throws Exception {
+		ConcurrentMessageDigest.init("MD5");
 
-        ConcurrentMessageDigest.init("MD5");
+		// Configure the Realm
+		MapRealm realm = new MapRealm();
+		realm.addUser(USER, PWD);
+		realm.addUserRole(USER, ROLE);
 
-        // Configure the Realm
-        MapRealm realm = new MapRealm();
-        realm.addUser(USER, PWD);
-        realm.addUserRole(USER, ROLE);
+		// Add the Realm to the Context
+		Context context = new StandardContext();
+		context.setName(CONTEXT_PATH);
+		context.setRealm(realm);
 
-        // Add the Realm to the Context
-        Context context = new StandardContext();
-        context.setName(CONTEXT_PATH);
-        context.setRealm(realm);
+		// Make the Context and Realm visible to the Authenticator
+		authenticator.setContainer(context);
+		authenticator.setNonceCountWindowSize(8 * 1024);
 
-        // Make the Context and Realm visible to the Authenticator
-        authenticator.setContainer(context);
-        authenticator.setNonceCountWindowSize(8 * 1024);
+		authenticator.start();
+	}
 
-        authenticator.start();
-    }
+	private static class TesterRunnable implements Runnable {
 
+		private String nonce;
+		private int requestCount;
 
-    private static class TesterRunnable implements Runnable {
+		private int success = 0;
+		private long time = 0;
 
-        private String nonce;
-        private int requestCount;
+		private TesterDigestRequest request;
+		private HttpServletResponse response;
+		private LoginConfig config;
+		private DigestAuthenticator authenticator;
 
-        private int success = 0;
-        private long time = 0;
+		private static final String A1 = USER + ":" + REALM + ":" + PWD;
+		private static final String A2 = METHOD + ":" + CONTEXT_PATH + URI;
 
-        private TesterDigestRequest request;
-        private HttpServletResponse response;
-        private LoginConfig config;
-        private DigestAuthenticator authenticator;
+		private static final String MD5A1 = MD5Encoder
+				.encode(ConcurrentMessageDigest.digest("MD5", A1.getBytes()));
+		private static final String MD5A2 = MD5Encoder
+				.encode(ConcurrentMessageDigest.digest("MD5", A2.getBytes()));
 
-        private static final String A1 = USER + ":" + REALM + ":" + PWD;
-        private static final String A2 = METHOD + ":" + CONTEXT_PATH + URI;
+		// All init code should be in here. run() needs to be quick
+		public TesterRunnable(DigestAuthenticator authenticator, String nonce,
+				int requestCount) throws Exception {
+			this.authenticator = authenticator;
+			this.nonce = nonce;
+			this.requestCount = requestCount;
 
-        private static final String MD5A1 = MD5Encoder.encode(
-                ConcurrentMessageDigest.digest("MD5", A1.getBytes()));
-        private static final String MD5A2 = MD5Encoder.encode(
-                ConcurrentMessageDigest.digest("MD5", A2.getBytes()));
+			request = new TesterDigestRequest();
 
+			response = new TesterHttpServletResponse();
 
+			config = new LoginConfig();
+			config.setRealmName(REALM);
+		}
 
-        // All init code should be in here. run() needs to be quick
-        public TesterRunnable(DigestAuthenticator authenticator,
-                String nonce, int requestCount) throws Exception {
-            this.authenticator = authenticator;
-            this.nonce = nonce;
-            this.requestCount = requestCount;
+		@Override
+		public void run() {
+			long start = System.currentTimeMillis();
+			for (int i = 0; i < requestCount; i++) {
+				try {
+					request.setAuthHeader(buildDigestResponse(nonce));
+					if (authenticator.authenticate(request, response)) {
+						success++;
+					}
+					// Clear out authenticated user ready for next iteration
+					request.setUserPrincipal(null);
+				} catch (IOException ioe) {
+					// Ignore
+				}
+			}
+			time = System.currentTimeMillis() - start;
+		}
 
-            request = new TesterDigestRequest();
+		public int getSuccess() {
+			return success;
+		}
 
-            response = new TesterHttpServletResponse();
+		public long getTime() {
+			return time;
+		}
 
-            config = new LoginConfig();
-            config.setRealmName(REALM);
-        }
+		private String buildDigestResponse(String nonce) {
 
-        @Override
-        public void run() {
-            long start = System.currentTimeMillis();
-            for (int i = 0; i < requestCount; i++) {
-                try {
-                    request.setAuthHeader(buildDigestResponse(nonce));
-                    if (authenticator.authenticate(request, response)) {
-                        success++;
-                    }
-                    // Clear out authenticated user ready for next iteration
-                    request.setUserPrincipal(null);
-                } catch (IOException ioe) {
-                    // Ignore
-                }
-            }
-            time = System.currentTimeMillis() - start;
-        }
+			String ncString = String.format("%1$08x",
+					Integer.valueOf(nonceCount.incrementAndGet()));
+			String cnonce = "cnonce";
 
-        public int getSuccess() {
-            return success;
-        }
+			String response = MD5A1 + ":" + nonce + ":" + ncString + ":"
+					+ cnonce + ":" + QOP + ":" + MD5A2;
 
-        public long getTime() {
-            return time;
-        }
+			String md5response = MD5Encoder.encode(ConcurrentMessageDigest
+					.digest("MD5", response.getBytes()));
 
-        private String buildDigestResponse(String nonce) {
+			StringBuilder auth = new StringBuilder();
+			auth.append("Digest username=\"");
+			auth.append(USER);
+			auth.append("\", realm=\"");
+			auth.append(REALM);
+			auth.append("\", nonce=\"");
+			auth.append(nonce);
+			auth.append("\", uri=\"");
+			auth.append(CONTEXT_PATH + URI);
+			auth.append("\", opaque=\"");
+			auth.append(authenticator.getOpaque());
+			auth.append("\", response=\"");
+			auth.append(md5response);
+			auth.append("\"");
+			auth.append(", qop=");
+			auth.append(QOP);
+			auth.append(", nc=");
+			auth.append(ncString);
+			auth.append(", cnonce=\"");
+			auth.append(cnonce);
+			auth.append("\"");
 
-            String ncString = String.format("%1$08x",
-                    Integer.valueOf(nonceCount.incrementAndGet()));
-            String cnonce = "cnonce";
+			return auth.toString();
+		}
+	}
 
-            String response = MD5A1 + ":" + nonce + ":" + ncString + ":" +
-                    cnonce + ":" + QOP + ":" + MD5A2;
+	private static class TesterDigestRequest extends Request {
 
-            String md5response = MD5Encoder.encode(
-                    ConcurrentMessageDigest.digest("MD5", response.getBytes()));
+		private String authHeader = null;
 
-            StringBuilder auth = new StringBuilder();
-            auth.append("Digest username=\"");
-            auth.append(USER);
-            auth.append("\", realm=\"");
-            auth.append(REALM);
-            auth.append("\", nonce=\"");
-            auth.append(nonce);
-            auth.append("\", uri=\"");
-            auth.append(CONTEXT_PATH + URI);
-            auth.append("\", opaque=\"");
-            auth.append(authenticator.getOpaque());
-            auth.append("\", response=\"");
-            auth.append(md5response);
-            auth.append("\"");
-            auth.append(", qop=");
-            auth.append(QOP);
-            auth.append(", nc=");
-            auth.append(ncString);
-            auth.append(", cnonce=\"");
-            auth.append(cnonce);
-            auth.append("\"");
+		@Override
+		public String getRemoteAddr() {
+			return "127.0.0.1";
+		}
 
-            return auth.toString();
-        }
-    }
+		public void setAuthHeader(String authHeader) {
+			this.authHeader = authHeader;
+		}
 
+		@Override
+		public String getHeader(String name) {
+			if (CLIENT_AUTH_HEADER.equalsIgnoreCase(name)) {
+				return authHeader;
+			} else {
+				return super.getHeader(name);
+			}
+		}
 
-    private static class TesterDigestRequest extends Request {
+		@Override
+		public String getMethod() {
+			return METHOD;
+		}
 
-        private String authHeader = null;
+		@Override
+		public String getQueryString() {
+			return null;
+		}
 
-        @Override
-        public String getRemoteAddr() {
-            return "127.0.0.1";
-        }
-
-        public void setAuthHeader(String authHeader) {
-            this.authHeader = authHeader;
-        }
-
-        @Override
-        public String getHeader(String name) {
-            if (CLIENT_AUTH_HEADER.equalsIgnoreCase(name)) {
-                return authHeader;
-            } else {
-                return super.getHeader(name);
-            }
-        }
-
-        @Override
-        public String getMethod() {
-            return METHOD;
-        }
-
-        @Override
-        public String getQueryString() {
-            return null;
-        }
-
-        @Override
-        public String getRequestURI() {
-            return CONTEXT_PATH + URI;
-        }
-    }
+		@Override
+		public String getRequestURI() {
+			return CONTEXT_PATH + URI;
+		}
+	}
 }

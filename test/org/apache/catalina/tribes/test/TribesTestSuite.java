@@ -37,17 +37,17 @@ import org.apache.catalina.tribes.test.channel.TestUdpPackages;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-        // o.a.catalina.tribes.test.channel
-        TestGroupChannelStartStop.class, TestGroupChannelOptionFlag.class,
-        TestDataIntegrity.class, TestMulticastPackages.class,
-        TestRemoteProcessException.class, TestUdpPackages.class,
-        // o.a.catalina.tribes.test.interceptors
-        TestNonBlockingCoordinator.class, TestOrderInterceptor.class,
-        // o.a.catalina.tribes.test.io
-        TestGroupChannelSenderConnections.class, TestXByteBuffer.class,
-        // o.a.catalina.tribes.test.membership
-        TestMemberImplSerialization.class, TestDomainFilterInterceptor.class,
-        TestGroupChannelMemberArrival.class, TestTcpFailureDetector.class })
+		// o.a.catalina.tribes.test.channel
+		TestGroupChannelStartStop.class, TestGroupChannelOptionFlag.class,
+		TestDataIntegrity.class, TestMulticastPackages.class,
+		TestRemoteProcessException.class, TestUdpPackages.class,
+		// o.a.catalina.tribes.test.interceptors
+		TestNonBlockingCoordinator.class, TestOrderInterceptor.class,
+		// o.a.catalina.tribes.test.io
+		TestGroupChannelSenderConnections.class, TestXByteBuffer.class,
+		// o.a.catalina.tribes.test.membership
+		TestMemberImplSerialization.class, TestDomainFilterInterceptor.class,
+		TestGroupChannelMemberArrival.class, TestTcpFailureDetector.class })
 public class TribesTestSuite {
 
 }

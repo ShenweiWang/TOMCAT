@@ -23,88 +23,91 @@ import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
 public abstract class AbstractAjpProtocol<S> extends AbstractProtocol<S> {
-    
-    /**
-     * The string manager for this package.
-     */
-    protected static final StringManager sm =
-        StringManager.getManager(Constants.Package);
 
+	/**
+	 * The string manager for this package.
+	 */
+	protected static final StringManager sm = StringManager
+			.getManager(Constants.Package);
 
-    @Override
-    protected String getProtocolName() {
-        return "Ajp";
-    }
+	@Override
+	protected String getProtocolName() {
+		return "Ajp";
+	}
 
+	// ------------------------------------------------- AJP specific properties
+	// ------------------------------------------ managed in the ProtocolHandler
 
+	/**
+	 * Should authentication be done in the native webserver layer, or in the
+	 * Servlet container ?
+	 */
+	protected boolean tomcatAuthentication = true;
 
-    // ------------------------------------------------- AJP specific properties
-    // ------------------------------------------ managed in the ProtocolHandler
-    
-    /**
-     * Should authentication be done in the native webserver layer, 
-     * or in the Servlet container ?
-     */
-    protected boolean tomcatAuthentication = true;
-    public boolean getTomcatAuthentication() { return tomcatAuthentication; }
-    public void setTomcatAuthentication(boolean tomcatAuthentication) {
-        this.tomcatAuthentication = tomcatAuthentication;
-    }
+	public boolean getTomcatAuthentication() {
+		return tomcatAuthentication;
+	}
 
+	public void setTomcatAuthentication(boolean tomcatAuthentication) {
+		this.tomcatAuthentication = tomcatAuthentication;
+	}
 
-    /**
-     * Required secret.
-     */
-    protected String requiredSecret = null;
-    public void setRequiredSecret(String requiredSecret) {
-        this.requiredSecret = requiredSecret;
-    }
+	/**
+	 * Required secret.
+	 */
+	protected String requiredSecret = null;
 
+	public void setRequiredSecret(String requiredSecret) {
+		this.requiredSecret = requiredSecret;
+	}
 
-    /**
-     * AJP packet size.
-     */
-    protected int packetSize = Constants.MAX_PACKET_SIZE;
-    public int getPacketSize() { return packetSize; }
-    public void setPacketSize(int packetSize) {
-        if(packetSize < Constants.MAX_PACKET_SIZE) {
-            this.packetSize = Constants.MAX_PACKET_SIZE;
-        } else {
-            this.packetSize = packetSize;
-        }
-    }
-    
-    protected abstract static class AbstractAjpConnectionHandler<S,P extends AbstractAjpProcessor<S>>
-            extends AbstractConnectionHandler<S, P> {
+	/**
+	 * AJP packet size.
+	 */
+	protected int packetSize = Constants.MAX_PACKET_SIZE;
 
-        @Override
-        protected void initSsl(SocketWrapper<S> socket, Processor<S> processor) {
-            // NOOP for AJP
-        }
+	public int getPacketSize() {
+		return packetSize;
+	}
 
-        @Override
-        protected void longPoll(SocketWrapper<S> socket,
-                Processor<S> processor) {
-            // Same requirements for all AJP connectors
-            socket.setAsync(true);
-        }
+	public void setPacketSize(int packetSize) {
+		if (packetSize < Constants.MAX_PACKET_SIZE) {
+			this.packetSize = Constants.MAX_PACKET_SIZE;
+		} else {
+			this.packetSize = packetSize;
+		}
+	}
 
-        /**
-         * @deprecated  Will be removed in Tomcat 8.0.x.
-         */
-        @Deprecated
-        @Override
-        protected P createUpgradeProcessor(SocketWrapper<S> socket,
-                org.apache.coyote.http11.upgrade.UpgradeInbound inbound) {
-            // TODO should fail - throw IOE
-            return null;
-        }
-        
-        @Override
-        protected P createUpgradeProcessor(SocketWrapper<S> socket,
-                HttpUpgradeHandler httpUpgradeHandler) {
-            // TODO should fail - throw IOE
-            return null;
-        }
-    }
+	protected abstract static class AbstractAjpConnectionHandler<S, P extends AbstractAjpProcessor<S>>
+			extends AbstractConnectionHandler<S, P> {
+
+		@Override
+		protected void initSsl(SocketWrapper<S> socket, Processor<S> processor) {
+			// NOOP for AJP
+		}
+
+		@Override
+		protected void longPoll(SocketWrapper<S> socket, Processor<S> processor) {
+			// Same requirements for all AJP connectors
+			socket.setAsync(true);
+		}
+
+		/**
+		 * @deprecated Will be removed in Tomcat 8.0.x.
+		 */
+		@Deprecated
+		@Override
+		protected P createUpgradeProcessor(SocketWrapper<S> socket,
+				org.apache.coyote.http11.upgrade.UpgradeInbound inbound) {
+			// TODO should fail - throw IOE
+			return null;
+		}
+
+		@Override
+		protected P createUpgradeProcessor(SocketWrapper<S> socket,
+				HttpUpgradeHandler httpUpgradeHandler) {
+			// TODO should fail - throw IOE
+			return null;
+		}
+	}
 }

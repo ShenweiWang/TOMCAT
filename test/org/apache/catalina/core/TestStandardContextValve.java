@@ -38,151 +38,149 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestStandardContextValve extends TomcatBaseTest {
 
-    @Test
-    public void testBug51653a() throws Exception {
-        // Set up a container
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug51653a() throws Exception {
+		// Set up a container
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        File docBase = new File(System.getProperty("java.io.tmpdir"));
-        Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
+		// Must have a real docBase - just use temp
+		File docBase = new File(System.getProperty("java.io.tmpdir"));
+		Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
 
-        // Traces order of events across multiple components
-        StringBuilder trace = new StringBuilder();
+		// Traces order of events across multiple components
+		StringBuilder trace = new StringBuilder();
 
-        //Add the error page
-        Tomcat.addServlet(ctx, "errorPage", new Bug51653ErrorPage(trace));
-        ctx.addServletMapping("/error", "errorPage");
-        // And the handling for 404 responses
-        ErrorPage errorPage = new ErrorPage();
-        errorPage.setErrorCode(Response.SC_NOT_FOUND);
-        errorPage.setLocation("/error");
-        ctx.addErrorPage(errorPage);
+		// Add the error page
+		Tomcat.addServlet(ctx, "errorPage", new Bug51653ErrorPage(trace));
+		ctx.addServletMapping("/error", "errorPage");
+		// And the handling for 404 responses
+		ErrorPage errorPage = new ErrorPage();
+		errorPage.setErrorCode(Response.SC_NOT_FOUND);
+		errorPage.setLocation("/error");
+		ctx.addErrorPage(errorPage);
 
-        // Add the request listener
-        Bug51653RequestListener reqListener =
-            new Bug51653RequestListener(trace);
-        ((StandardContext) ctx).addApplicationEventListener(reqListener);
+		// Add the request listener
+		Bug51653RequestListener reqListener = new Bug51653RequestListener(trace);
+		((StandardContext) ctx).addApplicationEventListener(reqListener);
 
-        tomcat.start();
+		tomcat.start();
 
-        // Request a page that does not exist
-        int rc = getUrl("http://localhost:" + getPort() + "/invalid",
-                new ByteChunk(), null);
+		// Request a page that does not exist
+		int rc = getUrl("http://localhost:" + getPort() + "/invalid",
+				new ByteChunk(), null);
 
-        // Need to allow time (but not too long in case the test fails) for
-        // ServletRequestListener to complete
-        int i = 20;
-        while (i > 0) {
-            if (trace.toString().endsWith("Destroy")) {
-                break;
-            }
-            Thread.sleep(250);
-            i--;
-        }
+		// Need to allow time (but not too long in case the test fails) for
+		// ServletRequestListener to complete
+		int i = 20;
+		while (i > 0) {
+			if (trace.toString().endsWith("Destroy")) {
+				break;
+			}
+			Thread.sleep(250);
+			i--;
+		}
 
-        assertEquals(Response.SC_NOT_FOUND, rc);
-        assertEquals("InitErrorDestroy", trace.toString());
-    }
+		assertEquals(Response.SC_NOT_FOUND, rc);
+		assertEquals("InitErrorDestroy", trace.toString());
+	}
 
-    @Test
-    public void testBug51653b() throws Exception {
-        // Set up a container
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug51653b() throws Exception {
+		// Set up a container
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        File docBase = new File(System.getProperty("java.io.tmpdir"));
-        Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
+		// Must have a real docBase - just use temp
+		File docBase = new File(System.getProperty("java.io.tmpdir"));
+		Context ctx = tomcat.addContext("", docBase.getAbsolutePath());
 
-        // Traces order of events across multiple components
-        StringBuilder trace = new StringBuilder();
+		// Traces order of events across multiple components
+		StringBuilder trace = new StringBuilder();
 
-        // Add the page that generates the error
-        Tomcat.addServlet(ctx, "test", new Bug51653ErrorTrigger());
-        ctx.addServletMapping("/test", "test");
+		// Add the page that generates the error
+		Tomcat.addServlet(ctx, "test", new Bug51653ErrorTrigger());
+		ctx.addServletMapping("/test", "test");
 
-        // Add the error page
-        Tomcat.addServlet(ctx, "errorPage", new Bug51653ErrorPage(trace));
-        ctx.addServletMapping("/error", "errorPage");
-        // And the handling for 404 responses
-        ErrorPage errorPage = new ErrorPage();
-        errorPage.setErrorCode(Response.SC_NOT_FOUND);
-        errorPage.setLocation("/error");
-        ctx.addErrorPage(errorPage);
+		// Add the error page
+		Tomcat.addServlet(ctx, "errorPage", new Bug51653ErrorPage(trace));
+		ctx.addServletMapping("/error", "errorPage");
+		// And the handling for 404 responses
+		ErrorPage errorPage = new ErrorPage();
+		errorPage.setErrorCode(Response.SC_NOT_FOUND);
+		errorPage.setLocation("/error");
+		ctx.addErrorPage(errorPage);
 
-        // Add the request listener
-        Bug51653RequestListener reqListener =
-            new Bug51653RequestListener(trace);
-        ((StandardContext) ctx).addApplicationEventListener(reqListener);
+		// Add the request listener
+		Bug51653RequestListener reqListener = new Bug51653RequestListener(trace);
+		((StandardContext) ctx).addApplicationEventListener(reqListener);
 
-        tomcat.start();
+		tomcat.start();
 
-        // Request a page that does not exist
-        int rc = getUrl("http://localhost:" + getPort() + "/test",
-                new ByteChunk(), null);
+		// Request a page that does not exist
+		int rc = getUrl("http://localhost:" + getPort() + "/test",
+				new ByteChunk(), null);
 
-        // Need to allow time (but not too long in case the test fails) for
-        // ServletRequestListener to complete
-        int i = 20;
-        while (i > 0) {
-            if (trace.toString().endsWith("Destroy")) {
-                break;
-            }
-            Thread.sleep(250);
-            i--;
-        }
+		// Need to allow time (but not too long in case the test fails) for
+		// ServletRequestListener to complete
+		int i = 20;
+		while (i > 0) {
+			if (trace.toString().endsWith("Destroy")) {
+				break;
+			}
+			Thread.sleep(250);
+			i--;
+		}
 
-        assertEquals(Response.SC_NOT_FOUND, rc);
-        assertEquals("InitErrorDestroy", trace.toString());
-    }
+		assertEquals(Response.SC_NOT_FOUND, rc);
+		assertEquals("InitErrorDestroy", trace.toString());
+	}
 
-    private static class Bug51653ErrorTrigger extends HttpServlet {
-        private static final long serialVersionUID = 1L;
+	private static class Bug51653ErrorTrigger extends HttpServlet {
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.sendError(Response.SC_NOT_FOUND);
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.sendError(Response.SC_NOT_FOUND);
+		}
+	}
 
-    private static class Bug51653ErrorPage extends HttpServlet {
-        private static final long serialVersionUID = 1L;
+	private static class Bug51653ErrorPage extends HttpServlet {
+		private static final long serialVersionUID = 1L;
 
-        private StringBuilder sb;
+		private StringBuilder sb;
 
-        public Bug51653ErrorPage(StringBuilder sb) {
-            this.sb = sb;
-        }
+		public Bug51653ErrorPage(StringBuilder sb) {
+			this.sb = sb;
+		}
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            sb.append("Error");
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			sb.append("Error");
 
-            resp.setContentType("text/plain");
-            resp.getWriter().write("Error");
-        }
-    }
+			resp.setContentType("text/plain");
+			resp.getWriter().write("Error");
+		}
+	}
 
-    private static class Bug51653RequestListener
-            implements ServletRequestListener {
+	private static class Bug51653RequestListener implements
+			ServletRequestListener {
 
-        private StringBuilder sb;
+		private StringBuilder sb;
 
-        public Bug51653RequestListener(StringBuilder sb) {
-            this.sb = sb;
-        }
+		public Bug51653RequestListener(StringBuilder sb) {
+			this.sb = sb;
+		}
 
-        @Override
-        public void requestInitialized(ServletRequestEvent sre) {
-            sb.append("Init");
-        }
+		@Override
+		public void requestInitialized(ServletRequestEvent sre) {
+			sb.append("Init");
+		}
 
-        @Override
-        public void requestDestroyed(ServletRequestEvent sre) {
-            sb.append("Destroy");
-        }
+		@Override
+		public void requestDestroyed(ServletRequestEvent sre) {
+			sb.append("Destroy");
+		}
 
-    }
+	}
 }

@@ -29,44 +29,44 @@ import org.apache.tomcat.util.buf.CharChunk;
 
 public class TesterBase64Performance {
 
-    private static final int SIZE = 10000000;
+	private static final int SIZE = 10000000;
 
-    @SuppressWarnings("deprecation")
-    @Test
-    public void testDecode() throws Exception {
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testDecode() throws Exception {
 
-        List<ByteChunk> inputs = new ArrayList<ByteChunk>(SIZE);
+		List<ByteChunk> inputs = new ArrayList<ByteChunk>(SIZE);
 
-        for (int i = 0; i < SIZE; i++) {
-            String decodedString = "abc" + Integer.valueOf(i) +
-                    ":abc" + Integer.valueOf(i);
-            byte[] decodedBytes =
-                    decodedString.getBytes(B2CConverter.ISO_8859_1);
-            String encodedString =
-                    DatatypeConverter.printBase64Binary(decodedBytes);
-            byte[] encodedBytes =
-                    encodedString.getBytes(B2CConverter.ISO_8859_1);
+		for (int i = 0; i < SIZE; i++) {
+			String decodedString = "abc" + Integer.valueOf(i) + ":abc"
+					+ Integer.valueOf(i);
+			byte[] decodedBytes = decodedString
+					.getBytes(B2CConverter.ISO_8859_1);
+			String encodedString = DatatypeConverter
+					.printBase64Binary(decodedBytes);
+			byte[] encodedBytes = encodedString
+					.getBytes(B2CConverter.ISO_8859_1);
 
-            ByteChunk bc = new ByteChunk(encodedBytes.length);
-            bc.append(encodedBytes, 0, encodedBytes.length);
+			ByteChunk bc = new ByteChunk(encodedBytes.length);
+			bc.append(encodedBytes, 0, encodedBytes.length);
 
-            inputs.add(bc);
-        }
+			inputs.add(bc);
+		}
 
-        long startTomcat = System.currentTimeMillis();
-        for (ByteChunk bc : inputs) {
-            CharChunk cc = new CharChunk(bc.getLength());
-            Base64.decode(bc, cc);
-        }
-        long stopTomcat =  System.currentTimeMillis();
-        System.out.println("Tomcat: " + (stopTomcat - startTomcat) + " ms");
+		long startTomcat = System.currentTimeMillis();
+		for (ByteChunk bc : inputs) {
+			CharChunk cc = new CharChunk(bc.getLength());
+			Base64.decode(bc, cc);
+		}
+		long stopTomcat = System.currentTimeMillis();
+		System.out.println("Tomcat: " + (stopTomcat - startTomcat) + " ms");
 
-        long startCodec = System.currentTimeMillis();
-        for (ByteChunk bc : inputs) {
-            org.apache.tomcat.util.codec.binary.Base64.decodeBase64(
-                    bc.getBuffer(), bc.getOffset(), bc.getLength());
-        }
-        long stopCodec =  System.currentTimeMillis();
-        System.out.println("Codec: " + (stopCodec - startCodec) + " ms");
-    }
+		long startCodec = System.currentTimeMillis();
+		for (ByteChunk bc : inputs) {
+			org.apache.tomcat.util.codec.binary.Base64.decodeBase64(
+					bc.getBuffer(), bc.getOffset(), bc.getLength());
+		}
+		long stopCodec = System.currentTimeMillis();
+		System.out.println("Codec: " + (stopCodec - startCodec) + " ms");
+	}
 }

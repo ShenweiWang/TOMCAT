@@ -27,48 +27,47 @@ import org.apache.tomcat.websocket.server.WsContextListener;
 
 public class TesterUtil {
 
-    public static class ServerConfigListener extends WsContextListener {
+	public static class ServerConfigListener extends WsContextListener {
 
-        private static Class<?> pojoClazz;
+		private static Class<?> pojoClazz;
 
-        public static void setPojoClazz(Class<?> pojoClazz) {
-            ServerConfigListener.pojoClazz = pojoClazz;
-        }
+		public static void setPojoClazz(Class<?> pojoClazz) {
+			ServerConfigListener.pojoClazz = pojoClazz;
+		}
 
-        @Override
-        public void contextInitialized(ServletContextEvent sce) {
-            super.contextInitialized(sce);
-            ServerContainer sc =
-                    (ServerContainer) sce.getServletContext().getAttribute(
-                            Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
-            try {
-                sc.addEndpoint(pojoClazz);
-            } catch (DeploymentException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-    }
+		@Override
+		public void contextInitialized(ServletContextEvent sce) {
+			super.contextInitialized(sce);
+			ServerContainer sc = (ServerContainer) sce
+					.getServletContext()
+					.getAttribute(
+							Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
+			try {
+				sc.addEndpoint(pojoClazz);
+			} catch (DeploymentException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
 
+	public static class SingletonConfigurator extends Configurator {
 
-    public static class SingletonConfigurator extends Configurator {
+		private static Object instance;
 
-        private static Object instance;
+		public static void setInstance(Object instance) {
+			SingletonConfigurator.instance = instance;
+		}
 
-        public static void setInstance(Object instance) {
-            SingletonConfigurator.instance = instance;
-        }
+		@Override
+		public <T> T getEndpointInstance(Class<T> clazz)
+				throws InstantiationException {
+			@SuppressWarnings("unchecked")
+			T result = (T) instance;
+			return result;
+		}
+	}
 
-        @Override
-        public <T> T getEndpointInstance(Class<T> clazz)
-                throws InstantiationException {
-            @SuppressWarnings("unchecked")
-            T result = (T) instance;
-            return result;
-        }
-    }
-
-
-    @ClientEndpoint
-    public static final class SimpleClient {
-    }
+	@ClientEndpoint
+	public static final class SimpleClient {
+	}
 }

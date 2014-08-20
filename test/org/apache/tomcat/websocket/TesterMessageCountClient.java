@@ -35,210 +35,207 @@ import javax.websocket.Session;
 
 public class TesterMessageCountClient {
 
-    public interface TesterEndpoint {
-        void setLatch(CountDownLatch latch);
-    }
+	public interface TesterEndpoint {
+		void setLatch(CountDownLatch latch);
+	}
 
-    public static class TesterProgrammaticEndpoint
-            extends Endpoint implements TesterEndpoint {
+	public static class TesterProgrammaticEndpoint extends Endpoint implements
+			TesterEndpoint {
 
-        private CountDownLatch latch = null;
+		private CountDownLatch latch = null;
 
-        @Override
-        public void setLatch(CountDownLatch latch) {
-            this.latch = latch;
-        }
+		@Override
+		public void setLatch(CountDownLatch latch) {
+			this.latch = latch;
+		}
 
-        @Override
-        public void onClose(Session session, CloseReason closeReason) {
-            clearLatch();
-        }
+		@Override
+		public void onClose(Session session, CloseReason closeReason) {
+			clearLatch();
+		}
 
-        @Override
-        public void onError(Session session, Throwable throwable) {
-            clearLatch();
-        }
+		@Override
+		public void onError(Session session, Throwable throwable) {
+			clearLatch();
+		}
 
-        private void clearLatch() {
-            if (latch != null) {
-                while (latch.getCount() > 0) {
-                    latch.countDown();
-                }
-            }
-        }
+		private void clearLatch() {
+			if (latch != null) {
+				while (latch.getCount() > 0) {
+					latch.countDown();
+				}
+			}
+		}
 
-        @Override
-        public void onOpen(Session session, EndpointConfig config) {
-            session.getUserProperties().put("endpoint", this);
-        }
-    }
+		@Override
+		public void onOpen(Session session, EndpointConfig config) {
+			session.getUserProperties().put("endpoint", this);
+		}
+	}
 
-    @ClientEndpoint
-    public static class TesterAnnotatedEndpoint implements TesterEndpoint {
+	@ClientEndpoint
+	public static class TesterAnnotatedEndpoint implements TesterEndpoint {
 
-        private CountDownLatch latch = null;
+		private CountDownLatch latch = null;
 
-        @Override
-        public void setLatch(CountDownLatch latch) {
-            this.latch = latch;
-        }
+		@Override
+		public void setLatch(CountDownLatch latch) {
+			this.latch = latch;
+		}
 
-        @OnClose
-        public void onClose() {
-            clearLatch();
-        }
+		@OnClose
+		public void onClose() {
+			clearLatch();
+		}
 
-        @OnError
-        public void onError(@SuppressWarnings("unused") Throwable throwable) {
-            clearLatch();
-        }
+		@OnError
+		public void onError(@SuppressWarnings("unused") Throwable throwable) {
+			clearLatch();
+		}
 
-        private void clearLatch() {
-            if (latch != null) {
-                while (latch.getCount() > 0) {
-                    latch.countDown();
-                }
-            }
-        }
+		private void clearLatch() {
+			if (latch != null) {
+				while (latch.getCount() > 0) {
+					latch.countDown();
+				}
+			}
+		}
 
-        @OnOpen
-        public void onOpen(Session session) {
-            session.getUserProperties().put("endpoint", this);
-        }
-    }
+		@OnOpen
+		public void onOpen(Session session) {
+			session.getUserProperties().put("endpoint", this);
+		}
+	}
 
+	public abstract static class BasicHandler<T> implements
+			MessageHandler.Whole<T> {
 
-    public abstract static class BasicHandler<T>
-            implements MessageHandler.Whole<T> {
+		private final CountDownLatch latch;
 
-        private final CountDownLatch latch;
+		private final Queue<T> messages = new LinkedBlockingQueue<T>();
 
-        private final Queue<T> messages = new LinkedBlockingQueue<T>();
+		public BasicHandler(CountDownLatch latch) {
+			this.latch = latch;
+		}
 
-        public BasicHandler(CountDownLatch latch) {
-            this.latch = latch;
-        }
+		public CountDownLatch getLatch() {
+			return latch;
+		}
 
-        public CountDownLatch getLatch() {
-            return latch;
-        }
+		public Queue<T> getMessages() {
+			return messages;
+		}
+	}
 
-        public Queue<T> getMessages() {
-            return messages;
-        }
-    }
+	public static class BasicBinary extends BasicHandler<ByteBuffer> {
 
-    public static class BasicBinary extends BasicHandler<ByteBuffer> {
+		public BasicBinary(CountDownLatch latch) {
+			super(latch);
+		}
 
-        public BasicBinary(CountDownLatch latch) {
-            super(latch);
-        }
+		@Override
+		public void onMessage(ByteBuffer message) {
+			getMessages().add(message);
+			if (getLatch() != null) {
+				getLatch().countDown();
+			}
+		}
+	}
 
-        @Override
-        public void onMessage(ByteBuffer message) {
-            getMessages().add(message);
-            if (getLatch() != null) {
-                getLatch().countDown();
-            }
-        }
-    }
+	public static class BasicText extends BasicHandler<String> {
 
-    public static class BasicText extends BasicHandler<String> {
+		private final String expected;
 
-        private final String expected;
+		public BasicText(CountDownLatch latch) {
+			this(latch, null);
+		}
 
-        public BasicText(CountDownLatch latch) {
-            this(latch, null);
-        }
+		public BasicText(CountDownLatch latch, String expected) {
+			super(latch);
+			this.expected = expected;
+		}
 
-        public BasicText(CountDownLatch latch, String expected) {
-            super(latch);
-            this.expected = expected;
-        }
+		@Override
+		public void onMessage(String message) {
+			if (expected == null) {
+				getMessages().add(message);
+			} else {
+				if (!expected.equals(message)) {
+					throw new IllegalStateException("Expected: [" + expected
+							+ "]\r\n" + "Was:      [" + message + "]");
+				}
+			}
+			if (getLatch() != null) {
+				getLatch().countDown();
+			}
+		}
+	}
 
-        @Override
-        public void onMessage(String message) {
-            if (expected == null) {
-                getMessages().add(message);
-            } else {
-                if (!expected.equals(message)) {
-                    throw new IllegalStateException(
-                            "Expected: [" + expected + "]\r\n" +
-                            "Was:      [" + message + "]");
-                }
-            }
-            if (getLatch() != null) {
-                getLatch().countDown();
-            }
-        }
-    }
+	public static class SleepingText implements MessageHandler.Whole<String> {
 
-    public static class SleepingText implements MessageHandler.Whole<String> {
+		private final int sleep;
 
-        private final int sleep;
+		public SleepingText(int sleep) {
+			this.sleep = sleep;
+		}
 
-        public SleepingText(int sleep) {
-            this.sleep = sleep;
-        }
+		@Override
+		public void onMessage(String message) {
+			try {
+				Thread.sleep(sleep);
+			} catch (InterruptedException e) {
+				// Ignore
+			}
+		}
+	}
 
-        @Override
-        public void onMessage(String message) {
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-        }
-    }
+	public abstract static class AsyncHandler<T> implements
+			MessageHandler.Partial<T> {
 
-    public abstract static class AsyncHandler<T>
-            implements MessageHandler.Partial<T> {
+		private final CountDownLatch latch;
 
-        private final CountDownLatch latch;
+		private final List<T> messages = new CopyOnWriteArrayList<T>();
 
-        private final List<T> messages = new CopyOnWriteArrayList<T>();
+		public AsyncHandler(CountDownLatch latch) {
+			this.latch = latch;
+		}
 
-        public AsyncHandler(CountDownLatch latch) {
-            this.latch = latch;
-        }
+		public CountDownLatch getLatch() {
+			return latch;
+		}
 
-        public CountDownLatch getLatch() {
-            return latch;
-        }
+		public List<T> getMessages() {
+			return messages;
+		}
+	}
 
-        public List<T> getMessages() {
-            return messages;
-        }
-    }
+	public static class AsyncBinary extends AsyncHandler<ByteBuffer> {
 
-    public static class AsyncBinary extends AsyncHandler<ByteBuffer> {
+		public AsyncBinary(CountDownLatch latch) {
+			super(latch);
+		}
 
-        public AsyncBinary(CountDownLatch latch) {
-            super(latch);
-        }
+		@Override
+		public void onMessage(ByteBuffer message, boolean last) {
+			getMessages().add(message);
+			if (last && getLatch() != null) {
+				getLatch().countDown();
+			}
+		}
+	}
 
-        @Override
-        public void onMessage(ByteBuffer message, boolean last) {
-            getMessages().add(message);
-            if (last && getLatch() != null) {
-                getLatch().countDown();
-            }
-        }
-    }
+	public static class AsyncText extends AsyncHandler<String> {
 
-    public static class AsyncText extends AsyncHandler<String> {
+		public AsyncText(CountDownLatch latch) {
+			super(latch);
+		}
 
-
-        public AsyncText(CountDownLatch latch) {
-            super(latch);
-        }
-
-        @Override
-        public void onMessage(String message, boolean last) {
-            getMessages().add(message);
-            if (last && getLatch() != null) {
-                getLatch().countDown();
-            }
-        }
-    }
+		@Override
+		public void onMessage(String message, boolean last) {
+			getMessages().add(message);
+			if (last && getLatch() != null) {
+				getLatch().countDown();
+			}
+		}
+	}
 }

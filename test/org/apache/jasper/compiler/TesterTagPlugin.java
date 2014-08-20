@@ -24,8 +24,8 @@ import org.apache.jasper.compiler.tagplugin.TagPluginContext;
  */
 public class TesterTagPlugin implements TagPlugin {
 
-    @Override
-    public void doTag(TagPluginContext ctxt) {
-        ctxt.generateJavaSource("//Just a comment");
-    }
+	@Override
+	public void doTag(TagPluginContext ctxt) {
+		ctxt.generateJavaSource("//Just a comment");
+	}
 }

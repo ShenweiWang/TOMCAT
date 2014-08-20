@@ -25,117 +25,117 @@ import org.junit.Test;
 import org.apache.catalina.LifecycleState;
 
 public class TestApplicationSessionCookieConfig {
-    private ApplicationSessionCookieConfig applicationSessionCookieConfig;
-    private final CustomContext context = new CustomContext();
+	private ApplicationSessionCookieConfig applicationSessionCookieConfig;
+	private final CustomContext context = new CustomContext();
 
-    @Before
-    public void setUp() throws Exception {
-        applicationSessionCookieConfig = new ApplicationSessionCookieConfig(
-                context);
-    }
+	@Before
+	public void setUp() throws Exception {
+		applicationSessionCookieConfig = new ApplicationSessionCookieConfig(
+				context);
+	}
 
-    @Test
-    public void testSetCommentInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setComment("test");
-        assertTrue(applicationSessionCookieConfig.getComment().equals("test"));
-    }
+	@Test
+	public void testSetCommentInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setComment("test");
+		assertTrue(applicationSessionCookieConfig.getComment().equals("test"));
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetCommentNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setComment("test");
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetCommentNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setComment("test");
+	}
 
-    @Test
-    public void testSetDomainInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setDomain("test");
-        assertTrue(applicationSessionCookieConfig.getDomain().equals("test"));
-    }
+	@Test
+	public void testSetDomainInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setDomain("test");
+		assertTrue(applicationSessionCookieConfig.getDomain().equals("test"));
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetDomainNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setDomain("test");
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetDomainNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setDomain("test");
+	}
 
-    @Test
-    public void testSetHttpOnlyInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setHttpOnly(true);
-        assertTrue(applicationSessionCookieConfig.isHttpOnly());
-    }
+	@Test
+	public void testSetHttpOnlyInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setHttpOnly(true);
+		assertTrue(applicationSessionCookieConfig.isHttpOnly());
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetHttpOnlyNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setHttpOnly(true);
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetHttpOnlyNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setHttpOnly(true);
+	}
 
-    @Test
-    public void testSetMaxAgeInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setMaxAge(1);
-        assertTrue(applicationSessionCookieConfig.getMaxAge() == 1);
-    }
+	@Test
+	public void testSetMaxAgeInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setMaxAge(1);
+		assertTrue(applicationSessionCookieConfig.getMaxAge() == 1);
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetMaxAgeNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setMaxAge(1);
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetMaxAgeNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setMaxAge(1);
+	}
 
-    @Test
-    public void testSetNameInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setName("test");
-        assertTrue(applicationSessionCookieConfig.getName().equals("test"));
-    }
+	@Test
+	public void testSetNameInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setName("test");
+		assertTrue(applicationSessionCookieConfig.getName().equals("test"));
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetNameNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setName("test");
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetNameNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setName("test");
+	}
 
-    @Test
-    public void testSetPathInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setPath("test");
-        assertTrue(applicationSessionCookieConfig.getPath().equals("test"));
-    }
+	@Test
+	public void testSetPathInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setPath("test");
+		assertTrue(applicationSessionCookieConfig.getPath().equals("test"));
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetPathNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setPath("test");
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetPathNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setPath("test");
+	}
 
-    @Test
-    public void testSetSecureInitPhase() {
-        context.setState(LifecycleState.STARTING_PREP);
-        applicationSessionCookieConfig.setSecure(true);
-        assertTrue(applicationSessionCookieConfig.isSecure());
-    }
+	@Test
+	public void testSetSecureInitPhase() {
+		context.setState(LifecycleState.STARTING_PREP);
+		applicationSessionCookieConfig.setSecure(true);
+		assertTrue(applicationSessionCookieConfig.isSecure());
+	}
 
-    @Test(expected = IllegalStateException.class)
-    public void testSetSecureNotInitPhase() {
-        context.setState(LifecycleState.STARTED);
-        applicationSessionCookieConfig.setSecure(true);
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetSecureNotInitPhase() {
+		context.setState(LifecycleState.STARTED);
+		applicationSessionCookieConfig.setSecure(true);
+	}
 
-    private static class CustomContext extends StandardContext {
-        private LifecycleState state;
+	private static class CustomContext extends StandardContext {
+		private LifecycleState state;
 
-        @Override
-        public LifecycleState getState() {
-            return state;
-        }
+		@Override
+		public LifecycleState getState() {
+			return state;
+		}
 
-        @Override
-        public synchronized void setState(LifecycleState state) {
-            this.state = state;
-        }
-    }
+		@Override
+		public synchronized void setState(LifecycleState state) {
+			this.state = state;
+		}
+	}
 }

@@ -15,102 +15,95 @@
  * limitations under the License.
  */
 
-
 package org.apache.catalina.startup;
-
 
 import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.digester.RuleSetBase;
 
-
 /**
- * <p><strong>RuleSet</strong> for processing the contents of a Realm definition
- * element.  This <code>RuleSet</code> supports Realms such as the
- * <code>CombinedRealm</code> that used nested Realms.</p>
+ * <p>
+ * <strong>RuleSet</strong> for processing the contents of a Realm definition
+ * element. This <code>RuleSet</code> supports Realms such as the
+ * <code>CombinedRealm</code> that used nested Realms.
+ * </p>
  */
 public class RealmRuleSet extends RuleSetBase {
 
+	private static final int MAX_NESTED_REALM_LEVELS = Integer.getInteger(
+			"org.apache.catalina.startup.RealmRuleSet.MAX_NESTED_REALM_LEVELS",
+			3).intValue();
 
-    private static final int MAX_NESTED_REALM_LEVELS = Integer.getInteger(
-            "org.apache.catalina.startup.RealmRuleSet.MAX_NESTED_REALM_LEVELS",
-            3).intValue();
+	// ----------------------------------------------------- Instance Variables
 
-    // ----------------------------------------------------- Instance Variables
+	/**
+	 * The matching pattern prefix to use for recognizing our elements.
+	 */
+	protected String prefix = null;
 
+	// ------------------------------------------------------------ Constructor
 
-    /**
-     * The matching pattern prefix to use for recognizing our elements.
-     */
-    protected String prefix = null;
+	/**
+	 * Construct an instance of this <code>RuleSet</code> with the default
+	 * matching pattern prefix.
+	 */
+	public RealmRuleSet() {
 
+		this("");
 
-    // ------------------------------------------------------------ Constructor
+	}
 
+	/**
+	 * Construct an instance of this <code>RuleSet</code> with the specified
+	 * matching pattern prefix.
+	 *
+	 * @param prefix
+	 *            Prefix for matching pattern rules (including the trailing
+	 *            slash character)
+	 */
+	public RealmRuleSet(String prefix) {
 
-    /**
-     * Construct an instance of this <code>RuleSet</code> with the default
-     * matching pattern prefix.
-     */
-    public RealmRuleSet() {
+		super();
+		this.namespaceURI = null;
+		this.prefix = prefix;
 
-        this("");
+	}
 
-    }
+	// --------------------------------------------------------- Public Methods
 
+	/**
+	 * <p>
+	 * Add the set of Rule instances defined in this RuleSet to the specified
+	 * <code>Digester</code> instance, associating them with our namespace URI
+	 * (if any). This method should only be called by a Digester instance.
+	 * </p>
+	 *
+	 * @param digester
+	 *            Digester instance to which the new Rule instances should be
+	 *            added.
+	 */
+	@Override
+	public void addRuleInstances(Digester digester) {
 
-    /**
-     * Construct an instance of this <code>RuleSet</code> with the specified
-     * matching pattern prefix.
-     *
-     * @param prefix Prefix for matching pattern rules (including the
-     *  trailing slash character)
-     */
-    public RealmRuleSet(String prefix) {
+		String pattern = prefix;
 
-        super();
-        this.namespaceURI = null;
-        this.prefix = prefix;
+		for (int i = 0; i < MAX_NESTED_REALM_LEVELS; i++) {
 
-    }
+			if (i > 0) {
+				pattern += "/";
+			}
+			pattern += "Realm";
 
-
-    // --------------------------------------------------------- Public Methods
-
-
-    /**
-     * <p>Add the set of Rule instances defined in this RuleSet to the
-     * specified <code>Digester</code> instance, associating them with
-     * our namespace URI (if any).  This method should only be called
-     * by a Digester instance.</p>
-     *
-     * @param digester Digester instance to which the new Rule instances
-     *  should be added.
-     */
-    @Override
-    public void addRuleInstances(Digester digester) {
-
-        String pattern = prefix;
-
-        for (int i = 0; i < MAX_NESTED_REALM_LEVELS; i++) {
-
-            if (i > 0) {
-                pattern += "/";
-            }
-            pattern += "Realm";
-
-            digester.addObjectCreate(pattern,
-                                     null, // MUST be specified in the element,
-                                     "className");
-            digester.addSetProperties(pattern);
-            if (i == 0) {
-                digester.addSetNext(pattern,
-                                    "setRealm",
-                                    "org.apache.catalina.Realm");
-            } else {
-                digester.addSetNext(pattern,
-                                    "addRealm",
-                                    "org.apache.catalina.Realm");
-            }
-        }
-    }
+			digester.addObjectCreate(pattern, null, // MUST be specified in the
+													// element,
+					"className");
+			digester.addSetProperties(pattern);
+			if (i == 0) {
+				digester.addSetNext(pattern, "setRealm",
+						"org.apache.catalina.Realm");
+			} else {
+				digester.addSetNext(pattern, "addRealm",
+						"org.apache.catalina.Realm");
+			}
+		}
+	}
 }

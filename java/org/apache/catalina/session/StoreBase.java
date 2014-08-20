@@ -29,227 +29,236 @@ import org.apache.catalina.util.LifecycleBase;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
- * Abstract implementation of the Store interface to
- * support most of the functionality required by a Store.
+ * Abstract implementation of the Store interface to support most of the
+ * functionality required by a Store.
  *
  * @author Bip Thelin
  */
 public abstract class StoreBase extends LifecycleBase implements Store {
 
-    // ----------------------------------------------------- Instance Variables
+	// ----------------------------------------------------- Instance Variables
 
-    /**
-     * The descriptive information about this implementation.
-     */
-    protected static final String info = "StoreBase/1.0";
+	/**
+	 * The descriptive information about this implementation.
+	 */
+	protected static final String info = "StoreBase/1.0";
 
-    /**
-     * Name to register for this Store, used for logging.
-     */
-    protected static String storeName = "StoreBase";
+	/**
+	 * Name to register for this Store, used for logging.
+	 */
+	protected static String storeName = "StoreBase";
 
-    /**
-     * The property change support for this component.
-     */
-    protected PropertyChangeSupport support = new PropertyChangeSupport(this);
+	/**
+	 * The property change support for this component.
+	 */
+	protected PropertyChangeSupport support = new PropertyChangeSupport(this);
 
-    /**
-     * The string manager for this package.
-     */
-    protected static final StringManager sm = StringManager.getManager(Constants.Package);
+	/**
+	 * The string manager for this package.
+	 */
+	protected static final StringManager sm = StringManager
+			.getManager(Constants.Package);
 
-    /**
-     * The Manager with which this JDBCStore is associated.
-     */
-    protected Manager manager;
+	/**
+	 * The Manager with which this JDBCStore is associated.
+	 */
+	protected Manager manager;
 
-    // ------------------------------------------------------------- Properties
+	// ------------------------------------------------------------- Properties
 
-    /**
-     * Return the info for this Store.
-     */
-    @Override
-    public String getInfo() {
-        return(info);
-    }
+	/**
+	 * Return the info for this Store.
+	 */
+	@Override
+	public String getInfo() {
+		return (info);
+	}
 
+	/**
+	 * Return the name for this Store, used for logging.
+	 */
+	public String getStoreName() {
+		return (storeName);
+	}
 
-    /**
-     * Return the name for this Store, used for logging.
-     */
-    public String getStoreName() {
-        return(storeName);
-    }
+	/**
+	 * Set the Manager with which this Store is associated.
+	 *
+	 * @param manager
+	 *            The newly associated Manager
+	 */
+	@Override
+	public void setManager(Manager manager) {
+		Manager oldManager = this.manager;
+		this.manager = manager;
+		support.firePropertyChange("manager", oldManager, this.manager);
+	}
 
+	/**
+	 * Return the Manager with which the Store is associated.
+	 */
+	@Override
+	public Manager getManager() {
+		return (this.manager);
+	}
 
-    /**
-     * Set the Manager with which this Store is associated.
-     *
-     * @param manager The newly associated Manager
-     */
-    @Override
-    public void setManager(Manager manager) {
-        Manager oldManager = this.manager;
-        this.manager = manager;
-        support.firePropertyChange("manager", oldManager, this.manager);
-    }
+	// --------------------------------------------------------- Public Methods
 
-    /**
-     * Return the Manager with which the Store is associated.
-     */
-    @Override
-    public Manager getManager() {
-        return(this.manager);
-    }
+	/**
+	 * Add a property change listener to this component.
+	 *
+	 * @param listener
+	 *            a value of type 'PropertyChangeListener'
+	 */
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		support.addPropertyChangeListener(listener);
+	}
 
+	/**
+	 * Remove a property change listener from this component.
+	 *
+	 * @param listener
+	 *            The listener to remove
+	 */
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		support.removePropertyChangeListener(listener);
+	}
 
-    // --------------------------------------------------------- Public Methods
+	// --------------------------------------------------------- Protected
+	// Methods
 
-    /**
-     * Add a property change listener to this component.
-     *
-     * @param listener a value of type 'PropertyChangeListener'
-     */
-    @Override
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        support.addPropertyChangeListener(listener);
-    }
+	/**
+	 * Called by our background reaper thread to check if Sessions saved in our
+	 * store are subject of being expired. If so expire the Session and remove
+	 * it from the Store.
+	 *
+	 */
+	public void processExpires() {
+		String[] keys = null;
 
-    /**
-     * Remove a property change listener from this component.
-     *
-     * @param listener The listener to remove
-     */
-    @Override
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        support.removePropertyChangeListener(listener);
-    }
+		if (!getState().isAvailable()) {
+			return;
+		}
 
-    // --------------------------------------------------------- Protected Methods
+		try {
+			keys = keys();
+		} catch (IOException e) {
+			manager.getContainer().getLogger().error("Error getting keys", e);
+			return;
+		}
+		if (manager.getContainer().getLogger().isDebugEnabled()) {
+			manager.getContainer()
+					.getLogger()
+					.debug(getStoreName() + ": processExpires check number of "
+							+ keys.length + " sessions");
+		}
 
-    /**
-     * Called by our background reaper thread to check if Sessions
-     * saved in our store are subject of being expired. If so expire
-     * the Session and remove it from the Store.
-     *
-     */
-    public void processExpires() {
-        String[] keys = null;
+		long timeNow = System.currentTimeMillis();
 
-        if(!getState().isAvailable()) {
-            return;
-        }
+		for (int i = 0; i < keys.length; i++) {
+			try {
+				StandardSession session = (StandardSession) load(keys[i]);
+				if (session == null) {
+					continue;
+				}
+				int timeIdle = (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
+				if (timeIdle < session.getMaxInactiveInterval()) {
+					continue;
+				}
+				if (manager.getContainer().getLogger().isDebugEnabled()) {
+					manager.getContainer()
+							.getLogger()
+							.debug(getStoreName()
+									+ ": processExpires expire store session "
+									+ keys[i]);
+				}
+				boolean isLoaded = false;
+				if (manager instanceof PersistentManagerBase) {
+					isLoaded = ((PersistentManagerBase) manager)
+							.isLoaded(keys[i]);
+				} else {
+					try {
+						if (manager.findSession(keys[i]) != null) {
+							isLoaded = true;
+						}
+					} catch (IOException ioe) {
+						// Ignore - session will be expired
+					}
+				}
+				if (isLoaded) {
+					// recycle old backup session
+					session.recycle();
+				} else {
+					// expire swapped out session
+					session.expire();
+				}
+				remove(keys[i]);
+			} catch (Exception e) {
+				manager.getContainer().getLogger()
+						.error("Session: " + keys[i] + "; ", e);
+				try {
+					remove(keys[i]);
+				} catch (IOException e2) {
+					manager.getContainer().getLogger()
+							.error("Error removing key", e2);
+				}
+			}
+		}
+	}
 
-        try {
-            keys = keys();
-        } catch (IOException e) {
-            manager.getContainer().getLogger().error("Error getting keys", e);
-            return;
-        }
-        if (manager.getContainer().getLogger().isDebugEnabled()) {
-            manager.getContainer().getLogger().debug(getStoreName()+ ": processExpires check number of " + keys.length + " sessions" );
-        }
+	@Override
+	protected void initInternal() {
+		// NOOP
+	}
 
-        long timeNow = System.currentTimeMillis();
+	/**
+	 * Start this component and implement the requirements of
+	 * {@link LifecycleBase#startInternal()}.
+	 *
+	 * @exception LifecycleException
+	 *                if this component detects a fatal error that prevents this
+	 *                component from being used
+	 */
+	@Override
+	protected synchronized void startInternal() throws LifecycleException {
 
-        for (int i = 0; i < keys.length; i++) {
-            try {
-                StandardSession session = (StandardSession) load(keys[i]);
-                if (session == null) {
-                    continue;
-                }
-                int timeIdle = (int) ((timeNow - session.getThisAccessedTime()) / 1000L);
-                if (timeIdle < session.getMaxInactiveInterval()) {
-                    continue;
-                }
-                if (manager.getContainer().getLogger().isDebugEnabled()) {
-                    manager.getContainer().getLogger().debug(getStoreName()+ ": processExpires expire store session " + keys[i] );
-                }
-                boolean isLoaded = false;
-                if (manager instanceof PersistentManagerBase) {
-                    isLoaded = ((PersistentManagerBase) manager).isLoaded(keys[i]);
-                } else {
-                    try {
-                        if (manager.findSession(keys[i]) != null) {
-                            isLoaded = true;
-                        }
-                    } catch (IOException ioe) {
-                        // Ignore - session will be expired
-                    }
-                }
-                if (isLoaded) {
-                    // recycle old backup session
-                    session.recycle();
-                } else {
-                    // expire swapped out session
-                    session.expire();
-                }
-                remove(keys[i]);
-            } catch (Exception e) {
-                manager.getContainer().getLogger().error("Session: "+keys[i]+"; ", e);
-                try {
-                    remove(keys[i]);
-                } catch (IOException e2) {
-                    manager.getContainer().getLogger().error("Error removing key", e2);
-                }
-            }
-        }
-    }
+		setState(LifecycleState.STARTING);
+	}
 
+	/**
+	 * Stop this component and implement the requirements of
+	 * {@link LifecycleBase#stopInternal()}.
+	 *
+	 * @exception LifecycleException
+	 *                if this component detects a fatal error that prevents this
+	 *                component from being used
+	 */
+	@Override
+	protected synchronized void stopInternal() throws LifecycleException {
 
-    @Override
-    protected void initInternal() {
-        // NOOP
-    }
-    
-    
-    /**
-     * Start this component and implement the requirements
-     * of {@link LifecycleBase#startInternal()}.
-     *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
-     */
-    @Override
-    protected synchronized void startInternal() throws LifecycleException {
-        
-        setState(LifecycleState.STARTING);
-    }
+		setState(LifecycleState.STOPPING);
+	}
 
+	@Override
+	protected void destroyInternal() {
+		// NOOP
+	}
 
-    /**
-     * Stop this component and implement the requirements
-     * of {@link LifecycleBase#stopInternal()}.
-     *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
-     */
-    @Override
-    protected synchronized void stopInternal() throws LifecycleException {
-
-        setState(LifecycleState.STOPPING);
-    }
-    
-    
-    @Override
-    protected void destroyInternal() {
-        // NOOP
-    }
-    
-    
-    /**
-     * Return a String rendering of this object.
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(this.getClass().getName());
-        sb.append('[');
-        if (manager == null) {
-            sb.append("Manager is null");
-        } else {
-            sb.append(manager);
-        }
-        sb.append(']');
-        return sb.toString();
-    }
+	/**
+	 * Return a String rendering of this object.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(this.getClass().getName());
+		sb.append('[');
+		if (manager == null) {
+			sb.append("Manager is null");
+		} else {
+			sb.append(manager);
+		}
+		sb.append(']');
+		return sb.toString();
+	}
 }

@@ -24,79 +24,83 @@ import org.apache.tomcat.util.bcel.Constants;
 
 /**
  * This class is derived from <em>Attribute</em> and declares this class as
- * `synthetic', i.e., it needs special handling.  The JVM specification
- * states "A class member that does not appear in the source code must be
- * marked using a Synthetic attribute."  It may appear in the ClassFile
- * attribute table, a field_info table or a method_info table.  This class
- * is intended to be instantiated from the
- * <em>Attribute.readAttribute()</em> method.
+ * `synthetic', i.e., it needs special handling. The JVM specification states "A
+ * class member that does not appear in the source code must be marked using a
+ * Synthetic attribute." It may appear in the ClassFile attribute table, a
+ * field_info table or a method_info table. This class is intended to be
+ * instantiated from the <em>Attribute.readAttribute()</em> method.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @see     Attribute
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @see Attribute
  */
 public final class Synthetic extends Attribute {
 
-    private static final long serialVersionUID = -5129612853226360165L;
-    private byte[] bytes;
+	private static final long serialVersionUID = -5129612853226360165L;
+	private byte[] bytes;
 
+	/**
+	 * @param name_index
+	 *            Index in constant pool to CONSTANT_Utf8, which should
+	 *            represent the string "Synthetic".
+	 * @param length
+	 *            Content length in bytes - should be zero.
+	 * @param bytes
+	 *            Attribute contents
+	 * @param constant_pool
+	 *            The constant pool this attribute is associated with.
+	 */
+	public Synthetic(int name_index, int length, byte[] bytes,
+			ConstantPool constant_pool) {
+		super(Constants.ATTR_SYNTHETIC, name_index, length, constant_pool);
+		this.bytes = bytes;
+	}
 
-    /**
-     * @param name_index Index in constant pool to CONSTANT_Utf8, which
-     * should represent the string "Synthetic".
-     * @param length Content length in bytes - should be zero.
-     * @param bytes Attribute contents
-     * @param constant_pool The constant pool this attribute is associated
-     * with.
-     */
-    public Synthetic(int name_index, int length, byte[] bytes, ConstantPool constant_pool) {
-        super(Constants.ATTR_SYNTHETIC, name_index, length, constant_pool);
-        this.bytes = bytes;
-    }
+	/**
+	 * Construct object from file stream.
+	 * 
+	 * @param name_index
+	 *            Index in constant pool to CONSTANT_Utf8
+	 * @param length
+	 *            Content length in bytes
+	 * @param file
+	 *            Input stream
+	 * @param constant_pool
+	 *            Array of constants
+	 * @throws IOException
+	 */
+	Synthetic(int name_index, int length, DataInputStream file,
+			ConstantPool constant_pool) throws IOException {
+		this(name_index, length, (byte[]) null, constant_pool);
+		if (length > 0) {
+			bytes = new byte[length];
+			file.readFully(bytes);
+			System.err.println("Synthetic attribute with length > 0");
+		}
+	}
 
+	/**
+	 * @return String representation.
+	 */
+	@Override
+	public final String toString() {
+		StringBuilder buf = new StringBuilder("Synthetic");
+		if (length > 0) {
+			buf.append(" ").append(Utility.toHexString(bytes));
+		}
+		return buf.toString();
+	}
 
-    /**
-     * Construct object from file stream.
-     * @param name_index Index in constant pool to CONSTANT_Utf8
-     * @param length Content length in bytes
-     * @param file Input stream
-     * @param constant_pool Array of constants
-     * @throws IOException
-     */
-    Synthetic(int name_index, int length, DataInputStream file, ConstantPool constant_pool)
-            throws IOException {
-        this(name_index, length, (byte[]) null, constant_pool);
-        if (length > 0) {
-            bytes = new byte[length];
-            file.readFully(bytes);
-            System.err.println("Synthetic attribute with length > 0");
-        }
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        StringBuilder buf = new StringBuilder("Synthetic");
-        if (length > 0) {
-            buf.append(" ").append(Utility.toHexString(bytes));
-        }
-        return buf.toString();
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool _constant_pool ) {
-        Synthetic c = (Synthetic) clone();
-        if (bytes != null) {
-            c.bytes = new byte[bytes.length];
-            System.arraycopy(bytes, 0, c.bytes, 0, bytes.length);
-        }
-        c.constant_pool = _constant_pool;
-        return c;
-    }
+	/**
+	 * @return deep copy of this attribute
+	 */
+	@Override
+	public Attribute copy(ConstantPool _constant_pool) {
+		Synthetic c = (Synthetic) clone();
+		if (bytes != null) {
+			c.bytes = new byte[bytes.length];
+			System.arraycopy(bytes, 0, c.bytes, 0, bytes.length);
+		}
+		c.constant_pool = _constant_pool;
+		return c;
+	}
 }

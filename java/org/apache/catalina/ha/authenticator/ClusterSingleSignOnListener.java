@@ -34,159 +34,156 @@ import org.apache.juli.logging.LogFactory;
  * @author Fabien Carrion
  */
 public class ClusterSingleSignOnListener extends ClusterListener {
- 
-    private static final Log log =
-        LogFactory.getLog(ClusterSingleSignOnListener.class);
 
-    /**
-     * The descriptive information about this implementation.
-     */
-    protected static final String info = "org.apache.catalina.ha.authenticator.ClusterSingleSignOnListener/1.0";
+	private static final Log log = LogFactory
+			.getLog(ClusterSingleSignOnListener.class);
 
-    // ------------------------------------------------------------- Properties
+	/**
+	 * The descriptive information about this implementation.
+	 */
+	protected static final String info = "org.apache.catalina.ha.authenticator.ClusterSingleSignOnListener/1.0";
 
-    private ClusterSingleSignOn clusterSSO = null;
+	// ------------------------------------------------------------- Properties
 
+	private ClusterSingleSignOn clusterSSO = null;
 
-    //--Constructor---------------------------------------------
+	// --Constructor---------------------------------------------
 
-    public ClusterSingleSignOnListener() {
-        // NO-OP
-    }
+	public ClusterSingleSignOnListener() {
+		// NO-OP
+	}
 
-    //--Logic---------------------------------------------------
+	// --Logic---------------------------------------------------
 
-    /**
-     * Return descriptive information about this implementation.
-     */
-    public String getInfo() {
+	/**
+	 * Return descriptive information about this implementation.
+	 */
+	public String getInfo() {
 
-        return (info);
+		return (info);
 
-    }
+	}
 
-    public ClusterSingleSignOn getClusterSSO() {
+	public ClusterSingleSignOn getClusterSSO() {
 
-        return clusterSSO;
+		return clusterSSO;
 
-    }
+	}
 
-    public void setClusterSSO(ClusterSingleSignOn clusterSSO) {
+	public void setClusterSSO(ClusterSingleSignOn clusterSSO) {
 
-        this.clusterSSO = clusterSSO;
+		this.clusterSSO = clusterSSO;
 
-    }
+	}
 
+	/**
+	 * Callback from the cluster, when a message is received, The cluster will
+	 * broadcast it invoking the messageReceived on the receiver.
+	 * 
+	 * @param myobj
+	 *            ClusterMessage - the message received from the cluster
+	 */
+	@Override
+	public void messageReceived(ClusterMessage myobj) {
+		if (myobj != null && myobj instanceof SingleSignOnMessage) {
+			SingleSignOnMessage msg = (SingleSignOnMessage) myobj;
+			int action = msg.getAction();
+			Session session = null;
+			Principal principal = null;
 
-    /**
-     * Callback from the cluster, when a message is received, The cluster will
-     * broadcast it invoking the messageReceived on the receiver.
-     * 
-     * @param myobj
-     *            ClusterMessage - the message received from the cluster
-     */
-    @Override
-    public void messageReceived(ClusterMessage myobj) {
-        if (myobj != null && myobj instanceof SingleSignOnMessage) {
-            SingleSignOnMessage msg = (SingleSignOnMessage) myobj;
-            int action = msg.getAction();
-            Session session = null;
-            Principal principal = null;
+			if (log.isDebugEnabled())
+				log.debug("SingleSignOnMessage Received with action "
+						+ msg.getAction());
 
-            if (log.isDebugEnabled())
-                log.debug("SingleSignOnMessage Received with action "
-                          + msg.getAction());
+			switch (action) {
+			case SingleSignOnMessage.ADD_SESSION:
+				session = getSession(msg.getSessionId(), msg.getContextName());
+				if (session != null)
+					clusterSSO.associateLocal(msg.getSsoId(), session);
+				break;
+			case SingleSignOnMessage.DEREGISTER_SESSION:
+				session = getSession(msg.getSessionId(), msg.getContextName());
+				if (session != null)
+					clusterSSO.deregisterLocal(msg.getSsoId(), session);
+				break;
+			case SingleSignOnMessage.LOGOUT_SESSION:
+				clusterSSO.deregisterLocal(msg.getSsoId());
+				break;
+			case SingleSignOnMessage.REGISTER_SESSION:
+				if (msg.getPrincipal() != null) {
+					principal = msg.getPrincipal().getPrincipal();
+				}
+				clusterSSO
+						.registerLocal(msg.getSsoId(), principal,
+								msg.getAuthType(), msg.getUsername(),
+								msg.getPassword());
+				break;
+			case SingleSignOnMessage.UPDATE_SESSION:
+				if (msg.getPrincipal() != null) {
+					principal = msg.getPrincipal().getPrincipal();
+				}
+				clusterSSO
+						.updateLocal(msg.getSsoId(), principal,
+								msg.getAuthType(), msg.getUsername(),
+								msg.getPassword());
+				break;
+			case SingleSignOnMessage.REMOVE_SESSION:
+				session = getSession(msg.getSessionId(), msg.getContextName());
+				if (session != null)
+					clusterSSO.removeSessionLocal(msg.getSsoId(), session);
+				break;
+			}
+		}
+	}
 
-            switch(action) {
-            case SingleSignOnMessage.ADD_SESSION:
-                session = getSession(msg.getSessionId(),
-                                     msg.getContextName());
-                if (session != null)
-                    clusterSSO.associateLocal(msg.getSsoId(), session);
-                break;
-            case SingleSignOnMessage.DEREGISTER_SESSION:
-                session = getSession(msg.getSessionId(),
-                                     msg.getContextName());
-                if (session != null)
-                    clusterSSO.deregisterLocal(msg.getSsoId(), session);
-                break;
-            case SingleSignOnMessage.LOGOUT_SESSION:
-                clusterSSO.deregisterLocal(msg.getSsoId());
-                break;
-            case SingleSignOnMessage.REGISTER_SESSION:
-                if (msg.getPrincipal() != null) {
-                    principal = msg.getPrincipal().getPrincipal();
-                }
-                clusterSSO.registerLocal(msg.getSsoId(), principal, msg.getAuthType(),
-                                         msg.getUsername(), msg.getPassword());
-                break;
-            case SingleSignOnMessage.UPDATE_SESSION:
-                if (msg.getPrincipal() != null) {
-                    principal = msg.getPrincipal().getPrincipal();
-                }
-                clusterSSO.updateLocal(msg.getSsoId(), principal, msg.getAuthType(),
-                                       msg.getUsername(), msg.getPassword());
-                break;
-            case SingleSignOnMessage.REMOVE_SESSION:
-                session = getSession(msg.getSessionId(),
-                                     msg.getContextName());
-                if (session != null)
-                    clusterSSO.removeSessionLocal(msg.getSsoId(), session);
-                break;
-            }
-        }
-    }
+	/**
+	 * Accept only SingleSignOnMessage
+	 * 
+	 * @param msg
+	 *            ClusterMessage
+	 * @return boolean - returns true to indicate that messageReceived should be
+	 *         invoked. If false is returned, the messageReceived method will
+	 *         not be invoked.
+	 */
+	@Override
+	public boolean accept(ClusterMessage msg) {
+		return (msg instanceof SingleSignOnMessage);
+	}
 
-    /**
-     * Accept only SingleSignOnMessage
-     * 
-     * @param msg
-     *            ClusterMessage
-     * @return boolean - returns true to indicate that messageReceived should be
-     *         invoked. If false is returned, the messageReceived method will
-     *         not be invoked.
-     */
-    @Override
-    public boolean accept(ClusterMessage msg) {
-        return (msg instanceof SingleSignOnMessage);
-    }
+	private Session getSession(String sessionId, String ctxname) {
 
+		Map<String, ClusterManager> managers = clusterSSO.getCluster()
+				.getManagers();
+		Session session = null;
 
-    private Session getSession(String sessionId, String ctxname) {
-        
-        Map<String,ClusterManager> managers = clusterSSO.getCluster().getManagers();
-        Session session = null;
+		if (ctxname == null) {
+			for (Map.Entry<String, ClusterManager> entry : managers.entrySet()) {
+				if (entry.getValue() != null) {
+					try {
+						session = entry.getValue().findSession(sessionId);
+					} catch (IOException io) {
+						log.error("Session doesn't exist:" + io);
+					}
+					return session;
+				}
+				// this happens a lot before the system has started
+				// up
+				if (log.isDebugEnabled())
+					log.debug("Context manager doesn't exist:" + entry.getKey());
+			}
+		} else {
+			ClusterManager mgr = managers.get(ctxname);
+			if (mgr != null) {
+				try {
+					session = mgr.findSession(sessionId);
+				} catch (IOException io) {
+					log.error("Session doesn't exist:" + io);
+				}
+				return session;
+			} else if (log.isErrorEnabled())
+				log.error("Context manager doesn't exist:" + ctxname);
+		}
 
-        if (ctxname == null) {
-            for (Map.Entry<String, ClusterManager> entry : managers.entrySet()) {
-                if (entry.getValue() != null) {
-                    try {
-                        session = entry.getValue().findSession(sessionId);
-                    } catch (IOException io) {
-                        log.error("Session doesn't exist:" + io);
-                    }
-                    return session;
-                }
-                //this happens a lot before the system has started
-                // up
-                if (log.isDebugEnabled())
-                    log.debug("Context manager doesn't exist:"
-                              + entry.getKey());
-            }
-        } else {
-            ClusterManager mgr = managers.get(ctxname);
-            if (mgr != null) {
-                try {
-                    session = mgr.findSession(sessionId);
-                } catch (IOException io) {
-                    log.error("Session doesn't exist:" + io);
-                }
-                return session;
-            } else if (log.isErrorEnabled())
-                log.error("Context manager doesn't exist:" + ctxname);
-        }
-
-        return null;
-    }
+		return null;
+	}
 }
-

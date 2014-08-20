@@ -30,30 +30,30 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class TesterServletEncodeUrl extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * Almost minimal processing for a servlet.
-     *
-     * @param nextUrl The url the caller would like to go to next. If
-     *                supplied, put an encoded url into the returned
-     *                html page as a hyperlink.
-     */
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+	/**
+	 * Almost minimal processing for a servlet.
+	 *
+	 * @param nextUrl
+	 *            The url the caller would like to go to next. If supplied, put
+	 *            an encoded url into the returned html page as a hyperlink.
+	 */
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 
-        resp.setContentType("text/plain");
-        PrintWriter out = resp.getWriter();
-        out.print("OK");
+		resp.setContentType("text/plain");
+		PrintWriter out = resp.getWriter();
+		out.print("OK");
 
-        String param = req.getParameter("nextUrl");
-        if (param!=null) {
-            // append an encoded url to carry the sessionids
-            String targetUrl = resp.encodeURL(param);
-            out.print(". You want to go <a href=\"");
-            out.print(targetUrl);
-            out.print("\">here next</a>.");
-        }
-    }
+		String param = req.getParameter("nextUrl");
+		if (param != null) {
+			// append an encoded url to carry the sessionids
+			String targetUrl = resp.encodeURL(param);
+			out.print(". You want to go <a href=\"");
+			out.print(targetUrl);
+			out.print("\">here next</a>.");
+		}
+	}
 }

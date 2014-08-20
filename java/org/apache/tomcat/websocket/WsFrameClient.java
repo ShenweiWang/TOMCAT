@@ -25,109 +25,105 @@ import javax.websocket.CloseReason.CloseCodes;
 
 public class WsFrameClient extends WsFrameBase {
 
-    private final AsyncChannelWrapper channel;
-    private final CompletionHandler<Integer,Void> handler;
-    // Not final as it may need to be re-sized
-    private ByteBuffer response;
+	private final AsyncChannelWrapper channel;
+	private final CompletionHandler<Integer, Void> handler;
+	// Not final as it may need to be re-sized
+	private ByteBuffer response;
 
-    public WsFrameClient(ByteBuffer response, AsyncChannelWrapper channel,
-            WsSession wsSession) {
-        super(wsSession);
-        this.response = response;
-        this.channel = channel;
-        this.handler = new WsFrameClientCompletionHandler();
+	public WsFrameClient(ByteBuffer response, AsyncChannelWrapper channel,
+			WsSession wsSession) {
+		super(wsSession);
+		this.response = response;
+		this.channel = channel;
+		this.handler = new WsFrameClientCompletionHandler();
 
-        try {
-            processSocketRead();
-        } catch (IOException e) {
-            close(e);
-        }
-    }
+		try {
+			processSocketRead();
+		} catch (IOException e) {
+			close(e);
+		}
+	}
 
+	private void processSocketRead() throws IOException {
 
-    private void processSocketRead() throws IOException {
+		while (response.hasRemaining()) {
+			int remaining = response.remaining();
 
-        while (response.hasRemaining()) {
-            int remaining = response.remaining();
+			int toCopy = Math.min(remaining, inputBuffer.length - writePos);
 
-            int toCopy = Math.min(remaining, inputBuffer.length - writePos);
+			// Copy remaining bytes read in HTTP phase to input buffer used by
+			// frame processing
+			response.get(inputBuffer, writePos, toCopy);
+			writePos += toCopy;
 
-            // Copy remaining bytes read in HTTP phase to input buffer used by
-            // frame processing
-            response.get(inputBuffer, writePos, toCopy);
-            writePos += toCopy;
+			// Process the data we have
+			processInputBuffer();
+		}
+		response.clear();
 
-            // Process the data we have
-            processInputBuffer();
-        }
-        response.clear();
+		// Get some more data
+		if (isOpen()) {
+			channel.read(response, null, handler);
+		}
+	}
 
-        // Get some more data
-        if (isOpen()) {
-            channel.read(response, null, handler);
-        }
-    }
+	private final void close(Throwable t) {
+		CloseReason cr;
+		if (t instanceof WsIOException) {
+			cr = ((WsIOException) t).getCloseReason();
+		} else {
+			cr = new CloseReason(CloseCodes.CLOSED_ABNORMALLY, t.getMessage());
+		}
 
+		try {
+			wsSession.close(cr);
+		} catch (IOException ignore) {
+			// Ignore
+		}
+	}
 
-    private final void close(Throwable t) {
-        CloseReason cr;
-        if (t instanceof WsIOException) {
-            cr = ((WsIOException) t).getCloseReason();
-        } else {
-            cr = new CloseReason(
-                CloseCodes.CLOSED_ABNORMALLY, t.getMessage());
-        }
+	@Override
+	protected boolean isMasked() {
+		// Data is from the server so it is not masked
+		return false;
+	}
 
-        try {
-            wsSession.close(cr);
-        } catch (IOException ignore) {
-            // Ignore
-        }
-    }
+	private class WsFrameClientCompletionHandler implements
+			CompletionHandler<Integer, Void> {
 
+		@Override
+		public void completed(Integer result, Void attachment) {
+			response.flip();
+			try {
+				processSocketRead();
+			} catch (IOException e) {
+				// Only send a close message on an IOException if the client
+				// has not yet received a close control message from the server
+				// as the IOException may be in response to the client
+				// continuing to send a message after the server sent a close
+				// control message.
+				if (isOpen()) {
+					close(e);
+				}
+			}
+		}
 
-    @Override
-    protected boolean isMasked() {
-        // Data is from the server so it is not masked
-        return false;
-    }
-
-
-    private class WsFrameClientCompletionHandler
-            implements CompletionHandler<Integer,Void> {
-
-        @Override
-        public void completed(Integer result, Void attachment) {
-            response.flip();
-            try {
-                processSocketRead();
-            } catch (IOException e) {
-                // Only send a close message on an IOException if the client
-                // has not yet received a close control message from the server
-                // as the IOException may be in response to the client
-                // continuing to send a message after the server sent a close
-                // control message.
-                if (isOpen()) {
-                    close(e);
-                }
-            }
-        }
-
-        @Override
-        public void failed(Throwable exc, Void attachment) {
-            if (exc instanceof ReadBufferOverflowException) {
-                // response will be empty if this exception is thrown
-                response = ByteBuffer.allocate(
-                        ((ReadBufferOverflowException) exc).getMinBufferSize());
-                response.flip();
-                try {
-                    processSocketRead();
-                } catch (IOException e) {
-                    close(e);
-                }
-            } else {
-                close(exc);
-            }
-        }
-    }
+		@Override
+		public void failed(Throwable exc, Void attachment) {
+			if (exc instanceof ReadBufferOverflowException) {
+				// response will be empty if this exception is thrown
+				response = ByteBuffer
+						.allocate(((ReadBufferOverflowException) exc)
+								.getMinBufferSize());
+				response.flip();
+				try {
+					processSocketRead();
+				} catch (IOException e) {
+					close(e);
+				}
+			} else {
+				close(exc);
+			}
+		}
+	}
 }

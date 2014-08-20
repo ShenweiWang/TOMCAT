@@ -23,7 +23,6 @@ import javax.websocket.DeploymentException;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 
-
 /**
  * Wrapper class for instances of POJOs annotated with
  * {@link javax.websocket.ClientEndpoint} so they appear as standard
@@ -31,16 +30,15 @@ import javax.websocket.Session;
  */
 public class PojoEndpointClient extends PojoEndpointBase {
 
-    public PojoEndpointClient(Object pojo,
-            Class<? extends Decoder>[] decoders) throws DeploymentException {
-        setPojo(pojo);
-        setMethodMapping(
-                new PojoMethodMapping(pojo.getClass(), decoders, null));
-        setPathParameters(Collections.<String, String> emptyMap());
-    }
+	public PojoEndpointClient(Object pojo, Class<? extends Decoder>[] decoders)
+			throws DeploymentException {
+		setPojo(pojo);
+		setMethodMapping(new PojoMethodMapping(pojo.getClass(), decoders, null));
+		setPathParameters(Collections.<String, String> emptyMap());
+	}
 
-    @Override
-    public void onOpen(Session session, EndpointConfig config) {
-        doOnOpen(session, config);
-    }
+	@Override
+	public void onOpen(Session session, EndpointConfig config) {
+		doOnOpen(session, config);
+	}
 }

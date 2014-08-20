@@ -30,35 +30,36 @@ import org.apache.tomcat.util.net.ServerSocketFactory;
 
 /* JSSEImplementation:
 
-   Concrete implementation class for JSSE
+ Concrete implementation class for JSSE
 
-   @author EKR
-*/
+ @author EKR
+ */
 
 public class JSSEImplementation extends SSLImplementation {
 
-    @Override
-    public String getImplementationName(){
-        return "JSSE";
-    }
+	@Override
+	public String getImplementationName() {
+		return "JSSE";
+	}
 
-    @Override
-    public ServerSocketFactory getServerSocketFactory(AbstractEndpoint<?> endpoint)  {
-        return new JSSESocketFactory(endpoint);
-    }
+	@Override
+	public ServerSocketFactory getServerSocketFactory(
+			AbstractEndpoint<?> endpoint) {
+		return new JSSESocketFactory(endpoint);
+	}
 
-    @Override
-    public SSLSupport getSSLSupport(Socket s) {
-        return new JSSESupport((SSLSocket) s);
-    }
+	@Override
+	public SSLSupport getSSLSupport(Socket s) {
+		return new JSSESupport((SSLSocket) s);
+	}
 
-    @Override
-    public SSLSupport getSSLSupport(SSLSession session) {
-        return new JSSESupport(session);
-    }
+	@Override
+	public SSLSupport getSSLSupport(SSLSession session) {
+		return new JSSESupport(session);
+	}
 
-    @Override
-    public SSLUtil getSSLUtil(AbstractEndpoint<?> endpoint) {
-        return new JSSESocketFactory(endpoint);
-    }
+	@Override
+	public SSLUtil getSSLUtil(AbstractEndpoint<?> endpoint) {
+		return new JSSESocketFactory(endpoint);
+	}
 }

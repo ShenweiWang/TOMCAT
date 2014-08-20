@@ -43,74 +43,74 @@ import org.apache.juli.logging.LogFactory;
  */
 public abstract class LoggingBaseTest {
 
-    protected Log log;
+	protected Log log;
 
-    private File tempDir;
+	private File tempDir;
 
-    private List<File> deleteOnTearDown = new ArrayList<File>();
+	private List<File> deleteOnTearDown = new ArrayList<File>();
 
-    /**
-     * Helper method that returns the directory where Tomcat build resides. It
-     * is used to access resources that are part of default Tomcat deployment.
-     * E.g. the examples webapp.
-     */
-    public File getBuildDirectory() {
-        return new File(System.getProperty("tomcat.test.tomcatbuild",
-                "output/build"));
-    }
+	/**
+	 * Helper method that returns the directory where Tomcat build resides. It
+	 * is used to access resources that are part of default Tomcat deployment.
+	 * E.g. the examples webapp.
+	 */
+	public File getBuildDirectory() {
+		return new File(System.getProperty("tomcat.test.tomcatbuild",
+				"output/build"));
+	}
 
-    /**
-     * Helper method that returns the path of the temporary directory used by
-     * the test runs. The directory is configured during {@link #setUp()}.
-     *
-     * <p>
-     * It is used as <code>${catalina.base}</code> for the instance of Tomcat
-     * that is being started, but can be used to store other temporary files as
-     * well. Its <code>work</code> and <code>webapps</code> subdirectories are
-     * deleted at {@link #tearDown()}. If you have other files or directories
-     * that have to be deleted on cleanup, register them with
-     * {@link #addDeleteOnTearDown(File)}.
-     */
-    public File getTemporaryDirectory() {
-        return tempDir;
-    }
+	/**
+	 * Helper method that returns the path of the temporary directory used by
+	 * the test runs. The directory is configured during {@link #setUp()}.
+	 *
+	 * <p>
+	 * It is used as <code>${catalina.base}</code> for the instance of Tomcat
+	 * that is being started, but can be used to store other temporary files as
+	 * well. Its <code>work</code> and <code>webapps</code> subdirectories are
+	 * deleted at {@link #tearDown()}. If you have other files or directories
+	 * that have to be deleted on cleanup, register them with
+	 * {@link #addDeleteOnTearDown(File)}.
+	 */
+	public File getTemporaryDirectory() {
+		return tempDir;
+	}
 
-    /**
-     * Schedule the given file or directory to be deleted during after-test
-     * cleanup.
-     *
-     * @param file
-     *            File or directory
-     */
-    public void addDeleteOnTearDown(File file) {
-        deleteOnTearDown.add(file);
-    }
+	/**
+	 * Schedule the given file or directory to be deleted during after-test
+	 * cleanup.
+	 *
+	 * @param file
+	 *            File or directory
+	 */
+	public void addDeleteOnTearDown(File file) {
+		deleteOnTearDown.add(file);
+	}
 
-    @Before
-    public void setUp() throws Exception {
-        // Create catalina.base directory
-        tempDir = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
-        if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
-            fail("Unable to create temporary directory for test");
-        }
+	@Before
+	public void setUp() throws Exception {
+		// Create catalina.base directory
+		tempDir = new File(System.getProperty("tomcat.test.temp", "output/tmp"));
+		if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
+			fail("Unable to create temporary directory for test");
+		}
 
-        System.setProperty("catalina.base", tempDir.getAbsolutePath());
+		System.setProperty("catalina.base", tempDir.getAbsolutePath());
 
-        // Configure logging
-        System.setProperty("java.util.logging.manager",
-                "org.apache.juli.ClassLoaderLogManager");
-        System.setProperty("java.util.logging.config.file", new File(
-                getBuildDirectory(), "conf/logging.properties").toString());
+		// Configure logging
+		System.setProperty("java.util.logging.manager",
+				"org.apache.juli.ClassLoaderLogManager");
+		System.setProperty("java.util.logging.config.file", new File(
+				getBuildDirectory(), "conf/logging.properties").toString());
 
-        // Get log instance after logging has been configured
-        log = LogFactory.getLog(getClass());
-    }
+		// Get log instance after logging has been configured
+		log = LogFactory.getLog(getClass());
+	}
 
-    @After
-    public void tearDown() throws Exception {
-        for (File file : deleteOnTearDown) {
-            ExpandWar.delete(file);
-        }
-        deleteOnTearDown.clear();
-    }
+	@After
+	public void tearDown() throws Exception {
+		for (File file : deleteOnTearDown) {
+			ExpandWar.delete(file);
+		}
+		deleteOnTearDown.clear();
+	}
 }

@@ -39,83 +39,81 @@ import org.apache.tomcat.util.buf.TestUtf8.Utf8TestCase;
 
 public class TestInputBuffer extends TomcatBaseTest {
 
-    @Test
-    public void testUtf8Body() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        Context root = tomcat.addContext("", TEMP_DIR);
-        Tomcat.addServlet(root, "Echo", new Utf8Echo());
-        root.addServletMapping("/test", "Echo");
+	@Test
+	public void testUtf8Body() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		Context root = tomcat.addContext("", TEMP_DIR);
+		Tomcat.addServlet(root, "Echo", new Utf8Echo());
+		root.addServletMapping("/test", "Echo");
 
-        tomcat.getConnector().setProperty("soTimeout", "300000");
-        tomcat.start();
+		tomcat.getConnector().setProperty("soTimeout", "300000");
+		tomcat.start();
 
-        for (Utf8TestCase testCase : TestUtf8.TEST_CASES) {
-            String expected = null;
-            if (testCase.invalidIndex == -1) {
-                expected = testCase.outputReplaced;
-            }
-            doUtf8BodyTest(testCase.description, testCase.input, expected);
-        }
-    }
+		for (Utf8TestCase testCase : TestUtf8.TEST_CASES) {
+			String expected = null;
+			if (testCase.invalidIndex == -1) {
+				expected = testCase.outputReplaced;
+			}
+			doUtf8BodyTest(testCase.description, testCase.input, expected);
+		}
+	}
 
+	private void doUtf8BodyTest(String description, int[] input, String expected)
+			throws Exception {
 
-    private void doUtf8BodyTest(String description, int[] input,
-            String expected) throws Exception {
+		byte[] bytes = new byte[input.length];
+		for (int i = 0; i < input.length; i++) {
+			bytes[i] = (byte) input[i];
+		}
 
-        byte[] bytes = new byte[input.length];
-        for (int i = 0; i < input.length; i++) {
-            bytes[i] = (byte) input[i];
-        }
+		ByteChunk bc = new ByteChunk();
+		int rc = postUrl(bytes, "http://localhost:" + getPort() + "/test", bc,
+				null);
 
-        ByteChunk bc = new ByteChunk();
-        int rc = postUrl(bytes, "http://localhost:" + getPort() + "/test", bc,
-                null);
+		if (expected == null) {
+			Assert.assertEquals(description, HttpServletResponse.SC_OK, rc);
+			Assert.assertEquals(description, "FAILED", bc.toString());
+		} else if (expected.length() == 0) {
+			Assert.assertNull(description, bc.toString());
+		} else {
+			bc.setCharset(B2CConverter.UTF_8);
+			Assert.assertEquals(description, expected, bc.toString());
+		}
+	}
 
-        if (expected == null) {
-            Assert.assertEquals(description, HttpServletResponse.SC_OK, rc);
-            Assert.assertEquals(description, "FAILED", bc.toString());
-        } else if (expected.length() == 0) {
-            Assert.assertNull(description, bc.toString());
-        } else {
-            bc.setCharset(B2CConverter.UTF_8);
-            Assert.assertEquals(description, expected, bc.toString());
-        }
-    }
+	private static class Utf8Echo extends HttpServlet {
 
+		private static final long serialVersionUID = 1L;
 
-    private static class Utf8Echo extends HttpServlet {
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			// Should use POST
+			resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+		}
 
-        private static final long serialVersionUID = 1L;
+		@Override
+		protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			req.setCharacterEncoding("UTF-8");
+			Reader r = req.getReader();
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            // Should use POST
-            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-        }
+			resp.setCharacterEncoding("UTF-8");
+			resp.setContentType("text/plain");
+			Writer w = resp.getWriter();
 
-        @Override
-        protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            req.setCharacterEncoding("UTF-8");
-            Reader r = req.getReader();
-
-            resp.setCharacterEncoding("UTF-8");
-            resp.setContentType("text/plain");
-            Writer w = resp.getWriter();
-
-            try {
-                // Copy one character at a time
-                int c = r.read();
-                while (c != -1) {
-                    w.write(c);
-                    c = r.read();
-                }
-                w.close();
-            } catch (MalformedInputException mie) {
-                resp.resetBuffer();
-                w.write("FAILED");
-            }
-        }
-    }
+			try {
+				// Copy one character at a time
+				int c = r.read();
+				while (c != -1) {
+					w.write(c);
+					c = r.read();
+				}
+				w.close();
+			} catch (MalformedInputException mie) {
+				resp.resetBuffer();
+				w.write("FAILED");
+			}
+		}
+	}
 }

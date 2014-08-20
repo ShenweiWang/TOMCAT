@@ -30,36 +30,36 @@ import org.apache.catalina.realm.RealmBase;
  * passwords.
  */
 public final class TesterMapRealm extends RealmBase {
-    private Map<String,String> users = new HashMap<String,String>();
-    private Map<String,List<String>> roles = new HashMap<String,List<String>>();
+	private Map<String, String> users = new HashMap<String, String>();
+	private Map<String, List<String>> roles = new HashMap<String, List<String>>();
 
-    public void addUser(String username, String password) {
-        users.put(username, password);
-    }
+	public void addUser(String username, String password) {
+		users.put(username, password);
+	}
 
-    public void addUserRole(String username, String role) {
-        List<String> userRoles = roles.get(username);
-        if (userRoles == null) {
-            userRoles = new ArrayList<String>();
-            roles.put(username, userRoles);
-        }
-        userRoles.add(role);
-    }
+	public void addUserRole(String username, String role) {
+		List<String> userRoles = roles.get(username);
+		if (userRoles == null) {
+			userRoles = new ArrayList<String>();
+			roles.put(username, userRoles);
+		}
+		userRoles.add(role);
+	}
 
-    @Override
-    protected String getName() {
-        return "MapRealm";
-    }
+	@Override
+	protected String getName() {
+		return "MapRealm";
+	}
 
-    @Override
-    protected String getPassword(String username) {
-        return users.get(username);
-    }
+	@Override
+	protected String getPassword(String username) {
+		return users.get(username);
+	}
 
-    @Override
-    protected Principal getPrincipal(String username) {
-        return new GenericPrincipal(username, getPassword(username),
-                roles.get(username));
-    }
+	@Override
+	protected Principal getPrincipal(String username) {
+		return new GenericPrincipal(username, getPassword(username),
+				roles.get(username));
+	}
 
 }

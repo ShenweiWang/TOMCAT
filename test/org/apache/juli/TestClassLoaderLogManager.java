@@ -29,121 +29,122 @@ import org.junit.Test;
  */
 public class TestClassLoaderLogManager {
 
-    @Test
-    public void testReplace() {
-        ClassLoaderLogManager logManager = new ClassLoaderLogManager();
-        Assert.assertEquals("", logManager.replace(""));
-        Assert.assertEquals("${", logManager.replace("${"));
-        Assert.assertEquals("${undefinedproperty}",
-                logManager.replace("${undefinedproperty}"));
-        Assert.assertEquals(
-                System.getProperty("line.separator")
-                        + System.getProperty("path.separator")
-                        + System.getProperty("file.separator"),
-                logManager
-                        .replace("${line.separator}${path.separator}${file.separator}"));
-        Assert.assertEquals(
-                "foo" + System.getProperty("file.separator") + "bar"
-                        + System.getProperty("line.separator")
-                        + System.getProperty("path.separator") + "baz",
-                logManager
-                        .replace("foo${file.separator}bar${line.separator}${path.separator}baz"));
-        // BZ 51249
-        Assert.assertEquals(
-                "%{file.separator}" + System.getProperty("file.separator"),
-                logManager.replace("%{file.separator}${file.separator}"));
-        Assert.assertEquals(
-                System.getProperty("file.separator") + "${undefinedproperty}"
-                        + System.getProperty("file.separator"),
-                logManager
-                        .replace("${file.separator}${undefinedproperty}${file.separator}"));
-        Assert.assertEquals("${}" + System.getProperty("path.separator"),
-                logManager.replace("${}${path.separator}"));
-    }
+	@Test
+	public void testReplace() {
+		ClassLoaderLogManager logManager = new ClassLoaderLogManager();
+		Assert.assertEquals("", logManager.replace(""));
+		Assert.assertEquals("${", logManager.replace("${"));
+		Assert.assertEquals("${undefinedproperty}",
+				logManager.replace("${undefinedproperty}"));
+		Assert.assertEquals(
+				System.getProperty("line.separator")
+						+ System.getProperty("path.separator")
+						+ System.getProperty("file.separator"),
+				logManager
+						.replace("${line.separator}${path.separator}${file.separator}"));
+		Assert.assertEquals(
+				"foo" + System.getProperty("file.separator") + "bar"
+						+ System.getProperty("line.separator")
+						+ System.getProperty("path.separator") + "baz",
+				logManager
+						.replace("foo${file.separator}bar${line.separator}${path.separator}baz"));
+		// BZ 51249
+		Assert.assertEquals(
+				"%{file.separator}" + System.getProperty("file.separator"),
+				logManager.replace("%{file.separator}${file.separator}"));
+		Assert.assertEquals(
+				System.getProperty("file.separator") + "${undefinedproperty}"
+						+ System.getProperty("file.separator"),
+				logManager
+						.replace("${file.separator}${undefinedproperty}${file.separator}"));
+		Assert.assertEquals("${}" + System.getProperty("path.separator"),
+				logManager.replace("${}${path.separator}"));
+	}
 
-    @Test
-    public void testBug56082() {
-        ClassLoaderLogManager logManager = new ClassLoaderLogManager();
+	@Test
+	public void testBug56082() {
+		ClassLoaderLogManager logManager = new ClassLoaderLogManager();
 
-        LoggerCreateThread[] createThreads = new LoggerCreateThread[10];
-        for (int i = 0; i < createThreads.length; i ++) {
-            createThreads[i] = new LoggerCreateThread(logManager);
-            createThreads[i].setName("LoggerCreate-" + i);
-            createThreads[i].start();
-        }
+		LoggerCreateThread[] createThreads = new LoggerCreateThread[10];
+		for (int i = 0; i < createThreads.length; i++) {
+			createThreads[i] = new LoggerCreateThread(logManager);
+			createThreads[i].setName("LoggerCreate-" + i);
+			createThreads[i].start();
+		}
 
-        LoggerListThread listThread = new LoggerListThread(logManager);
-        listThread.setName("LoggerList");
-        listThread.start();
+		LoggerListThread listThread = new LoggerListThread(logManager);
+		listThread.setName("LoggerList");
+		listThread.start();
 
-        int count = 0;
-        while (count < 4 && listThread.isAlive()) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-            count++;
-        }
+		int count = 0;
+		while (count < 4 && listThread.isAlive()) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				// Ignore
+			}
+			count++;
+		}
 
-        for (int i = 0; i < createThreads.length; i ++) {
-            createThreads[i].setRunning(false);
-        }
+		for (int i = 0; i < createThreads.length; i++) {
+			createThreads[i].setRunning(false);
+		}
 
-        Assert.assertTrue(listThread.isRunning());
-        listThread.setRunning(false);
-    }
+		Assert.assertTrue(listThread.isRunning());
+		listThread.setRunning(false);
+	}
 
-    private static class LoggerCreateThread extends Thread {
+	private static class LoggerCreateThread extends Thread {
 
-        private final LogManager logManager;
-        private volatile boolean running = true;
+		private final LogManager logManager;
+		private volatile boolean running = true;
 
-        public LoggerCreateThread(LogManager logManager) {
-            this.logManager = logManager;
-        }
+		public LoggerCreateThread(LogManager logManager) {
+			this.logManager = logManager;
+		}
 
-        @Override
-        public void run() {
-            Random r = new Random();
-            while (running) {
-                Logger logger = Logger.getLogger("Bug56082-" + r.nextInt(100000));
-                logManager.addLogger(logger);
-            }
-        }
+		@Override
+		public void run() {
+			Random r = new Random();
+			while (running) {
+				Logger logger = Logger.getLogger("Bug56082-"
+						+ r.nextInt(100000));
+				logManager.addLogger(logger);
+			}
+		}
 
-        public void setRunning(boolean running) {
-            this.running = running;
-        }
-    }
+		public void setRunning(boolean running) {
+			this.running = running;
+		}
+	}
 
-    private static class LoggerListThread extends Thread {
+	private static class LoggerListThread extends Thread {
 
-        private final LogManager logManager;
-        private volatile boolean running = true;
+		private final LogManager logManager;
+		private volatile boolean running = true;
 
-        public LoggerListThread(LogManager logManager) {
-            this.logManager = logManager;
-        }
+		public LoggerListThread(LogManager logManager) {
+			this.logManager = logManager;
+		}
 
-        @Override
-        public void run() {
-            while (running) {
-                try {
-                    Collections.list(logManager.getLoggerNames());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    running = false;
-                }
-            }
-        }
+		@Override
+		public void run() {
+			while (running) {
+				try {
+					Collections.list(logManager.getLoggerNames());
+				} catch (Exception e) {
+					e.printStackTrace();
+					running = false;
+				}
+			}
+		}
 
-        public boolean isRunning() {
-            return running;
-        }
+		public boolean isRunning() {
+			return running;
+		}
 
-        public void setRunning(boolean running) {
-            this.running = running;
-        }
-    }
+		public void setRunning(boolean running) {
+			this.running = running;
+		}
+	}
 }

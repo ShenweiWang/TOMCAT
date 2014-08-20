@@ -22,53 +22,51 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
- * This class is derived from the abstract 
- * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
+/**
+ * This class is derived from the abstract <A
+ * HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class
  * and represents a reference to a Double object.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @see     Constant
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @see Constant
  */
 public final class ConstantDouble extends Constant {
 
-    private static final long serialVersionUID = 3450743772468544760L;
-    private double bytes;
+	private static final long serialVersionUID = 3450743772468544760L;
+	private double bytes;
 
+	/**
+	 * @param bytes
+	 *            Data
+	 */
+	public ConstantDouble(double bytes) {
+		super(Constants.CONSTANT_Double);
+		this.bytes = bytes;
+	}
 
-    /** 
-     * @param bytes Data
-     */
-    public ConstantDouble(double bytes) {
-        super(Constants.CONSTANT_Double);
-        this.bytes = bytes;
-    }
+	/**
+	 * Initialize instance from file data.
+	 *
+	 * @param file
+	 *            Input stream
+	 * @throws IOException
+	 */
+	ConstantDouble(DataInput file) throws IOException {
+		this(file.readDouble());
+	}
 
+	/**
+	 * @return data, i.e., 8 bytes.
+	 */
+	public final double getBytes() {
+		return bytes;
+	}
 
-    /** 
-     * Initialize instance from file data.
-     *
-     * @param file Input stream
-     * @throws IOException
-     */
-    ConstantDouble(DataInput file) throws IOException {
-        this(file.readDouble());
-    }
-
-
-    /**
-     * @return data, i.e., 8 bytes.
-     */
-    public final double getBytes() {
-        return bytes;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(bytes = " + bytes + ")";
-    }
+	/**
+	 * @return String representation.
+	 */
+	@Override
+	public final String toString() {
+		return super.toString() + "(bytes = " + bytes + ")";
+	}
 }

@@ -27,22 +27,22 @@ import org.junit.Test;
  */
 public class TestUEncoder {
 
-    @Test
-    public void testEncodeURL() throws IOException {
-        UEncoder urlEncoder = new UEncoder();
+	@Test
+	public void testEncodeURL() throws IOException {
+		UEncoder urlEncoder = new UEncoder();
 
-        String s = "a/b/c/d+e.class";
-        assertTrue(urlEncoder.encodeURL(s, 0, s.length()).equals(
-                "a%2fb%2fc%2fd%2be.class"));
-        assertTrue(urlEncoder.encodeURL(s, 2, s.length() - 2).equals(
-                "b%2fc%2fd%2be.cla"));
+		String s = "a/b/c/d+e.class";
+		assertTrue(urlEncoder.encodeURL(s, 0, s.length()).equals(
+				"a%2fb%2fc%2fd%2be.class"));
+		assertTrue(urlEncoder.encodeURL(s, 2, s.length() - 2).equals(
+				"b%2fc%2fd%2be.cla"));
 
-        urlEncoder.addSafeCharacter('+');
-        assertTrue(urlEncoder.encodeURL(s, 0, s.length()).equals(
-                "a%2fb%2fc%2fd+e.class"));
+		urlEncoder.addSafeCharacter('+');
+		assertTrue(urlEncoder.encodeURL(s, 0, s.length()).equals(
+				"a%2fb%2fc%2fd+e.class"));
 
-        s = new String(new char[] { 0xD801, 0xDC01 });
-        assertTrue(urlEncoder.encodeURL(s, 0, s.length())
-                .equals("%f0%90%90%81"));
-    }
+		s = new String(new char[] { 0xD801, 0xDC01 });
+		assertTrue(urlEncoder.encodeURL(s, 0, s.length())
+				.equals("%f0%90%90%81"));
+	}
 }

@@ -32,34 +32,35 @@ import org.apache.tomcat.util.buf.ByteChunk;
  */
 public class TestCookiesNoFwdStrictSysProps extends CookiesBaseTest {
 
-    @Override
-    @Test
-    public void testCookiesInstance() throws Exception {
+	@Override
+	@Test
+	public void testCookiesInstance() throws Exception {
 
-        System.setProperty("org.apache.catalina.STRICT_SERVLET_COMPLIANCE",
-                "true");
-        System.setProperty("org.apache.tomcat.util.http.ServerCookie.FWD_SLASH_IS_SEPARATOR",
-                "false");
+		System.setProperty("org.apache.catalina.STRICT_SERVLET_COMPLIANCE",
+				"true");
+		System.setProperty(
+				"org.apache.tomcat.util.http.ServerCookie.FWD_SLASH_IS_SEPARATOR",
+				"false");
 
-        Tomcat tomcat = getTomcatInstance();
+		Tomcat tomcat = getTomcatInstance();
 
-        addServlets(tomcat);
+		addServlets(tomcat);
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/invalid");
-        assertEquals("Cookie name fail", res.toString());
-        res = getUrl("http://localhost:" + getPort() + "/null");
-        assertEquals("Cookie name fail", res.toString());
-        res = getUrl("http://localhost:" + getPort() + "/blank");
-        assertEquals("Cookie name fail", res.toString());
-        res = getUrl("http://localhost:" + getPort() + "/invalidFwd");
-        assertEquals("Cookie name ok", res.toString());
-        res = getUrl("http://localhost:" + getPort() + "/invalidStrict");
-        assertEquals("Cookie name fail", res.toString());
-        res = getUrl("http://localhost:" + getPort() + "/valid");
-        assertEquals("Cookie name ok", res.toString());
+		ByteChunk res = getUrl("http://localhost:" + getPort() + "/invalid");
+		assertEquals("Cookie name fail", res.toString());
+		res = getUrl("http://localhost:" + getPort() + "/null");
+		assertEquals("Cookie name fail", res.toString());
+		res = getUrl("http://localhost:" + getPort() + "/blank");
+		assertEquals("Cookie name fail", res.toString());
+		res = getUrl("http://localhost:" + getPort() + "/invalidFwd");
+		assertEquals("Cookie name ok", res.toString());
+		res = getUrl("http://localhost:" + getPort() + "/invalidStrict");
+		assertEquals("Cookie name fail", res.toString());
+		res = getUrl("http://localhost:" + getPort() + "/valid");
+		assertEquals("Cookie name ok", res.toString());
 
-    }
+	}
 
 }

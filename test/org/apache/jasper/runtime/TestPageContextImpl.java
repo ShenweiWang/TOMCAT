@@ -39,64 +39,66 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestPageContextImpl extends TomcatBaseTest {
 
-    @Test
-    public void testDoForward() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testDoForward() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = new ByteChunk();
+		ByteChunk res = new ByteChunk();
 
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/test/bug5nnnn/bug53545.jsp", res, null);
+		int rc = getUrl("http://localhost:" + getPort()
+				+ "/test/bug5nnnn/bug53545.jsp", res, null);
 
-        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
+		Assert.assertEquals(HttpServletResponse.SC_OK, rc);
 
-        String body = res.toString();
-        Assert.assertTrue(body.contains("OK"));
-        Assert.assertFalse(body.contains("FAIL"));
-    }
+		String body = res.toString();
+		Assert.assertTrue(body.contains("OK"));
+		Assert.assertFalse(body.contains("FAIL"));
+	}
 
-    @Test
-    public void testDefaultBufferSize() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testDefaultBufferSize() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        // app dir is relative to server home
-        Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        // Add the Servlet
-        Tomcat.addServlet(ctx, "bug56010", new Bug56010());
-        ctx.addServletMapping("/bug56010", "bug56010");
+		// Add the Servlet
+		Tomcat.addServlet(ctx, "bug56010", new Bug56010());
+		ctx.addServletMapping("/bug56010", "bug56010");
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/test/bug56010");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug56010");
 
-        String result = res.toString();
-        Assert.assertTrue(result.contains("OK"));
-    }
+		String result = res.toString();
+		Assert.assertTrue(result.contains("OK"));
+	}
 
-    public static class Bug56010 extends HttpServlet {
+	public static class Bug56010 extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
 
-            PageContext pageContext = JspFactory.getDefaultFactory().getPageContext(
-                    this, req, resp, null, false, JspWriter.DEFAULT_BUFFER, true);
-            JspWriter out = pageContext.getOut();
-            if (Constants.DEFAULT_BUFFER_SIZE == out.getBufferSize()) {
-                resp.getWriter().println("OK");
-            } else {
-                resp.getWriter().println("FAIL");
-            }
-        }
+			PageContext pageContext = JspFactory.getDefaultFactory()
+					.getPageContext(this, req, resp, null, false,
+							JspWriter.DEFAULT_BUFFER, true);
+			JspWriter out = pageContext.getOut();
+			if (Constants.DEFAULT_BUFFER_SIZE == out.getBufferSize()) {
+				resp.getWriter().println("OK");
+			} else {
+				resp.getWriter().println("FAIL");
+			}
+		}
 
-    }
+	}
 }

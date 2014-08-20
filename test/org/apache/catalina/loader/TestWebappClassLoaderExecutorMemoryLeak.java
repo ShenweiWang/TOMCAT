@@ -37,92 +37,95 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestWebappClassLoaderExecutorMemoryLeak extends TomcatBaseTest {
 
-    @Test
-    public void testTimerThreadLeak() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testTimerThreadLeak() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        Context ctx = tomcat.addContext("",
-                System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        if (ctx instanceof StandardContext) {
-            ((StandardContext) ctx).setClearReferencesStopThreads(true);
-        }
+		if (ctx instanceof StandardContext) {
+			((StandardContext) ctx).setClearReferencesStopThreads(true);
+		}
 
-        ExecutorServlet executorServlet = new ExecutorServlet();
-        Tomcat.addServlet(ctx, "taskServlet", executorServlet);
-        ctx.addServletMapping("/", "taskServlet");
+		ExecutorServlet executorServlet = new ExecutorServlet();
+		Tomcat.addServlet(ctx, "taskServlet", executorServlet);
+		ctx.addServletMapping("/", "taskServlet");
 
-        tomcat.start();
+		tomcat.start();
 
-        // This will trigger the timer & thread creation
-        getUrl("http://localhost:" + getPort() + "/");
+		// This will trigger the timer & thread creation
+		getUrl("http://localhost:" + getPort() + "/");
 
-        // Stop the context
-        ctx.stop();
+		// Stop the context
+		ctx.stop();
 
-        // If the thread still exists, we have a thread/memory leak
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ie) {
-            // ignore
-        }
+		// If the thread still exists, we have a thread/memory leak
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException ie) {
+			// ignore
+		}
 
-        Assert.assertTrue(executorServlet.tpe.isShutdown());
-        Assert.assertTrue(executorServlet.tpe.isTerminated());
-    }
+		Assert.assertTrue(executorServlet.tpe.isShutdown());
+		Assert.assertTrue(executorServlet.tpe.isTerminated());
+	}
 
-    static class ExecutorServlet extends HttpServlet {
+	static class ExecutorServlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        int nTasks = 5;
-        long n = 1000L;
-        int tpSize = 10;
+		int nTasks = 5;
+		long n = 1000L;
+		int tpSize = 10;
 
-        public volatile ThreadPoolExecutor tpe;
+		public volatile ThreadPoolExecutor tpe;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
 
-            resp.getWriter().println(
-                    "The current thread served " + this + " servlet");
-            tpe = new ThreadPoolExecutor(tpSize, tpSize, 50000L,
-                    TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+			resp.getWriter().println(
+					"The current thread served " + this + " servlet");
+			tpe = new ThreadPoolExecutor(tpSize, tpSize, 50000L,
+					TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 
-            Task[] tasks = new Task[nTasks];
-            for (int i = 0; i < nTasks; i++) {
-                tasks[i] = new Task("Task " + i);
-                tpe.execute(tasks[i]);
-            }
-            resp.getWriter().println("Started " + nTasks +
-                    " never ending tasks using the ThreadPoolExecutor");
-            resp.getWriter().flush();
-        }
+			Task[] tasks = new Task[nTasks];
+			for (int i = 0; i < nTasks; i++) {
+				tasks[i] = new Task("Task " + i);
+				tpe.execute(tasks[i]);
+			}
+			resp.getWriter()
+					.println(
+							"Started "
+									+ nTasks
+									+ " never ending tasks using the ThreadPoolExecutor");
+			resp.getWriter().flush();
+		}
 
-        class Task implements Runnable {
+		class Task implements Runnable {
 
-            String _id;
+			String _id;
 
-            public Task(String id) {
-                this._id = id;
-            }
+			public Task(String id) {
+				this._id = id;
+			}
 
-            @Override
-            public void run() {
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        Thread.sleep(20000);
-                        System.out.println(Thread.currentThread().getClass()
-                                + " [" + Thread.currentThread().getName()
-                                + "] executing " + this._id);
-                    }
-                } catch (InterruptedException e) {
-                    System.out.println(Thread.currentThread().getClass() + " ["
-                            + Thread.currentThread().getName() + "] EXITING");
-                }
-            }
-        }
-    }
+			@Override
+			public void run() {
+				try {
+					while (!Thread.currentThread().isInterrupted()) {
+						Thread.sleep(20000);
+						System.out.println(Thread.currentThread().getClass()
+								+ " [" + Thread.currentThread().getName()
+								+ "] executing " + this._id);
+					}
+				} catch (InterruptedException e) {
+					System.out.println(Thread.currentThread().getClass() + " ["
+							+ Thread.currentThread().getName() + "] EXITING");
+				}
+			}
+		}
+	}
 }

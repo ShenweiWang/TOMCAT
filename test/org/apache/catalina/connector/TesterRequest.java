@@ -17,32 +17,34 @@
 package org.apache.catalina.connector;
 
 public class TesterRequest extends Request {
-    @Override
-    public String getScheme() {
-        return "http";
-    }
+	@Override
+	public String getScheme() {
+		return "http";
+	}
 
-    @Override
-    public String getServerName() {
-        return "localhost";
-    }
+	@Override
+	public String getServerName() {
+		return "localhost";
+	}
 
-    @Override
-    public int getServerPort() {
-        return 8080;
-    }
+	@Override
+	public int getServerPort() {
+		return 8080;
+	}
 
-    @Override
-    public String getDecodedRequestURI() {
-        return "/level1/level2/foo.html";
-    }
+	@Override
+	public String getDecodedRequestURI() {
+		return "/level1/level2/foo.html";
+	}
 
-    private String method;
-    public void setMethod(String method) {
-        this.method = method;
-    }
-    @Override
-    public String getMethod() {
-        return method;
-    }
+	private String method;
+
+	public void setMethod(String method) {
+		this.method = method;
+	}
+
+	@Override
+	public String getMethod() {
+		return method;
+	}
 }

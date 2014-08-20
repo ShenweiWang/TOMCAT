@@ -18,6 +18,6 @@
 package org.apache.el;
 
 public class TesterBeanAA extends TesterBeanA {
-    // No additional implementation - just need a class that extends A for
-    // testing EL methods calls
+	// No additional implementation - just need a class that extends A for
+	// testing EL methods calls
 }

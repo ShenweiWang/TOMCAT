@@ -24,301 +24,297 @@ import org.junit.Test;
 
 public class TestAuthorizationDigest {
 
-    @Test
-    public void testBug54060a() throws Exception {
-        String header = "Digest username=\"mthornton\", " +
-                "realm=\"optrak.com\", " +
-                "nonce=\"1351427243671:c1d6360150712149bae931a3ed7cb498\", " +
-                "uri=\"/files/junk.txt\", " +
-                "response=\"c5c2410bfc46753e83a8f007888b0d2e\", " +
-                "opaque=\"DB85C1A73933A7EB586D10E4BF2924EF\", " +
-                "qop=auth, " +
-                "nc=00000001, " +
-                "cnonce=\"9926cb3c334ede11\"";
-
-        StringReader input = new StringReader(header);
-
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-
-        Assert.assertEquals("mthornton", result.get("username"));
-        Assert.assertEquals("optrak.com", result.get("realm"));
-        Assert.assertEquals("1351427243671:c1d6360150712149bae931a3ed7cb498",
-                result.get("nonce"));
-        Assert.assertEquals("/files/junk.txt", result.get("uri"));
-        Assert.assertEquals("c5c2410bfc46753e83a8f007888b0d2e",
-                result.get("response"));
-        Assert.assertEquals("DB85C1A73933A7EB586D10E4BF2924EF",
-                result.get("opaque"));
-        Assert.assertEquals("auth", result.get("qop"));
-        Assert.assertEquals("00000001", result.get("nc"));
-        Assert.assertEquals("9926cb3c334ede11", result.get("cnonce"));
-    }
-
-    @Test
-    public void testBug54060b() throws Exception {
-        String header = "Digest username=\"mthornton\", " +
-                "realm=\"optrak.com\", " +
-                "nonce=\"1351427480964:a01c16fed5168d72a2b5267395a2022e\", " +
-                "uri=\"/files\", " +
-                "algorithm=MD5, " +
-                "response=\"f310c44b87efc0bc0a7aab7096fd36b6\", " +
-                "opaque=\"DB85C1A73933A7EB586D10E4BF2924EF\", " +
-                "cnonce=\"MHg3ZjA3ZGMwMTUwMTA6NzI2OToxMzUxNDI3NDgw\", " +
-                "nc=00000001, " +
-                "qop=auth";
-
-        StringReader input = new StringReader(header);
-
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-
-        Assert.assertEquals("mthornton", result.get("username"));
-        Assert.assertEquals("optrak.com", result.get("realm"));
-        Assert.assertEquals("1351427480964:a01c16fed5168d72a2b5267395a2022e",
-                result.get("nonce"));
-        Assert.assertEquals("/files", result.get("uri"));
-        Assert.assertEquals("MD5", result.get("algorithm"));
-        Assert.assertEquals("f310c44b87efc0bc0a7aab7096fd36b6",
-                result.get("response"));
-        Assert.assertEquals("DB85C1A73933A7EB586D10E4BF2924EF",
-                result.get("opaque"));
-        Assert.assertEquals("MHg3ZjA3ZGMwMTUwMTA6NzI2OToxMzUxNDI3NDgw",
-                result.get("cnonce"));
-        Assert.assertEquals("00000001", result.get("nc"));
-        Assert.assertEquals("auth", result.get("qop"));
-    }
-
-    @Test
-    public void testBug54060c() throws Exception {
-        String header = "Digest username=\"mthornton\", qop=auth";
-
-        StringReader input = new StringReader(header);
+	@Test
+	public void testBug54060a() throws Exception {
+		String header = "Digest username=\"mthornton\", "
+				+ "realm=\"optrak.com\", "
+				+ "nonce=\"1351427243671:c1d6360150712149bae931a3ed7cb498\", "
+				+ "uri=\"/files/junk.txt\", "
+				+ "response=\"c5c2410bfc46753e83a8f007888b0d2e\", "
+				+ "opaque=\"DB85C1A73933A7EB586D10E4BF2924EF\", "
+				+ "qop=auth, " + "nc=00000001, "
+				+ "cnonce=\"9926cb3c334ede11\"";
+
+		StringReader input = new StringReader(header);
+
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+
+		Assert.assertEquals("mthornton", result.get("username"));
+		Assert.assertEquals("optrak.com", result.get("realm"));
+		Assert.assertEquals("1351427243671:c1d6360150712149bae931a3ed7cb498",
+				result.get("nonce"));
+		Assert.assertEquals("/files/junk.txt", result.get("uri"));
+		Assert.assertEquals("c5c2410bfc46753e83a8f007888b0d2e",
+				result.get("response"));
+		Assert.assertEquals("DB85C1A73933A7EB586D10E4BF2924EF",
+				result.get("opaque"));
+		Assert.assertEquals("auth", result.get("qop"));
+		Assert.assertEquals("00000001", result.get("nc"));
+		Assert.assertEquals("9926cb3c334ede11", result.get("cnonce"));
+	}
+
+	@Test
+	public void testBug54060b() throws Exception {
+		String header = "Digest username=\"mthornton\", "
+				+ "realm=\"optrak.com\", "
+				+ "nonce=\"1351427480964:a01c16fed5168d72a2b5267395a2022e\", "
+				+ "uri=\"/files\", " + "algorithm=MD5, "
+				+ "response=\"f310c44b87efc0bc0a7aab7096fd36b6\", "
+				+ "opaque=\"DB85C1A73933A7EB586D10E4BF2924EF\", "
+				+ "cnonce=\"MHg3ZjA3ZGMwMTUwMTA6NzI2OToxMzUxNDI3NDgw\", "
+				+ "nc=00000001, " + "qop=auth";
+
+		StringReader input = new StringReader(header);
+
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+
+		Assert.assertEquals("mthornton", result.get("username"));
+		Assert.assertEquals("optrak.com", result.get("realm"));
+		Assert.assertEquals("1351427480964:a01c16fed5168d72a2b5267395a2022e",
+				result.get("nonce"));
+		Assert.assertEquals("/files", result.get("uri"));
+		Assert.assertEquals("MD5", result.get("algorithm"));
+		Assert.assertEquals("f310c44b87efc0bc0a7aab7096fd36b6",
+				result.get("response"));
+		Assert.assertEquals("DB85C1A73933A7EB586D10E4BF2924EF",
+				result.get("opaque"));
+		Assert.assertEquals("MHg3ZjA3ZGMwMTUwMTA6NzI2OToxMzUxNDI3NDgw",
+				result.get("cnonce"));
+		Assert.assertEquals("00000001", result.get("nc"));
+		Assert.assertEquals("auth", result.get("qop"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+	@Test
+	public void testBug54060c() throws Exception {
+		String header = "Digest username=\"mthornton\", qop=auth";
 
-        Assert.assertEquals("mthornton", result.get("username"));
-        Assert.assertEquals("auth", result.get("qop"));
-    }
+		StringReader input = new StringReader(header);
 
-    @Test
-    public void testBug54060d() throws Exception {
-        String header = "Digest username=\"mthornton\"," +
-                "qop=auth," +
-                "cnonce=\"9926cb3c334ede11\"";
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
 
-        StringReader input = new StringReader(header);
+		Assert.assertEquals("mthornton", result.get("username"));
+		Assert.assertEquals("auth", result.get("qop"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+	@Test
+	public void testBug54060d() throws Exception {
+		String header = "Digest username=\"mthornton\"," + "qop=auth,"
+				+ "cnonce=\"9926cb3c334ede11\"";
 
-        Assert.assertEquals("mthornton", result.get("username"));
-        Assert.assertEquals("auth", result.get("qop"));
-        Assert.assertEquals("9926cb3c334ede11", result.get("cnonce"));
-    }
+		StringReader input = new StringReader(header);
 
-    @Test
-    public void testEndWithLhex() throws Exception {
-        String header = "Digest nc=00000001";
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
 
-        StringReader input = new StringReader(header);
+		Assert.assertEquals("mthornton", result.get("username"));
+		Assert.assertEquals("auth", result.get("qop"));
+		Assert.assertEquals("9926cb3c334ede11", result.get("cnonce"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+	@Test
+	public void testEndWithLhex() throws Exception {
+		String header = "Digest nc=00000001";
 
-        Assert.assertEquals("00000001", result.get("nc"));
-    }
+		StringReader input = new StringReader(header);
 
-    @Test
-    public void testQuotedLhex() throws Exception {
-        String header = "Digest nc=\"09abcdef\"";
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
 
-        StringReader input = new StringReader(header);
+		Assert.assertEquals("00000001", result.get("nc"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+	@Test
+	public void testQuotedLhex() throws Exception {
+		String header = "Digest nc=\"09abcdef\"";
 
-        Assert.assertEquals("09abcdef", result.get("nc"));
-    }
+		StringReader input = new StringReader(header);
 
-    @Test
-    public void testQuotedLhexUppercase() throws Exception {
-        String header = "Digest nc=\"00ABCDEF\"";
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
 
-        StringReader input = new StringReader(header);
+		Assert.assertEquals("09abcdef", result.get("nc"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+	@Test
+	public void testQuotedLhexUppercase() throws Exception {
+		String header = "Digest nc=\"00ABCDEF\"";
 
-        Assert.assertEquals("00abcdef", result.get("nc"));
-    }
+		StringReader input = new StringReader(header);
 
-    @Test
-    public void testUnclosedQuotedLhex() throws Exception {
-        String header = "Digest nc=\"00000001";
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
 
-        StringReader input = new StringReader(header);
+		Assert.assertEquals("00abcdef", result.get("nc"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
+	@Test
+	public void testUnclosedQuotedLhex() throws Exception {
+		String header = "Digest nc=\"00000001";
 
-        Assert.assertNull(result);
-    }
+		StringReader input = new StringReader(header);
 
-    @Test
-    public void testUnclosedQuotedString1() throws Exception {
-        String header = "Digest username=\"test";
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
 
-        StringReader input = new StringReader(header);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testUnclosedQuotedString1() throws Exception {
+		String header = "Digest username=\"test";
 
-    @Test
-    public void testUnclosedQuotedString2() throws Exception {
-        String header = "Digest username=\"test\\";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testUnclosedQuotedString2() throws Exception {
+		String header = "Digest username=\"test\\";
 
-    @Test
-    public void testNonTokenDirective() throws Exception {
-        String header = "Digest user{name=\"test\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testNonTokenDirective() throws Exception {
+		String header = "Digest user{name=\"test\"";
 
-    @Test
-    public void testTokenQop() throws Exception {
-        String header = "Digest qop=auth";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertEquals("auth", result.get("qop"));
-    }
+	@Test
+	public void testTokenQop() throws Exception {
+		String header = "Digest qop=auth";
 
-    @Test
-    public void testQuotedTokenQop() throws Exception {
-        String header = "Digest qop=\"auth\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertEquals("auth", result.get("qop"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertEquals("auth", result.get("qop"));
-    }
+	@Test
+	public void testQuotedTokenQop() throws Exception {
+		String header = "Digest qop=\"auth\"";
 
-    @Test
-    public void testNonTokenQop() throws Exception {
-        String header = "Digest qop=au{th";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertEquals("auth", result.get("qop"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testNonTokenQop() throws Exception {
+		String header = "Digest qop=au{th";
 
-    @Test
-    public void testQuotedNonTokenQop() throws Exception {
-        String header = "Digest qop=\"au{th\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testQuotedNonTokenQop() throws Exception {
+		String header = "Digest qop=\"au{th\"";
 
-    @Test
-    public void testQuotedNonTokenQop2() throws Exception {
-        String header = "Digest qop=\"{auth\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testQuotedNonTokenQop2() throws Exception {
+		String header = "Digest qop=\"{auth\"";
 
-    @Test
-    public void testUnclosedQuotedTokenQop() throws Exception {
-        String header = "Digest qop=\"auth";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testUnclosedQuotedTokenQop() throws Exception {
+		String header = "Digest qop=\"auth";
 
-    @Test
-    public void testWrongCharacterInToken() throws Exception {
-        String header = "Digest \u044f";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testWrongCharacterInToken() throws Exception {
+		String header = "Digest \u044f";
 
-    @Test
-    public void testWrongCharacterInToken2() throws Exception {
-        String header = "Digest qop=\u044f";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testWrongCharacterInToken2() throws Exception {
+		String header = "Digest qop=\u044f";
 
-    @Test
-    public void testWrongCharacterInQuotedToken() throws Exception {
-        String header = "Digest qop=\"\u044f\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testWrongCharacterInQuotedToken() throws Exception {
+		String header = "Digest qop=\"\u044f\"";
 
-    @Test
-    public void testWrongCharacterInHex() throws Exception {
-        String header = "Digest nc=\u044f";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testWrongCharacterInHex() throws Exception {
+		String header = "Digest nc=\u044f";
 
-    @Test
-    public void testWrongCharacterInQuotedHex() throws Exception {
-        String header = "Digest nc=\"\u044f\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertNull(result);
-    }
+	@Test
+	public void testWrongCharacterInQuotedHex() throws Exception {
+		String header = "Digest nc=\"\u044f\"";
 
-    @Test
-    public void testParseAuthParamA() throws Exception {
-        // Test for HttpParser.readTokenOrQuotedString()
-        // auth-param = token "=" ( token | quoted-string )
-        String header = "Digest a=b";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertNull(result);
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertEquals("b", result.get("a"));
-    }
+	@Test
+	public void testParseAuthParamA() throws Exception {
+		// Test for HttpParser.readTokenOrQuotedString()
+		// auth-param = token "=" ( token | quoted-string )
+		String header = "Digest a=b";
 
-    @Test
-    public void testParseAuthParamB() throws Exception {
-        // Test for HttpParser.readTokenOrQuotedString()
-        // auth-param = token "=" ( token | quoted-string )
-        String header = "Digest a=\"b\"";
+		StringReader input = new StringReader(header);
 
-        StringReader input = new StringReader(header);
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertEquals("b", result.get("a"));
+	}
 
-        Map<String,String> result = HttpParser.parseAuthorizationDigest(input);
-        Assert.assertEquals("b", result.get("a"));
-    }
+	@Test
+	public void testParseAuthParamB() throws Exception {
+		// Test for HttpParser.readTokenOrQuotedString()
+		// auth-param = token "=" ( token | quoted-string )
+		String header = "Digest a=\"b\"";
+
+		StringReader input = new StringReader(header);
+
+		Map<String, String> result = HttpParser.parseAuthorizationDigest(input);
+		Assert.assertEquals("b", result.get("a"));
+	}
 }

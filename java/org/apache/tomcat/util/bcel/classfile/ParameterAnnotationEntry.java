@@ -25,26 +25,28 @@ import org.apache.tomcat.util.bcel.Constants;
 /**
  * represents one parameter annotation in the parameter annotation table
  * 
- * @author  <A HREF="mailto:dbrosius@qis.net">D. Brosius</A>
+ * @author <A HREF="mailto:dbrosius@qis.net">D. Brosius</A>
  * @since 6.0
  */
 public class ParameterAnnotationEntry implements Constants {
 
-    private int annotation_table_length;
-    private AnnotationEntry[] annotation_table;
+	private int annotation_table_length;
+	private AnnotationEntry[] annotation_table;
 
+	/**
+	 * Construct object from file stream.
+	 * 
+	 * @param file
+	 *            Input stream
+	 * @throws IOException
+	 */
+	ParameterAnnotationEntry(DataInputStream file, ConstantPool constant_pool)
+			throws IOException {
+		annotation_table_length = (file.readUnsignedShort());
+		annotation_table = new AnnotationEntry[annotation_table_length];
+		for (int i = 0; i < annotation_table_length; i++) {
+			annotation_table[i] = AnnotationEntry.read(file, constant_pool);
+		}
+	}
 
-    /**
-     * Construct object from file stream.
-     * @param file Input stream
-     * @throws IOException
-     */
-    ParameterAnnotationEntry(DataInputStream file, ConstantPool constant_pool) throws IOException {
-        annotation_table_length = (file.readUnsignedShort());
-        annotation_table = new AnnotationEntry[annotation_table_length];
-        for (int i = 0; i < annotation_table_length; i++) {
-            annotation_table[i] = AnnotationEntry.read(file, constant_pool);
-        }
-    }
-    
 }

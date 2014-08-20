@@ -23,182 +23,181 @@ import org.apache.catalina.tribes.Member;
 
 /**
  * Contains the SingleSignOn data, read and written by the ClusterSingleSignOn
+ * 
  * @author Fabien Carrion
  */
 
 public class SingleSignOnMessage implements ClusterMessage {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public static final int ADD_SESSION = 1;
-    public static final int DEREGISTER_SESSION = 2;
-    public static final int LOGOUT_SESSION = 3;
-    public static final int REGISTER_SESSION = 4;
-    public static final int UPDATE_SESSION = 5;
-    public static final int REMOVE_SESSION = 6;
+	public static final int ADD_SESSION = 1;
+	public static final int DEREGISTER_SESSION = 2;
+	public static final int LOGOUT_SESSION = 3;
+	public static final int REGISTER_SESSION = 4;
+	public static final int UPDATE_SESSION = 5;
+	public static final int REMOVE_SESSION = 6;
 
-    private int action = -1;
-    private String ssoId = null;
-    private String ctxname = null;
-    private String sessionId = null;
-    private String authType = null;
-    private String password = null;
-    private String username = null;
-    private SerializablePrincipal principal = null;
+	private int action = -1;
+	private String ssoId = null;
+	private String ctxname = null;
+	private String sessionId = null;
+	private String authType = null;
+	private String password = null;
+	private String username = null;
+	private SerializablePrincipal principal = null;
 
-    private Member address = null;
-    private long timestamp = 0;
-    private String uniqueId = null;
+	private Member address = null;
+	private long timestamp = 0;
+	private String uniqueId = null;
 
-    public SingleSignOnMessage(Member source,
-                               String ssoId,
-                               String sessionId) {
-        this.address = source;
-        this.ssoId = ssoId;
-        this.sessionId = sessionId;
-    }
-    
-    /**
-     * Get the address that this message originated from.  This would be set
-     * if the message was being relayed from a host other than the one
-     * that originally sent it.
-     */
-    @Override
-    public Member getAddress() {
-        return address;
-    }
+	public SingleSignOnMessage(Member source, String ssoId, String sessionId) {
+		this.address = source;
+		this.ssoId = ssoId;
+		this.sessionId = sessionId;
+	}
 
-    /**
-     * Called by the cluster before sending it to the other
-     * nodes.
-     *
-     * @param member Member
-     */
-    @Override
-    public void setAddress(Member member) {
-        this.address = member;
-    }
+	/**
+	 * Get the address that this message originated from. This would be set if
+	 * the message was being relayed from a host other than the one that
+	 * originally sent it.
+	 */
+	@Override
+	public Member getAddress() {
+		return address;
+	}
 
-    /**
-     * Timestamp message.
-     *
-     * @return long
-     */
-    @Override
-    public long getTimestamp() {
-        return timestamp;
-    }
+	/**
+	 * Called by the cluster before sending it to the other nodes.
+	 *
+	 * @param member
+	 *            Member
+	 */
+	@Override
+	public void setAddress(Member member) {
+		this.address = member;
+	}
 
-    /**
-     * Called by the cluster before sending out
-     * the message.
-     *
-     * @param timestamp The timestamp
-     */
-    @Override
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
+	/**
+	 * Timestamp message.
+	 *
+	 * @return long
+	 */
+	@Override
+	public long getTimestamp() {
+		return timestamp;
+	}
 
-    /**
-     * Each message must have a unique ID, in case of using async replication,
-     * and a smart queue, this id is used to replace messages not yet sent.
-     *
-     * @return String
-     */
-    @Override
-    public String getUniqueId() {
-        if (this.uniqueId != null)
-            return this.uniqueId;
-        StringBuilder result = new StringBuilder(getSsoId());
-        result.append("#-#");
-        result.append(System.currentTimeMillis());
-        return result.toString();
-    }
+	/**
+	 * Called by the cluster before sending out the message.
+	 *
+	 * @param timestamp
+	 *            The timestamp
+	 */
+	@Override
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
+	}
 
-    @Override
-    public void setUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
-    }
+	/**
+	 * Each message must have a unique ID, in case of using async replication,
+	 * and a smart queue, this id is used to replace messages not yet sent.
+	 *
+	 * @return String
+	 */
+	@Override
+	public String getUniqueId() {
+		if (this.uniqueId != null)
+			return this.uniqueId;
+		StringBuilder result = new StringBuilder(getSsoId());
+		result.append("#-#");
+		result.append(System.currentTimeMillis());
+		return result.toString();
+	}
 
-    public int getAction() {
-        return action;
-    }
+	@Override
+	public void setUniqueId(String uniqueId) {
+		this.uniqueId = uniqueId;
+	}
 
-    public void setAction(int action) {
-        this.action = action;
-    }
+	public int getAction() {
+		return action;
+	}
 
-    public String getSsoId() {
-        return ssoId;
-    }
+	public void setAction(int action) {
+		this.action = action;
+	}
 
-    public void setSsoId(String ssoId) {
-        this.ssoId = ssoId;
-    }
+	public String getSsoId() {
+		return ssoId;
+	}
 
-    public String getContextName() {
-        return ctxname;
-    }
+	public void setSsoId(String ssoId) {
+		this.ssoId = ssoId;
+	}
 
-    public void setContextName(String ctxname) {
-        this.ctxname = ctxname;
-    }
+	public String getContextName() {
+		return ctxname;
+	}
 
-    public String getSessionId() {
-        return sessionId;
-    }
+	public void setContextName(String ctxname) {
+		this.ctxname = ctxname;
+	}
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
+	public String getSessionId() {
+		return sessionId;
+	}
 
-    public String getAuthType() {
-        return authType;
-    }
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
 
-    public void setAuthType(String authType) {
-        this.authType = authType;
-    }
+	public String getAuthType() {
+		return authType;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public void setAuthType(String authType) {
+		this.authType = authType;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    public String getUsername() {
-        return username;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public SerializablePrincipal getPrincipal() {
-        return principal;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public void setPrincipal(SerializablePrincipal principal) {
-        this.principal = principal;
-    }
+	public SerializablePrincipal getPrincipal() {
+		return principal;
+	}
 
-    // --------------------------------------------------------- Public Methods
+	public void setPrincipal(SerializablePrincipal principal) {
+		this.principal = principal;
+	}
 
-    /**
-     * Return a String rendering of this object.
-     */
-    @Override
-    public String toString() {
+	// --------------------------------------------------------- Public Methods
 
-        StringBuilder sb = new StringBuilder("SingleSignOnMessage[action=");
-        sb.append(getAction()).append(", ssoId=").append(getSsoId());
-        sb.append(", sessionId=").append(getSessionId()).append(", username=");
-        sb.append(getUsername()).append("]");
-        return (sb.toString());
+	/**
+	 * Return a String rendering of this object.
+	 */
+	@Override
+	public String toString() {
 
-    }
+		StringBuilder sb = new StringBuilder("SingleSignOnMessage[action=");
+		sb.append(getAction()).append(", ssoId=").append(getSsoId());
+		sb.append(", sessionId=").append(getSessionId()).append(", username=");
+		sb.append(getUsername()).append("]");
+		return (sb.toString());
+
+	}
 
 }

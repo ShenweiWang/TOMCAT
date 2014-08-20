@@ -17,13 +17,13 @@
 package org.apache.tomcat.unittest;
 
 public class TesterCounter {
-    private int count = 0;
+	private int count = 0;
 
-    public void increment() {
-        count++;
-    }
+	public void increment() {
+		count++;
+	}
 
-    public int getCount() {
-        return count;
-    }
+	public int getCount() {
+		return count;
+	}
 }

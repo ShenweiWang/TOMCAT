@@ -36,68 +36,69 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestStandardSession extends TomcatBaseTest {
 
-    /**
-     * Test session.invalidate() in a clustered environment.
-     */
-    @Test
-    public void testBug56578a() throws Exception {
-        doTestInvalidate(true);
-    }
+	/**
+	 * Test session.invalidate() in a clustered environment.
+	 */
+	@Test
+	public void testBug56578a() throws Exception {
+		doTestInvalidate(true);
+	}
 
-    @Test
-    public void testBug56578b() throws Exception {
-        doTestInvalidate(false);
-    }
+	@Test
+	public void testBug56578b() throws Exception {
+		doTestInvalidate(false);
+	}
 
-    private void doTestInvalidate(boolean useClustering) throws Exception {
-        // Setup Tomcat instance
-        Tomcat tomcat = getTomcatInstance();
+	private void doTestInvalidate(boolean useClustering) throws Exception {
+		// Setup Tomcat instance
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        Context ctx = tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, "bug56578", new Bug56578Servlet());
-        ctx.addServletMapping("/bug56578", "bug56578");
+		Tomcat.addServlet(ctx, "bug56578", new Bug56578Servlet());
+		ctx.addServletMapping("/bug56578", "bug56578");
 
-        if (useClustering) {
-            tomcat.getEngine().setCluster(new SimpleTcpCluster());
-            ctx.setDistributable(true);
-            ctx.setManager(ctx.getCluster().createManager(""));
-        }
-        tomcat.start();
+		if (useClustering) {
+			tomcat.getEngine().setCluster(new SimpleTcpCluster());
+			ctx.setDistributable(true);
+			ctx.setManager(ctx.getCluster().createManager(""));
+		}
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/bug56578");
-        Assert.assertEquals("PASS", res.toString());
-    }
+		ByteChunk res = getUrl("http://localhost:" + getPort() + "/bug56578");
+		Assert.assertEquals("PASS", res.toString());
+	}
 
-    private static class Bug56578Servlet extends HttpServlet {
+	private static class Bug56578Servlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.setContentType("text/plain");
-            resp.setCharacterEncoding("UTF-8");
-            PrintWriter pw = resp.getWriter();
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.setContentType("text/plain");
+			resp.setCharacterEncoding("UTF-8");
+			PrintWriter pw = resp.getWriter();
 
-            HttpSession session = req.getSession(true);
-            session.invalidate();
+			HttpSession session = req.getSession(true);
+			session.invalidate();
 
-            // Ugly but the easiest way to test of the session is valid or not
-            boolean result;
-            try {
-                session.getCreationTime();
-                result = false;
-            } catch (IllegalStateException ise) {
-                result = true;
-            }
+			// Ugly but the easiest way to test of the session is valid or not
+			boolean result;
+			try {
+				session.getCreationTime();
+				result = false;
+			} catch (IllegalStateException ise) {
+				result = true;
+			}
 
-            if (result) {
-                pw.print("PASS");
-            } else {
-                pw.print("FAIL");
-            }
-        }
-    }
+			if (result) {
+				pw.print("PASS");
+			} else {
+				pw.print("FAIL");
+			}
+		}
+	}
 }

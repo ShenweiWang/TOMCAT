@@ -32,145 +32,132 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.websocket.TesterEchoServer;
 
-
 public class TestWsServerContainer extends TomcatBaseTest {
 
-    @Test
-    public void testBug54807() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(Bug54807Config.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+	@Test
+	public void testBug54807() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(Bug54807Config.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        tomcat.start();
+		tomcat.start();
 
-        Assert.assertEquals(LifecycleState.STARTED, ctx.getState());
-    }
+		Assert.assertEquals(LifecycleState.STARTED, ctx.getState());
+	}
 
+	public static class Bug54807Config extends WsContextListener {
 
-    public static class Bug54807Config extends WsContextListener {
+		@Override
+		public void contextInitialized(ServletContextEvent sce) {
+			super.contextInitialized(sce);
 
-        @Override
-        public void contextInitialized(ServletContextEvent sce) {
-            super.contextInitialized(sce);
+			ServerContainer sc = (ServerContainer) sce
+					.getServletContext()
+					.getAttribute(
+							Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
 
-            ServerContainer sc =
-                    (ServerContainer) sce.getServletContext().getAttribute(
-                            Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
+			ServerEndpointConfig sec = ServerEndpointConfig.Builder.create(
+					TesterEchoServer.Basic.class, "/{param}").build();
 
-            ServerEndpointConfig sec = ServerEndpointConfig.Builder.create(
-                    TesterEchoServer.Basic.class, "/{param}").build();
+			try {
+				sc.addEndpoint(sec);
+			} catch (DeploymentException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 
-            try {
-                sc.addEndpoint(sec);
-            } catch (DeploymentException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
+	@Test
+	public void testSpecExample3() throws Exception {
+		WsServerContainer sc = new WsServerContainer(new TesterServletContext());
 
+		ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/{var}/c").build();
+		ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/c").build();
+		ServerEndpointConfig configC = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/{var1}/{var2}").build();
 
-    @Test
-    public void testSpecExample3() throws Exception {
-        WsServerContainer sc =
-                new WsServerContainer(new TesterServletContext());
+		sc.addEndpoint(configA);
+		sc.addEndpoint(configB);
+		sc.addEndpoint(configC);
 
-        ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/{var}/c").build();
-        ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/c").build();
-        ServerEndpointConfig configC = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/{var1}/{var2}").build();
+		Assert.assertEquals(configB, sc.findMapping("/a/b/c").getConfig());
+		Assert.assertEquals(configA, sc.findMapping("/a/d/c").getConfig());
+		Assert.assertEquals(configC, sc.findMapping("/a/x/y").getConfig());
+	}
 
-        sc.addEndpoint(configA);
-        sc.addEndpoint(configB);
-        sc.addEndpoint(configC);
+	@Test
+	public void testSpecExample4() throws Exception {
+		WsServerContainer sc = new WsServerContainer(new TesterServletContext());
 
-        Assert.assertEquals(configB, sc.findMapping("/a/b/c").getConfig());
-        Assert.assertEquals(configA, sc.findMapping("/a/d/c").getConfig());
-        Assert.assertEquals(configC, sc.findMapping("/a/x/y").getConfig());
-    }
+		ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
+				Object.class, "/{var1}/d").build();
+		ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
+				Object.class, "/b/{var2}").build();
 
+		sc.addEndpoint(configA);
+		sc.addEndpoint(configB);
 
-    @Test
-    public void testSpecExample4() throws Exception {
-        WsServerContainer sc =
-                new WsServerContainer(new TesterServletContext());
+		Assert.assertEquals(configB, sc.findMapping("/b/d").getConfig());
+	}
 
-        ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
-                Object.class, "/{var1}/d").build();
-        ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
-                Object.class, "/b/{var2}").build();
+	@Test(expected = javax.websocket.DeploymentException.class)
+	public void testDuplicatePaths_01() throws Exception {
+		WsServerContainer sc = new WsServerContainer(new TesterServletContext());
 
-        sc.addEndpoint(configA);
-        sc.addEndpoint(configB);
+		ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/c").build();
+		ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/c").build();
 
-        Assert.assertEquals(configB, sc.findMapping("/b/d").getConfig());
-    }
+		sc.addEndpoint(configA);
+		sc.addEndpoint(configB);
+	}
 
+	@Test(expected = javax.websocket.DeploymentException.class)
+	public void testDuplicatePaths_02() throws Exception {
+		WsServerContainer sc = new WsServerContainer(new TesterServletContext());
 
-    @Test(expected = javax.websocket.DeploymentException.class)
-    public void testDuplicatePaths_01() throws Exception {
-        WsServerContainer sc =
-                new WsServerContainer(new TesterServletContext());
+		ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/{var}").build();
+		ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/{var}").build();
 
-        ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/c").build();
-        ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/c").build();
+		sc.addEndpoint(configA);
+		sc.addEndpoint(configB);
+	}
 
-        sc.addEndpoint(configA);
-        sc.addEndpoint(configB);
-    }
+	@Test(expected = javax.websocket.DeploymentException.class)
+	public void testDuplicatePaths_03() throws Exception {
+		WsServerContainer sc = new WsServerContainer(new TesterServletContext());
 
+		ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/{var1}").build();
+		ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/{var2}").build();
 
-    @Test(expected = javax.websocket.DeploymentException.class)
-    public void testDuplicatePaths_02() throws Exception {
-        WsServerContainer sc =
-                new WsServerContainer(new TesterServletContext());
+		sc.addEndpoint(configA);
+		sc.addEndpoint(configB);
+	}
 
-        ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/{var}").build();
-        ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/{var}").build();
+	@Test
+	public void testDuplicatePaths_04() throws Exception {
+		WsServerContainer sc = new WsServerContainer(new TesterServletContext());
 
-        sc.addEndpoint(configA);
-        sc.addEndpoint(configB);
-    }
+		ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/{var1}/{var2}").build();
+		ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
+				Object.class, "/a/b/{var2}").build();
 
+		sc.addEndpoint(configA);
+		sc.addEndpoint(configB);
 
-    @Test(expected = javax.websocket.DeploymentException.class)
-    public void testDuplicatePaths_03() throws Exception {
-        WsServerContainer sc =
-                new WsServerContainer(new TesterServletContext());
-
-        ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/{var1}").build();
-        ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/{var2}").build();
-
-        sc.addEndpoint(configA);
-        sc.addEndpoint(configB);
-    }
-
-
-    @Test
-    public void testDuplicatePaths_04() throws Exception {
-        WsServerContainer sc =
-                new WsServerContainer(new TesterServletContext());
-
-        ServerEndpointConfig configA = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/{var1}/{var2}").build();
-        ServerEndpointConfig configB = ServerEndpointConfig.Builder.create(
-                Object.class, "/a/b/{var2}").build();
-
-        sc.addEndpoint(configA);
-        sc.addEndpoint(configB);
-
-        Assert.assertEquals(configA, sc.findMapping("/a/x/y").getConfig());
-        Assert.assertEquals(configB, sc.findMapping("/a/b/y").getConfig());
-    }
+		Assert.assertEquals(configA, sc.findMapping("/a/x/y").getConfig());
+		Assert.assertEquals(configB, sc.findMapping("/a/b/y").getConfig());
+	}
 }

@@ -23,190 +23,183 @@ import org.apache.tomcat.util.res.StringManager;
 
 /**
  * Extended implementation of <strong>HashMap</strong> that includes a
- * <code>locked</code> property.  This class can be used to safely expose
- * Catalina internal parameter map objects to user classes without having
- * to clone them in order to avoid modifications.  When first created, a
+ * <code>locked</code> property. This class can be used to safely expose
+ * Catalina internal parameter map objects to user classes without having to
+ * clone them in order to avoid modifications. When first created, a
  * <code>ParmaeterMap</code> instance is not locked.
  *
  * @author Craig R. McClanahan
  */
-public final class ParameterMap<K,V> extends LinkedHashMap<K,V> {
+public final class ParameterMap<K, V> extends LinkedHashMap<K, V> {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
+	// ----------------------------------------------------------- Constructors
+	/**
+	 * Construct a new, empty map with the default initial capacity and load
+	 * factor.
+	 */
+	public ParameterMap() {
 
-    // ----------------------------------------------------------- Constructors
-    /**
-     * Construct a new, empty map with the default initial capacity and
-     * load factor.
-     */
-    public ParameterMap() {
+		super();
 
-        super();
+	}
 
-    }
+	/**
+	 * Construct a new, empty map with the specified initial capacity and
+	 * default load factor.
+	 *
+	 * @param initialCapacity
+	 *            The initial capacity of this map
+	 */
+	public ParameterMap(int initialCapacity) {
 
+		super(initialCapacity);
 
-    /**
-     * Construct a new, empty map with the specified initial capacity and
-     * default load factor.
-     *
-     * @param initialCapacity The initial capacity of this map
-     */
-    public ParameterMap(int initialCapacity) {
+	}
 
-        super(initialCapacity);
+	/**
+	 * Construct a new, empty map with the specified initial capacity and load
+	 * factor.
+	 *
+	 * @param initialCapacity
+	 *            The initial capacity of this map
+	 * @param loadFactor
+	 *            The load factor of this map
+	 */
+	public ParameterMap(int initialCapacity, float loadFactor) {
 
-    }
+		super(initialCapacity, loadFactor);
 
+	}
 
-    /**
-     * Construct a new, empty map with the specified initial capacity and
-     * load factor.
-     *
-     * @param initialCapacity The initial capacity of this map
-     * @param loadFactor The load factor of this map
-     */
-    public ParameterMap(int initialCapacity, float loadFactor) {
+	/**
+	 * Construct a new map with the same mappings as the given map.
+	 *
+	 * @param map
+	 *            Map whose contents are duplicated in the new map
+	 */
+	public ParameterMap(Map<K, V> map) {
 
-        super(initialCapacity, loadFactor);
+		super(map);
 
-    }
+	}
 
+	// ------------------------------------------------------------- Properties
 
-    /**
-     * Construct a new map with the same mappings as the given map.
-     *
-     * @param map Map whose contents are duplicated in the new map
-     */
-    public ParameterMap(Map<K,V> map) {
+	/**
+	 * The current lock state of this parameter map.
+	 */
+	private boolean locked = false;
 
-        super(map);
+	/**
+	 * Return the locked state of this parameter map.
+	 */
+	public boolean isLocked() {
 
-    }
+		return (this.locked);
 
+	}
 
-    // ------------------------------------------------------------- Properties
+	/**
+	 * Set the locked state of this parameter map.
+	 *
+	 * @param locked
+	 *            The new locked state
+	 */
+	public void setLocked(boolean locked) {
 
+		this.locked = locked;
 
-    /**
-     * The current lock state of this parameter map.
-     */
-    private boolean locked = false;
+	}
 
+	/**
+	 * The string manager for this package.
+	 */
+	private static final StringManager sm = StringManager
+			.getManager("org.apache.catalina.util");
 
-    /**
-     * Return the locked state of this parameter map.
-     */
-    public boolean isLocked() {
+	// --------------------------------------------------------- Public Methods
 
-        return (this.locked);
+	/**
+	 * Remove all mappings from this map.
+	 *
+	 * @exception IllegalStateException
+	 *                if this map is currently locked
+	 */
+	@Override
+	public void clear() {
 
-    }
+		if (locked)
+			throw new IllegalStateException(sm.getString("parameterMap.locked"));
+		super.clear();
 
+	}
 
-    /**
-     * Set the locked state of this parameter map.
-     *
-     * @param locked The new locked state
-     */
-    public void setLocked(boolean locked) {
+	/**
+	 * Associate the specified value with the specified key in this map. If the
+	 * map previously contained a mapping for this key, the old value is
+	 * replaced.
+	 *
+	 * @param key
+	 *            Key with which the specified value is to be associated
+	 * @param value
+	 *            Value to be associated with the specified key
+	 *
+	 * @return The previous value associated with the specified key, or
+	 *         <code>null</code> if there was no mapping for key
+	 *
+	 * @exception IllegalStateException
+	 *                if this map is currently locked
+	 */
+	@Override
+	public V put(K key, V value) {
 
-        this.locked = locked;
+		if (locked)
+			throw new IllegalStateException(sm.getString("parameterMap.locked"));
+		return (super.put(key, value));
 
-    }
+	}
 
+	/**
+	 * Copy all of the mappings from the specified map to this one. These
+	 * mappings replace any mappings that this map had for any of the keys
+	 * currently in the specified Map.
+	 *
+	 * @param map
+	 *            Mappings to be stored into this map
+	 *
+	 * @exception IllegalStateException
+	 *                if this map is currently locked
+	 */
+	@Override
+	public void putAll(Map<? extends K, ? extends V> map) {
 
-    /**
-     * The string manager for this package.
-     */
-    private static final StringManager sm =
-        StringManager.getManager("org.apache.catalina.util");
+		if (locked)
+			throw new IllegalStateException(sm.getString("parameterMap.locked"));
+		super.putAll(map);
 
+	}
 
-    // --------------------------------------------------------- Public Methods
+	/**
+	 * Remove the mapping for this key from the map if present.
+	 *
+	 * @param key
+	 *            Key whose mapping is to be removed from the map
+	 *
+	 * @return The previous value associated with the specified key, or
+	 *         <code>null</code> if there was no mapping for that key
+	 *
+	 * @exception IllegalStateException
+	 *                if this map is currently locked
+	 */
+	@Override
+	public V remove(Object key) {
 
+		if (locked)
+			throw new IllegalStateException(sm.getString("parameterMap.locked"));
+		return (super.remove(key));
 
-
-    /**
-     * Remove all mappings from this map.
-     *
-     * @exception IllegalStateException if this map is currently locked
-     */
-    @Override
-    public void clear() {
-
-        if (locked)
-            throw new IllegalStateException
-                (sm.getString("parameterMap.locked"));
-        super.clear();
-
-    }
-
-
-    /**
-     * Associate the specified value with the specified key in this map.  If
-     * the map previously contained a mapping for this key, the old value is
-     * replaced.
-     *
-     * @param key Key with which the specified value is to be associated
-     * @param value Value to be associated with the specified key
-     *
-     * @return The previous value associated with the specified key, or
-     *  <code>null</code> if there was no mapping for key
-     *
-     * @exception IllegalStateException if this map is currently locked
-     */
-    @Override
-    public V put(K key, V value) {
-
-        if (locked)
-            throw new IllegalStateException
-                (sm.getString("parameterMap.locked"));
-        return (super.put(key, value));
-
-    }
-
-
-    /**
-     * Copy all of the mappings from the specified map to this one.  These
-     * mappings replace any mappings that this map had for any of the keys
-     * currently in the specified Map.
-     *
-     * @param map Mappings to be stored into this map
-     *
-     * @exception IllegalStateException if this map is currently locked
-     */
-    @Override
-    public void putAll(Map<? extends K,? extends V> map) {
-
-        if (locked)
-            throw new IllegalStateException
-                (sm.getString("parameterMap.locked"));
-        super.putAll(map);
-
-    }
-
-
-    /**
-     * Remove the mapping for this key from the map if present.
-     *
-     * @param key Key whose mapping is to be removed from the map
-     *
-     * @return The previous value associated with the specified key, or
-     *  <code>null</code> if there was no mapping for that key
-     *
-     * @exception IllegalStateException if this map is currently locked
-     */
-    @Override
-    public V remove(Object key) {
-
-        if (locked)
-            throw new IllegalStateException
-                (sm.getString("parameterMap.locked"));
-        return (super.remove(key));
-
-    }
-
+	}
 
 }

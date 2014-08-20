@@ -31,29 +31,30 @@ import javax.servlet.annotation.WebInitParam;
 
 /**
  * Test Mock to check Filter Annotations
+ * 
  * @author Peter Rossbach
  */
 @WebFilter(value = "/param", filterName = "paramFilter", dispatcherTypes = {
-        DispatcherType.ERROR, DispatcherType.ASYNC }, initParams = { @WebInitParam(name = "message", value = "Servlet says: ") })
+		DispatcherType.ERROR, DispatcherType.ASYNC }, initParams = { @WebInitParam(name = "message", value = "Servlet says: ") })
 public class ParamFilter implements Filter {
 
-    private FilterConfig _filterConfig;
+	private FilterConfig _filterConfig;
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        _filterConfig = filterConfig;
-    }
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+		_filterConfig = filterConfig;
+	}
 
-    @Override
-    public void doFilter(ServletRequest req, ServletResponse res,
-            FilterChain chain) throws ServletException, IOException {
-        PrintWriter out = res.getWriter();
-        out.print(_filterConfig.getInitParameter("message"));
-        chain.doFilter(req, res);
-    }
+	@Override
+	public void doFilter(ServletRequest req, ServletResponse res,
+			FilterChain chain) throws ServletException, IOException {
+		PrintWriter out = res.getWriter();
+		out.print(_filterConfig.getInitParameter("message"));
+		chain.doFilter(req, res);
+	}
 
-    @Override
-    public void destroy() {
-        // destroy
-    }
+	@Override
+	public void destroy() {
+		// destroy
+	}
 }

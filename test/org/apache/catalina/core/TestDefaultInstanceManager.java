@@ -25,62 +25,61 @@ import org.apache.catalina.Wrapper;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 
-
 public class TestDefaultInstanceManager extends TomcatBaseTest {
 
-    @Test
-    public void testClassUnloading() throws Exception {
+	@Test
+	public void testClassUnloading() throws Exception {
 
-        DefaultInstanceManager instanceManager = doClassUnloadingPrep();
+		DefaultInstanceManager instanceManager = doClassUnloadingPrep();
 
-        // Request a JSP page (that doesn't load any tag libraries etc.)
-        // This page does use @PostConstruct to ensure that the cache does not
-        // retain strong references
-        getUrl("http://localhost:" + getPort() + "/test/annotations.jsp");
-        // Request a second JSP (again, no tag libraries etc.)
-        getUrl("http://localhost:" + getPort() + "/test/bug36923.jsp");
+		// Request a JSP page (that doesn't load any tag libraries etc.)
+		// This page does use @PostConstruct to ensure that the cache does not
+		// retain strong references
+		getUrl("http://localhost:" + getPort() + "/test/annotations.jsp");
+		// Request a second JSP (again, no tag libraries etc.)
+		getUrl("http://localhost:" + getPort() + "/test/bug36923.jsp");
 
-        // Check the number of classes in the cache
-        int count = instanceManager.getAnnotationCacheSize();
+		// Check the number of classes in the cache
+		int count = instanceManager.getAnnotationCacheSize();
 
-        // Request a third JSP (again, no tag libraries etc.)
-        getUrl("http://localhost:" + getPort() + "/test/bug5nnnn/bug51544.jsp");
+		// Request a third JSP (again, no tag libraries etc.)
+		getUrl("http://localhost:" + getPort() + "/test/bug5nnnn/bug51544.jsp");
 
-        // Force a GC to clear out unloaded class (first JSP)
-        System.gc();
+		// Force a GC to clear out unloaded class (first JSP)
+		System.gc();
 
-        // Spin a while until GC happens or we wait too long
-        int loop = 0;
-        while (loop < 10) {
-            if (instanceManager.getAnnotationCacheSize() == count) {
-                break;
-            }
-            Thread.sleep(100);
-            loop++;
-        }
+		// Spin a while until GC happens or we wait too long
+		int loop = 0;
+		while (loop < 10) {
+			if (instanceManager.getAnnotationCacheSize() == count) {
+				break;
+			}
+			Thread.sleep(100);
+			loop++;
+		}
 
-        // First JSP should be unloaded and replaced by third (second left
-        // alone) so no change in overall count
-        assertEquals(count, instanceManager.getAnnotationCacheSize());
-    }
+		// First JSP should be unloaded and replaced by third (second left
+		// alone) so no change in overall count
+		assertEquals(count, instanceManager.getAnnotationCacheSize());
+	}
 
-    private DefaultInstanceManager doClassUnloadingPrep() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	private DefaultInstanceManager doClassUnloadingPrep() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Create the context (don't use addWebapp as we want to modify the
-        // JSP Servlet settings).
-        File appDir = new File("test/webapp-3.0");
-        StandardContext ctxt = (StandardContext) tomcat.addContext(
-                null, "/test", appDir.getAbsolutePath());
+		// Create the context (don't use addWebapp as we want to modify the
+		// JSP Servlet settings).
+		File appDir = new File("test/webapp-3.0");
+		StandardContext ctxt = (StandardContext) tomcat.addContext(null,
+				"/test", appDir.getAbsolutePath());
 
-        // Configure the defaults and then tweak the JSP servlet settings
-        // Note: Min value for maxLoadedJsps is 2
-        Tomcat.initWebappDefaults(ctxt);
-        Wrapper w = (Wrapper) ctxt.findChild("jsp");
-        w.addInitParameter("maxLoadedJsps", "2");
+		// Configure the defaults and then tweak the JSP servlet settings
+		// Note: Min value for maxLoadedJsps is 2
+		Tomcat.initWebappDefaults(ctxt);
+		Wrapper w = (Wrapper) ctxt.findChild("jsp");
+		w.addInitParameter("maxLoadedJsps", "2");
 
-        tomcat.start();
+		tomcat.start();
 
-        return (DefaultInstanceManager) ctxt.getInstanceManager();
-    }
+		return (DefaultInstanceManager) ctxt.getInstanceManager();
+	}
 }

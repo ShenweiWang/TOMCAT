@@ -25,19 +25,21 @@ import org.junit.Test;
 
 import org.apache.catalina.core.StandardContext;
 
-
 public class TestWebappServiceLoader extends TomcatBaseTest {
-    @Test
-    public void testWebapp() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        File appDir = new File("test/webapp-3.0-fragments-empty-absolute-ordering");
-        StandardContext ctxt = (StandardContext) tomcat.addContext(null, "/test", appDir.getAbsolutePath());
-        ctxt.addLifecycleListener(new ContextConfig());
-        tomcat.start();
+	@Test
+	public void testWebapp() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		File appDir = new File(
+				"test/webapp-3.0-fragments-empty-absolute-ordering");
+		StandardContext ctxt = (StandardContext) tomcat.addContext(null,
+				"/test", appDir.getAbsolutePath());
+		ctxt.addLifecycleListener(new ContextConfig());
+		tomcat.start();
 
-        WebappServiceLoader<ServletContainerInitializer> loader =
-                new WebappServiceLoader<ServletContainerInitializer>(ctxt.getServletContext(), null);
-        @SuppressWarnings("unused")
-        Collection<ServletContainerInitializer> initializers = loader.load(ServletContainerInitializer.class);
-    }
+		WebappServiceLoader<ServletContainerInitializer> loader = new WebappServiceLoader<ServletContainerInitializer>(
+				ctxt.getServletContext(), null);
+		@SuppressWarnings("unused")
+		Collection<ServletContainerInitializer> initializers = loader
+				.load(ServletContainerInitializer.class);
+	}
 }

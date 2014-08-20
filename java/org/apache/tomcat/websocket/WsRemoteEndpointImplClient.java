@@ -23,34 +23,32 @@ import javax.websocket.SendHandler;
 
 public class WsRemoteEndpointImplClient extends WsRemoteEndpointImplBase {
 
-    private final AsyncChannelWrapper channel;
+	private final AsyncChannelWrapper channel;
 
-    public WsRemoteEndpointImplClient(AsyncChannelWrapper channel) {
-        this.channel = channel;
-    }
+	public WsRemoteEndpointImplClient(AsyncChannelWrapper channel) {
+		this.channel = channel;
+	}
 
+	@Override
+	protected boolean isMasked() {
+		return true;
+	}
 
-    @Override
-    protected boolean isMasked() {
-        return true;
-    }
+	@Override
+	protected void doWrite(SendHandler handler, ByteBuffer... data) {
+		long timeout = getSendTimeout();
+		if (timeout < 1) {
+			timeout = Long.MAX_VALUE;
 
+		}
+		SendHandlerToCompletionHandler sh2ch = new SendHandlerToCompletionHandler(
+				handler);
+		channel.write(data, 0, data.length, timeout, TimeUnit.MILLISECONDS,
+				null, sh2ch);
+	}
 
-    @Override
-    protected void doWrite(SendHandler handler, ByteBuffer... data) {
-        long timeout = getSendTimeout();
-        if (timeout < 1) {
-            timeout = Long.MAX_VALUE;
-
-        }
-        SendHandlerToCompletionHandler sh2ch =
-                new SendHandlerToCompletionHandler(handler);
-        channel.write(data, 0, data.length, timeout, TimeUnit.MILLISECONDS,
-                null, sh2ch);
-    }
-
-    @Override
-    protected void doClose() {
-        channel.close();
-    }
+	@Override
+	protected void doClose() {
+		channel.close();
+	}
 }

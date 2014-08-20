@@ -52,266 +52,264 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestStandardContextResources extends TomcatBaseTest {
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
-        Tomcat tomcat = getTomcatInstance();
+		Tomcat tomcat = getTomcatInstance();
 
-        // BZ 49218: The test fails if JreMemoryLeakPreventionListener is not
-        // present. The listener affects the JVM, and thus not only the current,
-        // but also the subsequent tests that are run in the same JVM. So it is
-        // fair to add it in every test.
-        tomcat.getServer().addLifecycleListener(
-                new JreMemoryLeakPreventionListener());
-    }
+		// BZ 49218: The test fails if JreMemoryLeakPreventionListener is not
+		// present. The listener affects the JVM, and thus not only the current,
+		// but also the subsequent tests that are run in the same JVM. So it is
+		// fair to add it in every test.
+		tomcat.getServer().addLifecycleListener(
+				new JreMemoryLeakPreventionListener());
+	}
 
-    @Test
-    public void testResources() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testResources() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        assertPageContains("/test/resourceA.jsp",
-                "<p>resourceA.jsp in the web application</p>");
-        assertPageContains("/test/resourceB.jsp",
-                "<p>resourceB.jsp in resources.jar</p>");
-        assertPageContains("/test/folder/resourceC.jsp",
-                "<p>resourceC.jsp in the web application</p>");
-        assertPageContains("/test/folder/resourceD.jsp",
-                "<p>resourceD.jsp in resources.jar</p>");
-        assertPageContains("/test/folder/resourceE.jsp",
-                "<p>resourceE.jsp in the web application</p>");
-        assertPageContains("/test/resourceG.jsp",
-                "<p>resourceG.jsp in WEB-INF/classes</p>", 404);
+		assertPageContains("/test/resourceA.jsp",
+				"<p>resourceA.jsp in the web application</p>");
+		assertPageContains("/test/resourceB.jsp",
+				"<p>resourceB.jsp in resources.jar</p>");
+		assertPageContains("/test/folder/resourceC.jsp",
+				"<p>resourceC.jsp in the web application</p>");
+		assertPageContains("/test/folder/resourceD.jsp",
+				"<p>resourceD.jsp in resources.jar</p>");
+		assertPageContains("/test/folder/resourceE.jsp",
+				"<p>resourceE.jsp in the web application</p>");
+		assertPageContains("/test/resourceG.jsp",
+				"<p>resourceG.jsp in WEB-INF/classes</p>", 404);
 
-        // For BZ 54391. Relative ordering is specified in resources2.jar.
-        // It is not absolute-ordering, so there may be other jars in the list
-        @SuppressWarnings("unchecked")
-        List<String> orderedLibs = (List<String>) ctx.getServletContext()
-                .getAttribute(ServletContext.ORDERED_LIBS);
-        if (orderedLibs.size() > 2) {
-            log.warn("testResources(): orderedLibs: " + orderedLibs);
-        }
-        int index = orderedLibs.indexOf("resources.jar");
-        int index2 = orderedLibs.indexOf("resources2.jar");
-        assertTrue(orderedLibs.toString(), index >= 0 && index2 >= 0
-                && index < index2);
-    }
+		// For BZ 54391. Relative ordering is specified in resources2.jar.
+		// It is not absolute-ordering, so there may be other jars in the list
+		@SuppressWarnings("unchecked")
+		List<String> orderedLibs = (List<String>) ctx.getServletContext()
+				.getAttribute(ServletContext.ORDERED_LIBS);
+		if (orderedLibs.size() > 2) {
+			log.warn("testResources(): orderedLibs: " + orderedLibs);
+		}
+		int index = orderedLibs.indexOf("resources.jar");
+		int index2 = orderedLibs.indexOf("resources2.jar");
+		assertTrue(orderedLibs.toString(), index >= 0 && index2 >= 0
+				&& index < index2);
+	}
 
-    @Test
-    public void testResourcesWebInfClasses() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testResourcesWebInfClasses() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // app dir is relative to server home
-        File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		File appDir = new File("test/webapp-3.0-fragments");
 
-        // Need to cast to be able to set StandardContext specific attribute
-        StandardContext ctxt = (StandardContext)
-            tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        ctxt.setAddWebinfClassesResources(true);
+		// Need to cast to be able to set StandardContext specific attribute
+		StandardContext ctxt = (StandardContext) tomcat.addWebapp(null,
+				"/test", appDir.getAbsolutePath());
+		ctxt.setAddWebinfClassesResources(true);
 
-        tomcat.start();
+		tomcat.start();
 
-        assertPageContains("/test/resourceA.jsp",
-                "<p>resourceA.jsp in the web application</p>");
-        assertPageContains("/test/resourceB.jsp",
-                "<p>resourceB.jsp in resources.jar</p>");
-        assertPageContains("/test/folder/resourceC.jsp",
-                "<p>resourceC.jsp in the web application</p>");
-        assertPageContains("/test/folder/resourceD.jsp",
-                "<p>resourceD.jsp in resources.jar</p>");
-        assertPageContains("/test/folder/resourceE.jsp",
-                "<p>resourceE.jsp in the web application</p>");
-        assertPageContains("/test/resourceG.jsp",
-                "<p>resourceG.jsp in WEB-INF/classes</p>");
-    }
+		assertPageContains("/test/resourceA.jsp",
+				"<p>resourceA.jsp in the web application</p>");
+		assertPageContains("/test/resourceB.jsp",
+				"<p>resourceB.jsp in resources.jar</p>");
+		assertPageContains("/test/folder/resourceC.jsp",
+				"<p>resourceC.jsp in the web application</p>");
+		assertPageContains("/test/folder/resourceD.jsp",
+				"<p>resourceD.jsp in resources.jar</p>");
+		assertPageContains("/test/folder/resourceE.jsp",
+				"<p>resourceE.jsp in the web application</p>");
+		assertPageContains("/test/resourceG.jsp",
+				"<p>resourceG.jsp in WEB-INF/classes</p>");
+	}
 
-    @Test
-    public void testResourcesAbsoluteOrdering() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testResourcesAbsoluteOrdering() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        StandardContext ctx = (StandardContext) tomcat.addWebapp(null, "/test",
-                appDir.getAbsolutePath());
-        LifecycleListener[] listener = ctx.findLifecycleListeners();
-        assertEquals(3,listener.length);
-        assertTrue(listener[1] instanceof ContextConfig);
-        ContextConfig config = new ContextConfig() {
-            @Override
-            protected WebXml createWebXml() {
-                WebXml wxml = new WebXml();
-                wxml.addAbsoluteOrdering("resources");
-                wxml.addAbsoluteOrdering("resources2");
-                return wxml;
-            }
-        };
-        // prevent it from looking ( if it finds one - it'll have dup error )
-        config.setDefaultWebXml(Constants.NoDefaultWebXml);
-        listener[1] = config;
-        Tomcat.addServlet(ctx, "getresource", new GetResourceServlet());
-        ctx.addServletMapping("/getresource", "getresource");
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		StandardContext ctx = (StandardContext) tomcat.addWebapp(null, "/test",
+				appDir.getAbsolutePath());
+		LifecycleListener[] listener = ctx.findLifecycleListeners();
+		assertEquals(3, listener.length);
+		assertTrue(listener[1] instanceof ContextConfig);
+		ContextConfig config = new ContextConfig() {
+			@Override
+			protected WebXml createWebXml() {
+				WebXml wxml = new WebXml();
+				wxml.addAbsoluteOrdering("resources");
+				wxml.addAbsoluteOrdering("resources2");
+				return wxml;
+			}
+		};
+		// prevent it from looking ( if it finds one - it'll have dup error )
+		config.setDefaultWebXml(Constants.NoDefaultWebXml);
+		listener[1] = config;
+		Tomcat.addServlet(ctx, "getresource", new GetResourceServlet());
+		ctx.addServletMapping("/getresource", "getresource");
 
-        tomcat.start();
-        assertPageContains("/test/getresource?path=/resourceF.jsp",
-        "<p>resourceF.jsp in resources2.jar</p>");
-        assertPageContains("/test/getresource?path=/resourceB.jsp",
-        "<p>resourceB.jsp in resources.jar</p>");
+		tomcat.start();
+		assertPageContains("/test/getresource?path=/resourceF.jsp",
+				"<p>resourceF.jsp in resources2.jar</p>");
+		assertPageContains("/test/getresource?path=/resourceB.jsp",
+				"<p>resourceB.jsp in resources.jar</p>");
 
-        // Check ordering, for BZ 54391
-        assertEquals(Arrays.asList("resources.jar", "resources2.jar"), ctx
-                .getServletContext().getAttribute(ServletContext.ORDERED_LIBS));
+		// Check ordering, for BZ 54391
+		assertEquals(Arrays.asList("resources.jar", "resources2.jar"), ctx
+				.getServletContext().getAttribute(ServletContext.ORDERED_LIBS));
 
-        ctx.stop();
+		ctx.stop();
 
-        LifecycleListener[] listener1 = ctx.findLifecycleListeners();
-        // change ordering and reload
-        ContextConfig config1 = new ContextConfig() {
-            @Override
-            protected WebXml createWebXml() {
-                WebXml wxml = new WebXml();
-                wxml.addAbsoluteOrdering("resources2");
-                wxml.addAbsoluteOrdering("resources");
-                return wxml;
-            }
-        };
-        // prevent it from looking ( if it finds one - it'll have dup error )
-        config1.setDefaultWebXml(Constants.NoDefaultWebXml);
-        listener1[1] = config1;
-        // Need to init since context won't call init
-        config1.lifecycleEvent(
-                new LifecycleEvent(ctx, Lifecycle.AFTER_INIT_EVENT, null));
-        Tomcat.addServlet(ctx, "getresource", new GetResourceServlet());
-        ctx.addServletMapping("/getresource", "getresource");
+		LifecycleListener[] listener1 = ctx.findLifecycleListeners();
+		// change ordering and reload
+		ContextConfig config1 = new ContextConfig() {
+			@Override
+			protected WebXml createWebXml() {
+				WebXml wxml = new WebXml();
+				wxml.addAbsoluteOrdering("resources2");
+				wxml.addAbsoluteOrdering("resources");
+				return wxml;
+			}
+		};
+		// prevent it from looking ( if it finds one - it'll have dup error )
+		config1.setDefaultWebXml(Constants.NoDefaultWebXml);
+		listener1[1] = config1;
+		// Need to init since context won't call init
+		config1.lifecycleEvent(new LifecycleEvent(ctx,
+				Lifecycle.AFTER_INIT_EVENT, null));
+		Tomcat.addServlet(ctx, "getresource", new GetResourceServlet());
+		ctx.addServletMapping("/getresource", "getresource");
 
-        ctx.start();
+		ctx.start();
 
-        assertPageContains("/test/getresource?path=/resourceF.jsp",
-        "<p>resourceF.jsp in resources2.jar</p>");
-        assertPageContains("/test/getresource?path=/resourceB.jsp",
-        "<p>resourceB.jsp in resources2.jar</p>");
+		assertPageContains("/test/getresource?path=/resourceF.jsp",
+				"<p>resourceF.jsp in resources2.jar</p>");
+		assertPageContains("/test/getresource?path=/resourceB.jsp",
+				"<p>resourceB.jsp in resources2.jar</p>");
 
-        // Check ordering, for BZ 54391
-        assertEquals(Arrays.asList("resources2.jar", "resources.jar"), ctx
-                .getServletContext().getAttribute(ServletContext.ORDERED_LIBS));
-    }
+		// Check ordering, for BZ 54391
+		assertEquals(Arrays.asList("resources2.jar", "resources.jar"), ctx
+				.getServletContext().getAttribute(ServletContext.ORDERED_LIBS));
+	}
 
-    @Test
-    public void testResources2() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testResources2() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        StandardContext ctx = (StandardContext) tomcat.addWebapp(null, "/test",
-                appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		StandardContext ctx = (StandardContext) tomcat.addWebapp(null, "/test",
+				appDir.getAbsolutePath());
 
-        Tomcat.addServlet(ctx, "getresource", new GetResourceServlet());
-        ctx.addServletMapping("/getresource", "getresource");
+		Tomcat.addServlet(ctx, "getresource", new GetResourceServlet());
+		ctx.addServletMapping("/getresource", "getresource");
 
-        tomcat.start();
+		tomcat.start();
 
-        assertPageContains("/test/getresource?path=/resourceF.jsp",
-                "<p>resourceF.jsp in resources2.jar</p>");
-        assertPageContains("/test/getresource?path=/resourceA.jsp",
-                "<p>resourceA.jsp in the web application</p>");
-        assertPageContains("/test/getresource?path=/resourceB.jsp",
-                "<p>resourceB.jsp in resources.jar</p>");
-        assertPageContains("/test/getresource?path=/folder/resourceC.jsp",
-                "<p>resourceC.jsp in the web application</p>");
-        assertPageContains("/test/getresource?path=/folder/resourceD.jsp",
-                "<p>resourceD.jsp in resources.jar</p>");
-        assertPageContains("/test/getresource?path=/folder/resourceE.jsp",
-                "<p>resourceE.jsp in the web application</p>");
-    }
+		assertPageContains("/test/getresource?path=/resourceF.jsp",
+				"<p>resourceF.jsp in resources2.jar</p>");
+		assertPageContains("/test/getresource?path=/resourceA.jsp",
+				"<p>resourceA.jsp in the web application</p>");
+		assertPageContains("/test/getresource?path=/resourceB.jsp",
+				"<p>resourceB.jsp in resources.jar</p>");
+		assertPageContains("/test/getresource?path=/folder/resourceC.jsp",
+				"<p>resourceC.jsp in the web application</p>");
+		assertPageContains("/test/getresource?path=/folder/resourceD.jsp",
+				"<p>resourceD.jsp in resources.jar</p>");
+		assertPageContains("/test/getresource?path=/folder/resourceE.jsp",
+				"<p>resourceE.jsp in the web application</p>");
+	}
 
+	@Test
+	public void testResourceCaching() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-    @Test
-    public void testResourceCaching() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		StandardContext ctx = (StandardContext) tomcat.addWebapp(null, "/test",
+				appDir.getAbsolutePath());
+		ctx.setCachingAllowed(false);
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        StandardContext ctx = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
-        ctx.setCachingAllowed(false);
+		tomcat.start();
 
-        tomcat.start();
+		DirContext resources = ctx.getResources();
 
-        DirContext resources = ctx.getResources();
+		Assert.assertTrue(resources instanceof ProxyDirContext);
 
-        Assert.assertTrue(resources instanceof ProxyDirContext);
+		ProxyDirContext proxyResources = (ProxyDirContext) resources;
 
-        ProxyDirContext proxyResources = (ProxyDirContext) resources;
+		// Caching should be disabled
+		Assert.assertNull(proxyResources.getCache());
 
-        // Caching should be disabled
-        Assert.assertNull(proxyResources.getCache());
+		ctx.stop();
+		ctx.start();
 
-        ctx.stop();
-        ctx.start();
+		// Caching should still be disabled
+		Assert.assertNull(proxyResources.getCache());
+	}
 
-        // Caching should still be disabled
-        Assert.assertNull(proxyResources.getCache());
-    }
+	/**
+	 * A servlet that prints the requested resource. The path to the requested
+	 * resource is passed as a parameter, <code>path</code>.
+	 */
+	public static class GetResourceServlet extends HttpServlet {
 
+		private static final long serialVersionUID = 1L;
 
-    /**
-     * A servlet that prints the requested resource. The path to the requested
-     * resource is passed as a parameter, <code>path</code>.
-     */
-    public static class GetResourceServlet extends HttpServlet {
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
 
-        private static final long serialVersionUID = 1L;
+			resp.setContentType("text/plain");
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
+			ServletContext context = getServletContext();
 
-            resp.setContentType("text/plain");
+			// Check resources individually
+			URL url = context.getResource(req.getParameter("path"));
+			if (url == null) {
+				resp.getWriter().println("Not found");
+				return;
+			}
 
-            ServletContext context = getServletContext();
+			InputStream input = url.openStream();
+			OutputStream output = resp.getOutputStream();
+			try {
+				byte[] buffer = new byte[4000];
+				for (int len; (len = input.read(buffer)) > 0;) {
+					output.write(buffer, 0, len);
+				}
+			} finally {
+				input.close();
+				output.close();
+			}
+		}
+	}
 
-            // Check resources individually
-            URL url = context.getResource(req.getParameter("path"));
-            if (url == null) {
-                resp.getWriter().println("Not found");
-                return;
-            }
+	private void assertPageContains(String pageUrl, String expectedBody)
+			throws IOException {
 
-            InputStream input = url.openStream();
-            OutputStream output = resp.getOutputStream();
-            try {
-                byte[] buffer = new byte[4000];
-                for (int len; (len = input.read(buffer)) > 0;) {
-                    output.write(buffer, 0, len);
-                }
-            } finally {
-                input.close();
-                output.close();
-            }
-        }
-    }
+		assertPageContains(pageUrl, expectedBody, 200);
+	}
 
-    private void assertPageContains(String pageUrl, String expectedBody)
-            throws IOException {
+	private void assertPageContains(String pageUrl, String expectedBody,
+			int expectedStatus) throws IOException {
+		ByteChunk res = new ByteChunk();
+		int sc = getUrl("http://localhost:" + getPort() + pageUrl, res, null);
 
-        assertPageContains(pageUrl, expectedBody, 200);
-    }
+		assertEquals(expectedStatus, sc);
 
-    private void assertPageContains(String pageUrl, String expectedBody,
-            int expectedStatus) throws IOException {
-        ByteChunk res = new ByteChunk();
-        int sc = getUrl("http://localhost:" + getPort() + pageUrl, res, null);
-
-        assertEquals(expectedStatus, sc);
-
-        if (expectedStatus == 200) {
-            String result = res.toString();
-            assertTrue(result, result.indexOf(expectedBody) > 0);
-        }
-    }
+		if (expectedStatus == 200) {
+			String result = res.toString();
+			assertTrue(result, result.indexOf(expectedBody) > 0);
+		}
+	}
 }

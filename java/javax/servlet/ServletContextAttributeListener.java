@@ -29,21 +29,21 @@ import java.util.EventListener;
  */
 
 public interface ServletContextAttributeListener extends EventListener {
-    /**
-     * Notification that a new attribute was added to the servlet context.
-     * Called after the attribute is added.
-     */
-    public void attributeAdded(ServletContextAttributeEvent scab);
+	/**
+	 * Notification that a new attribute was added to the servlet context.
+	 * Called after the attribute is added.
+	 */
+	public void attributeAdded(ServletContextAttributeEvent scab);
 
-    /**
-     * Notification that an existing attribute has been removed from the servlet
-     * context. Called after the attribute is removed.
-     */
-    public void attributeRemoved(ServletContextAttributeEvent scab);
+	/**
+	 * Notification that an existing attribute has been removed from the servlet
+	 * context. Called after the attribute is removed.
+	 */
+	public void attributeRemoved(ServletContextAttributeEvent scab);
 
-    /**
-     * Notification that an attribute on the servlet context has been replaced.
-     * Called after the attribute is replaced.
-     */
-    public void attributeReplaced(ServletContextAttributeEvent scab);
+	/**
+	 * Notification that an attribute on the servlet context has been replaced.
+	 * Called after the attribute is replaced.
+	 */
+	public void attributeReplaced(ServletContextAttributeEvent scab);
 }

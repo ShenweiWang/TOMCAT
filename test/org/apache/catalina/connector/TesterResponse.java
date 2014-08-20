@@ -24,17 +24,17 @@ import java.io.IOException;
  */
 public class TesterResponse extends Response {
 
-    @Override
-    public boolean isCommitted() {
-        return false;
-    }
+	@Override
+	public boolean isCommitted() {
+		return false;
+	}
 
-    @Override
-    public void sendError(int status, String message) throws IOException {
-        // NO-OP by default.
-        /*
-        System.out.println("TesterResponse.sendError(" + status + ", \"" +
-                message + "\")");
-         */
-    }
+	@Override
+	public void sendError(int status, String message) throws IOException {
+		// NO-OP by default.
+		/*
+		 * System.out.println("TesterResponse.sendError(" + status + ", \"" +
+		 * message + "\")");
+		 */
+	}
 }

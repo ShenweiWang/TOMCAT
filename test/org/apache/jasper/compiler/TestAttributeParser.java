@@ -36,172 +36,176 @@ import org.apache.jasper.el.ELContextImpl;
  */
 public class TestAttributeParser {
 
-    /**
-     * Test use of spaces in ternary expressions. This was primarily an EL
-     * parser bug.
-     */
-    @Test
-    public void testBug42565() {
-        assertEquals("false", evalAttr("${false?true:false}", '\"'));
-        assertEquals("false", evalAttr("${false?true: false}", '\"'));
-        assertEquals("false", evalAttr("${false?true :false}", '\"'));
-        assertEquals("false", evalAttr("${false?true : false}", '\"'));
-        assertEquals("false", evalAttr("${false? true:false}", '\"'));
-        assertEquals("false", evalAttr("${false? true: false}", '\"'));
-        assertEquals("false", evalAttr("${false? true :false}", '\"'));
-        assertEquals("false", evalAttr("${false? true : false}", '\"'));
-        assertEquals("false", evalAttr("${false ?true:false}", '\"'));
-        assertEquals("false", evalAttr("${false ?true: false}", '\"'));
-        assertEquals("false", evalAttr("${false ?true :false}", '\"'));
-        assertEquals("false", evalAttr("${false ?true : false}", '\"'));
-        assertEquals("false", evalAttr("${false ? true:false}", '\"'));
-        assertEquals("false", evalAttr("${false ? true: false}", '\"'));
-        assertEquals("false", evalAttr("${false ? true :false}", '\"'));
-        assertEquals("false", evalAttr("${false ? true : false}", '\"'));
-    }
+	/**
+	 * Test use of spaces in ternary expressions. This was primarily an EL
+	 * parser bug.
+	 */
+	@Test
+	public void testBug42565() {
+		assertEquals("false", evalAttr("${false?true:false}", '\"'));
+		assertEquals("false", evalAttr("${false?true: false}", '\"'));
+		assertEquals("false", evalAttr("${false?true :false}", '\"'));
+		assertEquals("false", evalAttr("${false?true : false}", '\"'));
+		assertEquals("false", evalAttr("${false? true:false}", '\"'));
+		assertEquals("false", evalAttr("${false? true: false}", '\"'));
+		assertEquals("false", evalAttr("${false? true :false}", '\"'));
+		assertEquals("false", evalAttr("${false? true : false}", '\"'));
+		assertEquals("false", evalAttr("${false ?true:false}", '\"'));
+		assertEquals("false", evalAttr("${false ?true: false}", '\"'));
+		assertEquals("false", evalAttr("${false ?true :false}", '\"'));
+		assertEquals("false", evalAttr("${false ?true : false}", '\"'));
+		assertEquals("false", evalAttr("${false ? true:false}", '\"'));
+		assertEquals("false", evalAttr("${false ? true: false}", '\"'));
+		assertEquals("false", evalAttr("${false ? true :false}", '\"'));
+		assertEquals("false", evalAttr("${false ? true : false}", '\"'));
+	}
 
+	/**
+	 * Test use nested ternary expressions. Full tests in
+	 * {@link org.apache.el.TestELEvaluation}. This is just a smoke test to
+	 * ensure JSP attribute processing doesn't cause any additional issues.
+	 */
+	@Test
+	public void testBug44994() {
+		assertEquals("none",
+				evalAttr("${0 lt 0 ? 1 lt 0 ? 'many': 'one': 'none'}", '\"'));
+		assertEquals("one",
+				evalAttr("${0 lt 1 ? 1 lt 1 ? 'many': 'one': 'none'}", '\"'));
+		assertEquals("many",
+				evalAttr("${0 lt 2 ? 1 lt 2 ? 'many': 'one': 'none'}", '\"'));
+	}
 
-    /**
-     * Test use nested ternary expressions. Full tests in
-     * {@link org.apache.el.TestELEvaluation}. This is just a smoke test to
-     * ensure JSP attribute processing doesn't cause any additional issues.
-     */
-    @Test
-    public void testBug44994() {
-        assertEquals("none",
-                evalAttr("${0 lt 0 ? 1 lt 0 ? 'many': 'one': 'none'}", '\"'));
-        assertEquals("one",
-                evalAttr("${0 lt 1 ? 1 lt 1 ? 'many': 'one': 'none'}", '\"'));
-        assertEquals("many",
-                evalAttr("${0 lt 2 ? 1 lt 2 ? 'many': 'one': 'none'}", '\"'));
-    }
+	/**
+	 * Test the quoting requirements of JSP attributes. This doesn't make use of
+	 * EL. See {@link #testBug45451()} for a test that combines JSP attribute
+	 * quoting and EL quoting.
+	 */
+	@Test
+	public void testBug45015() {
+		// Warning: Java String quoting vs. JSP attribute quoting
+		assertEquals("hello 'world'", evalAttr("hello 'world'", '\"'));
+		assertEquals("hello 'world", evalAttr("hello 'world", '\"'));
+		assertEquals("hello world'", evalAttr("hello world'", '\"'));
+		assertEquals("hello world'", evalAttr("hello world\\'", '\"'));
+		assertEquals("hello world\"", evalAttr("hello world\\\"", '\"'));
+		assertEquals("hello \"world\"", evalAttr("hello \"world\"", '\"'));
+		assertEquals("hello \"world", evalAttr("hello \"world", '\"'));
+		assertEquals("hello world\"", evalAttr("hello world\"", '\"'));
+		assertEquals("hello world'", evalAttr("hello world\\'", '\"'));
+		assertEquals("hello world\"", evalAttr("hello world\\\"", '\"'));
 
+		assertEquals("hello 'world'", evalAttr("hello 'world'", '\''));
+		assertEquals("hello 'world", evalAttr("hello 'world", '\''));
+		assertEquals("hello world'", evalAttr("hello world'", '\''));
+		assertEquals("hello world'", evalAttr("hello world\\'", '\''));
+		assertEquals("hello world\"", evalAttr("hello world\\\"", '\''));
+		assertEquals("hello \"world\"", evalAttr("hello \"world\"", '\''));
+		assertEquals("hello \"world", evalAttr("hello \"world", '\''));
+		assertEquals("hello world\"", evalAttr("hello world\"", '\''));
+		assertEquals("hello world'", evalAttr("hello world\\'", '\''));
+		assertEquals("hello world\"", evalAttr("hello world\\\"", '\''));
 
-    /**
-     * Test the quoting requirements of JSP attributes. This doesn't make use of
-     * EL. See {@link #testBug45451()} for a test that combines JSP attribute
-     * quoting and EL quoting.
-     */
-    @Test
-    public void testBug45015() {
-        // Warning: Java String quoting vs. JSP attribute quoting
-        assertEquals("hello 'world'", evalAttr("hello 'world'", '\"'));
-        assertEquals("hello 'world", evalAttr("hello 'world", '\"'));
-        assertEquals("hello world'", evalAttr("hello world'", '\"'));
-        assertEquals("hello world'", evalAttr("hello world\\'", '\"'));
-        assertEquals("hello world\"", evalAttr("hello world\\\"", '\"'));
-        assertEquals("hello \"world\"", evalAttr("hello \"world\"", '\"'));
-        assertEquals("hello \"world", evalAttr("hello \"world", '\"'));
-        assertEquals("hello world\"", evalAttr("hello world\"", '\"'));
-        assertEquals("hello world'", evalAttr("hello world\\'", '\"'));
-        assertEquals("hello world\"", evalAttr("hello world\\\"", '\"'));
+	}
 
-        assertEquals("hello 'world'", evalAttr("hello 'world'", '\''));
-        assertEquals("hello 'world", evalAttr("hello 'world", '\''));
-        assertEquals("hello world'", evalAttr("hello world'", '\''));
-        assertEquals("hello world'", evalAttr("hello world\\'", '\''));
-        assertEquals("hello world\"", evalAttr("hello world\\\"", '\''));
-        assertEquals("hello \"world\"", evalAttr("hello \"world\"", '\''));
-        assertEquals("hello \"world", evalAttr("hello \"world", '\''));
-        assertEquals("hello world\"", evalAttr("hello world\"", '\''));
-        assertEquals("hello world'", evalAttr("hello world\\'", '\''));
-        assertEquals("hello world\"", evalAttr("hello world\\\"", '\''));
+	@Test
+	public void testBug45451() {
+		assertEquals("2", evalAttr("${1+1}", '\"'));
+		assertEquals("${1+1}", evalAttr("\\${1+1}", '\"'));
+		assertEquals("\\2", evalAttr("\\\\${1+1}", '\"'));
+	}
 
-    }
+	@Test
+	public void testBug49081() {
+		assertEquals("#2", evalAttr("#${1+1}", '\"'));
+	}
 
-    @Test
-    public void testBug45451() {
-        assertEquals("2", evalAttr("${1+1}", '\"'));
-        assertEquals("${1+1}", evalAttr("\\${1+1}", '\"'));
-        assertEquals("\\2", evalAttr("\\\\${1+1}", '\"'));
-    }
+	@Test
+	public void testLiteral() {
+		// Inspired by work on bug 45451, comments from kkolinko on the dev
+		// list and looking at the spec to find some edge cases
 
-    @Test
-    public void testBug49081() {
-        assertEquals("#2", evalAttr("#${1+1}", '\"'));
-    }
+		// '\' is only an escape character inside a StringLiteral
+		assertEquals("\\", evalAttr("${'\\\\\\\\'}", '\"'));
+		assertEquals("\\", evalAttr("${\"\\\\\\\\\"}", '\"'));
 
-    @Test
-    public void testLiteral() {
-        // Inspired by work on bug 45451, comments from kkolinko on the dev
-        // list and looking at the spec to find some edge cases
+		// Can use ''' inside '"' when quoting with '"' and vice versa without
+		// escaping
+		assertEquals("\\\"", evalAttr("${'\\\\\\\\\\\"'}", '\"'));
+		assertEquals("\"\\", evalAttr("${'\\\"\\\\\\\\'}", '\"'));
+		assertEquals("\\'", evalAttr("${'\\\\\\\\\\\\''}", '\"'));
+		assertEquals("'\\", evalAttr("${'\\\\'\\\\\\\\'}", '\"'));
+		assertEquals("\\'", evalAttr("${\\\"\\\\\\\\'\\\"}", '\"'));
+		assertEquals("'\\", evalAttr("${\\\"'\\\\\\\\\\\"}", '\"'));
+		assertEquals("\\\"", evalAttr("${\\\"\\\\\\\\\\\\\\\"\\\"}", '\"'));
+		assertEquals("\"\\", evalAttr("${\\\"\\\\\\\"\\\\\\\\\\\"}", '\"'));
 
-        // '\' is only an escape character inside a StringLiteral
-        assertEquals("\\", evalAttr("${'\\\\\\\\'}", '\"'));
-        assertEquals("\\", evalAttr("${\"\\\\\\\\\"}", '\"'));
+		// Quoting <% and %>
+		assertEquals("hello <% world", evalAttr("hello <\\% world", '\"'));
+		assertEquals("hello %> world", evalAttr("hello %> world", '\"'));
 
-        // Can use ''' inside '"' when quoting with '"' and vice versa without
-        // escaping
-        assertEquals("\\\"", evalAttr("${'\\\\\\\\\\\"'}", '\"'));
-        assertEquals("\"\\", evalAttr("${'\\\"\\\\\\\\'}", '\"'));
-        assertEquals("\\'", evalAttr("${'\\\\\\\\\\\\''}", '\"'));
-        assertEquals("'\\", evalAttr("${'\\\\'\\\\\\\\'}", '\"'));
-        assertEquals("\\'", evalAttr("${\\\"\\\\\\\\'\\\"}", '\"'));
-        assertEquals("'\\", evalAttr("${\\\"'\\\\\\\\\\\"}", '\"'));
-        assertEquals("\\\"", evalAttr("${\\\"\\\\\\\\\\\\\\\"\\\"}", '\"'));
-        assertEquals("\"\\", evalAttr("${\\\"\\\\\\\"\\\\\\\\\\\"}", '\"'));
+		// Test that the end of literal in EL expression is recognized in
+		// parseEL(), be it quoted with single or double quotes. That is, that
+		// AttributeParser correctly switches between parseLiteral and parseEL
+		// methods.
+		//
+		// The test is based on the difference in how the '\' character is
+		// printed:
+		// when in parseLiteral \\${ will be printed as ${'\'}${, but if we are
+		// still
+		// inside of parseEL it will be printed as \${, thus preventing the EL
+		// expression that follows from being evaluated.
+		//
+		assertEquals("foo\\bar\\baz",
+				evalAttr("${\'foo\'}\\\\${\'bar\'}\\\\${\'baz\'}", '\"'));
+		assertEquals("foo\\bar\\baz",
+				evalAttr("${\'foo\'}\\\\${\\\"bar\\\"}\\\\${\'baz\'}", '\"'));
+		assertEquals(
+				"foo\\bar\\baz",
+				evalAttr("${\\\"foo\\\"}\\\\${\'bar\'}\\\\${\\\"baz\\\"}", '\"'));
+		assertEquals("foo\\bar\\baz",
+				evalAttr("${\"foo\"}\\\\${\\\'bar\\\'}\\\\${\"baz\"}", '\''));
+	}
 
-        // Quoting <% and %>
-        assertEquals("hello <% world", evalAttr("hello <\\% world", '\"'));
-        assertEquals("hello %> world", evalAttr("hello %> world", '\"'));
+	@Test
+	public void testScriptExpressionLiterals() {
+		assertEquals(" \"hello world\" ",
+				parseScriptExpression(" \"hello world\" ", (char) 0));
+		assertEquals(" \"hello \\\"world\" ",
+				parseScriptExpression(" \"hello \\\\\"world\" ", (char) 0));
+	}
 
-        // Test that the end of literal in EL expression is recognized in
-        // parseEL(), be it quoted with single or double quotes. That is, that
-        // AttributeParser correctly switches between parseLiteral and parseEL
-        // methods.
-        //
-        // The test is based on the difference in how the '\' character is printed:
-        // when in parseLiteral \\${ will be printed as ${'\'}${, but if we are still
-        // inside of parseEL it will be printed as \${, thus preventing the EL
-        // expression that follows from being evaluated.
-        //
-        assertEquals("foo\\bar\\baz", evalAttr("${\'foo\'}\\\\${\'bar\'}\\\\${\'baz\'}", '\"'));
-        assertEquals("foo\\bar\\baz", evalAttr("${\'foo\'}\\\\${\\\"bar\\\"}\\\\${\'baz\'}", '\"'));
-        assertEquals("foo\\bar\\baz", evalAttr("${\\\"foo\\\"}\\\\${\'bar\'}\\\\${\\\"baz\\\"}", '\"'));
-        assertEquals("foo\\bar\\baz", evalAttr("${\"foo\"}\\\\${\\\'bar\\\'}\\\\${\"baz\"}", '\''));
-    }
+	private String evalAttr(String expression, char quote) {
 
-    @Test
-    public void testScriptExpressionLiterals() {
-        assertEquals(" \"hello world\" ", parseScriptExpression(
-                " \"hello world\" ", (char) 0));
-        assertEquals(" \"hello \\\"world\" ", parseScriptExpression(
-                " \"hello \\\\\"world\" ", (char) 0));
-    }
+		ELContextImpl ctx = new ELContextImpl();
+		ctx.setFunctionMapper(new FMapper());
+		ExpressionFactoryImpl exprFactory = new ExpressionFactoryImpl();
+		ValueExpression ve = exprFactory.createValueExpression(ctx,
+				AttributeParser.getUnquoted(expression, quote, false, false,
+						false), String.class);
+		return (String) ve.getValue(ctx);
+	}
 
-    private String evalAttr(String expression, char quote) {
+	private String parseScriptExpression(String expression, char quote) {
+		return AttributeParser.getUnquoted(expression, quote, false, false,
+				false);
+	}
 
-        ELContextImpl ctx = new ELContextImpl();
-        ctx.setFunctionMapper(new FMapper());
-        ExpressionFactoryImpl exprFactory = new ExpressionFactoryImpl();
-        ValueExpression ve = exprFactory.createValueExpression(ctx,
-                AttributeParser.getUnquoted(expression, quote, false, false,
-                        false),
-                String.class);
-        return (String) ve.getValue(ctx);
-    }
+	public static class FMapper extends FunctionMapper {
 
-    private String parseScriptExpression(String expression, char quote) {
-        return AttributeParser.getUnquoted(expression, quote, false, false,
-                false);
-    }
-
-    public static class FMapper extends FunctionMapper {
-
-        @Override
-        public Method resolveFunction(String prefix, String localName) {
-            if ("trim".equals(localName)) {
-                Method m;
-                try {
-                    m = TesterFunctions.class.getMethod("trim", String.class);
-                    return m;
-                } catch (SecurityException e) {
-                    // Ignore
-                } catch (NoSuchMethodException e) {
-                    // Ignore
-                }
-            }
-            return null;
-        }
-    }
+		@Override
+		public Method resolveFunction(String prefix, String localName) {
+			if ("trim".equals(localName)) {
+				Method m;
+				try {
+					m = TesterFunctions.class.getMethod("trim", String.class);
+					return m;
+				} catch (SecurityException e) {
+					// Ignore
+				} catch (NoSuchMethodException e) {
+					// Ignore
+				}
+			}
+			return null;
+		}
+	}
 }

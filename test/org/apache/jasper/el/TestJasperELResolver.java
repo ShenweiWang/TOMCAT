@@ -28,45 +28,44 @@ import org.junit.Test;
 
 public class TestJasperELResolver {
 
-    @Test
-    public void testConstructorNone() throws Exception {
-        doTestConstructor(0);
-    }
+	@Test
+	public void testConstructorNone() throws Exception {
+		doTestConstructor(0);
+	}
 
-    @Test
-    public void testConstructorOne() throws Exception {
-        doTestConstructor(1);
-    }
+	@Test
+	public void testConstructorOne() throws Exception {
+		doTestConstructor(1);
+	}
 
-    @Test
-    public void testConstructorFive() throws Exception {
-        doTestConstructor(5);
-    }
+	@Test
+	public void testConstructorFive() throws Exception {
+		doTestConstructor(5);
+	}
 
-    private void doTestConstructor(int count) throws Exception {
+	private void doTestConstructor(int count) throws Exception {
 
-        List<ELResolver> list = new ArrayList<ELResolver>();
-        for (int i = 0; i < count; i++) {
-            list.add(new ImplicitObjectELResolver());
-        }
+		List<ELResolver> list = new ArrayList<ELResolver>();
+		for (int i = 0; i < count; i++) {
+			list.add(new ImplicitObjectELResolver());
+		}
 
-        JasperELResolver resolver = new JasperELResolver(list);
+		JasperELResolver resolver = new JasperELResolver(list);
 
+		Assert.assertEquals(Integer.valueOf(count),
+				getField("appResolversSize", resolver));
+		Assert.assertEquals(7 + count,
+				((ELResolver[]) getField("resolvers", resolver)).length);
+		Assert.assertEquals(Integer.valueOf(7 + count),
+				getField("size", resolver));
 
-        Assert.assertEquals(Integer.valueOf(count),
-                getField("appResolversSize", resolver));
-        Assert.assertEquals(7 + count,
-                ((ELResolver[])getField("resolvers", resolver)).length);
-        Assert.assertEquals(Integer.valueOf(7 + count),
-                getField("size", resolver));
+	}
 
-    }
-
-    private static final Object getField(String name, Object target)
-            throws NoSuchFieldException, SecurityException,
-            IllegalArgumentException, IllegalAccessException {
-        Field field = target.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        return field.get(target);
-    }
+	private static final Object getField(String name, Object target)
+			throws NoSuchFieldException, SecurityException,
+			IllegalArgumentException, IllegalAccessException {
+		Field field = target.getClass().getDeclaredField(name);
+		field.setAccessible(true);
+		return field.get(target);
+	}
 }

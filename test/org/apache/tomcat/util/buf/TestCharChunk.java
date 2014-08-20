@@ -27,16 +27,16 @@ import org.junit.Test;
  */
 public class TestCharChunk {
 
-    @Test
-    public void testEndsWith() {
-        CharChunk cc = new CharChunk();
-        assertFalse(cc.endsWith("test"));
-        cc.setChars("xxtestxx".toCharArray(), 2, 4);
-        assertTrue(cc.endsWith(""));
-        assertTrue(cc.endsWith("t"));
-        assertTrue(cc.endsWith("st"));
-        assertTrue(cc.endsWith("test"));
-        assertFalse(cc.endsWith("x"));
-        assertFalse(cc.endsWith("xxtest"));
-    }
+	@Test
+	public void testEndsWith() {
+		CharChunk cc = new CharChunk();
+		assertFalse(cc.endsWith("test"));
+		cc.setChars("xxtestxx".toCharArray(), 2, 4);
+		assertTrue(cc.endsWith(""));
+		assertTrue(cc.endsWith("t"));
+		assertTrue(cc.endsWith("st"));
+		assertTrue(cc.endsWith("test"));
+		assertFalse(cc.endsWith("x"));
+		assertFalse(cc.endsWith("xxtest"));
+	}
 }

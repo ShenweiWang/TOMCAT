@@ -29,82 +29,78 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestJspConfig extends TomcatBaseTest {
 
-    @Test
-    public void testServlet23NoEL() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testServlet23NoEL() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir =
-            new File("test/webapp-2.3");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-2.3");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/el-as-literal.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/el-as-literal.jsp");
 
-        String result = res.toString();
+		String result = res.toString();
 
-        assertTrue(result.indexOf("<p>00-${'hello world'}</p>") > 0);
-        assertTrue(result.indexOf("<p>01-#{'hello world'}</p>") > 0);
-    }
+		assertTrue(result.indexOf("<p>00-${'hello world'}</p>") > 0);
+		assertTrue(result.indexOf("<p>01-#{'hello world'}</p>") > 0);
+	}
 
-    @Test
-    public void testServlet24NoEL() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testServlet24NoEL() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir =
-            new File("test/webapp-2.4");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-2.4");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/el-as-literal.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/el-as-literal.jsp");
 
-        String result = res.toString();
+		String result = res.toString();
 
-        assertTrue(result.indexOf("<p>00-hello world</p>") > 0);
-        assertTrue(result.indexOf("<p>01-#{'hello world'}</p>") > 0);
-    }
+		assertTrue(result.indexOf("<p>00-hello world</p>") > 0);
+		assertTrue(result.indexOf("<p>01-#{'hello world'}</p>") > 0);
+	}
 
-    @Test
-    public void testServlet25NoEL() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testServlet25NoEL() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir =
-            new File("test/webapp-2.5");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-2.5");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/el-as-literal.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/el-as-literal.jsp");
 
-        String result = res.toString();
+		String result = res.toString();
 
-        assertTrue(result.indexOf("<p>00-hello world</p>") > 0);
-    }
+		assertTrue(result.indexOf("<p>00-hello world</p>") > 0);
+	}
 
-    @Test
-    public void testServlet30NoEL() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testServlet30NoEL() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir =
-            new File("test/webapp-3.0");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/el-as-literal.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/el-as-literal.jsp");
 
-        String result = res.toString();
+		String result = res.toString();
 
-        assertTrue(result.indexOf("<p>00-hello world</p>") > 0);
-    }
+		assertTrue(result.indexOf("<p>00-hello world</p>") > 0);
+	}
 
 }

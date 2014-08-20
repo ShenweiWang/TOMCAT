@@ -33,41 +33,39 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestHttpServlet extends TomcatBaseTest {
 
-    @Test
-    public void testBug53454() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53454() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        StandardContext ctx = (StandardContext)
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		StandardContext ctx = (StandardContext) tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        // Map the test Servlet
-        LargeBodyServlet largeBodyServlet = new LargeBodyServlet();
-        Tomcat.addServlet(ctx, "largeBodyServlet", largeBodyServlet);
-        ctx.addServletMapping("/", "largeBodyServlet");
+		// Map the test Servlet
+		LargeBodyServlet largeBodyServlet = new LargeBodyServlet();
+		Tomcat.addServlet(ctx, "largeBodyServlet", largeBodyServlet);
+		ctx.addServletMapping("/", "largeBodyServlet");
 
-        tomcat.start();
+		tomcat.start();
 
-        Map<String,List<String>> resHeaders=
-                new HashMap<String, List<String>>();
-        int rc = headUrl("http://localhost:" + getPort() + "/", new ByteChunk(),
-               resHeaders);
+		Map<String, List<String>> resHeaders = new HashMap<String, List<String>>();
+		int rc = headUrl("http://localhost:" + getPort() + "/",
+				new ByteChunk(), resHeaders);
 
-        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-        Assert.assertEquals(LargeBodyServlet.RESPONSE_LENGTH,
-                resHeaders.get("Content-Length").get(0));
-    }
+		Assert.assertEquals(HttpServletResponse.SC_OK, rc);
+		Assert.assertEquals(LargeBodyServlet.RESPONSE_LENGTH,
+				resHeaders.get("Content-Length").get(0));
+	}
 
+	private static class LargeBodyServlet extends HttpServlet {
 
-    private static class LargeBodyServlet extends HttpServlet {
+		private static final long serialVersionUID = 1L;
+		private static final String RESPONSE_LENGTH = "12345678901";
 
-        private static final long serialVersionUID = 1L;
-        private static final String RESPONSE_LENGTH = "12345678901";
-
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.setHeader("content-length", RESPONSE_LENGTH);
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.setHeader("content-length", RESPONSE_LENGTH);
+		}
+	}
 }

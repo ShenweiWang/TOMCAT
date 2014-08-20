@@ -24,68 +24,68 @@ import java.io.Serializable;
 
 /**
  * This class represents a (PC offset, line number) pair, i.e., a line number in
- * the source that corresponds to a relative address in the byte code. This
- * is used for debugging purposes.
+ * the source that corresponds to a relative address in the byte code. This is
+ * used for debugging purposes.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @see     LineNumberTable
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @see LineNumberTable
  */
 public final class LineNumber implements Cloneable, Serializable {
 
-    private static final long serialVersionUID = 3393830630264494355L;
-    private int start_pc; // Program Counter (PC) corresponds to line
-    private int line_number; // number in source file
+	private static final long serialVersionUID = 3393830630264494355L;
+	private int start_pc; // Program Counter (PC) corresponds to line
+	private int line_number; // number in source file
 
+	/**
+	 * Construct object from file stream.
+	 * 
+	 * @param file
+	 *            Input stream
+	 * @throws IOException
+	 */
+	LineNumber(DataInput file) throws IOException {
+		this(file.readUnsignedShort(), file.readUnsignedShort());
+	}
 
-    /**
-     * Construct object from file stream.
-     * @param file Input stream
-     * @throws IOException
-     */
-    LineNumber(DataInput file) throws IOException {
-        this(file.readUnsignedShort(), file.readUnsignedShort());
-    }
+	/**
+	 * @param start_pc
+	 *            Program Counter (PC) corresponds to
+	 * @param line_number
+	 *            line number in source file
+	 */
+	public LineNumber(int start_pc, int line_number) {
+		this.start_pc = start_pc;
+		this.line_number = line_number;
+	}
 
+	/**
+	 * Dump line number/pc pair to file stream in binary format.
+	 *
+	 * @param file
+	 *            Output file stream
+	 * @throws IOException
+	 */
+	public final void dump(DataOutputStream file) throws IOException {
+		file.writeShort(start_pc);
+		file.writeShort(line_number);
+	}
 
-    /**
-     * @param start_pc Program Counter (PC) corresponds to
-     * @param line_number line number in source file
-     */
-    public LineNumber(int start_pc, int line_number) {
-        this.start_pc = start_pc;
-        this.line_number = line_number;
-    }
+	/**
+	 * @return String representation
+	 */
+	@Override
+	public final String toString() {
+		return "LineNumber(" + start_pc + ", " + line_number + ")";
+	}
 
-
-    /**
-     * Dump line number/pc pair to file stream in binary format.
-     *
-     * @param file Output file stream
-     * @throws IOException
-     */
-    public final void dump( DataOutputStream file ) throws IOException {
-        file.writeShort(start_pc);
-        file.writeShort(line_number);
-    }
-
-
-    /**
-     * @return String representation
-     */
-    @Override
-    public final String toString() {
-        return "LineNumber(" + start_pc + ", " + line_number + ")";
-    }
-
-
-    /**
-     * @return deep copy of this object
-     */
-    public LineNumber copy() {
-        try {
-            return (LineNumber) clone();
-        } catch (CloneNotSupportedException e) {
-        }
-        return null;
-    }
+	/**
+	 * @return deep copy of this object
+	 */
+	public LineNumber copy() {
+		try {
+			return (LineNumber) clone();
+		} catch (CloneNotSupportedException e) {
+		}
+		return null;
+	}
 }

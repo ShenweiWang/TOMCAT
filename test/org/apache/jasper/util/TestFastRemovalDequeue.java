@@ -21,179 +21,168 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-
 public class TestFastRemovalDequeue {
 
-    @Test
-    public void testSinglePushPop() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+	@Test
+	public void testSinglePushPop() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-        Object o1 = new Object();
+		Object o1 = new Object();
 
-        q.push(o1);
+		q.push(o1);
 
-        Object r = q.pop();
+		Object r = q.pop();
 
-        assertEquals(o1, r);
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		assertEquals(o1, r);
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
+	@Test
+	public void testDoublePushPop() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-    @Test
-    public void testDoublePushPop() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+		Object o1 = new Object();
+		Object o2 = new Object();
 
-        Object o1 = new Object();
-        Object o2 = new Object();
+		q.push(o1);
+		q.push(o2);
 
-        q.push(o1);
-        q.push(o2);
+		assertEquals(o2, q.first.getContent());
+		assertEquals(o1, q.last.getContent());
 
-        assertEquals(o2, q.first.getContent());
-        assertEquals(o1, q.last.getContent());
+		Object r1 = q.pop();
 
-        Object r1 = q.pop();
+		assertEquals(o1, r1);
+		assertEquals(o2, q.first.getContent());
+		assertEquals(o2, q.last.getContent());
 
-        assertEquals(o1, r1);
-        assertEquals(o2, q.first.getContent());
-        assertEquals(o2, q.last.getContent());
+		Object r2 = q.pop();
+		assertEquals(o2, r2);
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
+	@Test
+	public void testSingleUnpopPop() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-        Object r2 = q.pop();
-        assertEquals(o2, r2);
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		Object o1 = new Object();
 
+		q.unpop(o1);
 
-    @Test
-    public void testSingleUnpopPop() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+		Object r = q.pop();
 
-        Object o1 = new Object();
+		assertEquals(o1, r);
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
-        q.unpop(o1);
+	@Test
+	public void testDoubleUnpopPop() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-        Object r = q.pop();
+		Object o1 = new Object();
+		Object o2 = new Object();
 
-        assertEquals(o1, r);
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		q.unpop(o1);
+		q.unpop(o2);
 
+		assertEquals(o1, q.first.getContent());
+		assertEquals(o2, q.last.getContent());
 
-    @Test
-    public void testDoubleUnpopPop() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+		Object r2 = q.pop();
 
-        Object o1 = new Object();
-        Object o2 = new Object();
+		assertEquals(o2, r2);
+		assertEquals(o1, q.first.getContent());
+		assertEquals(o1, q.last.getContent());
 
-        q.unpop(o1);
-        q.unpop(o2);
+		Object r1 = q.pop();
+		assertEquals(o1, r1);
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
-        assertEquals(o1, q.first.getContent());
-        assertEquals(o2, q.last.getContent());
+	@Test
+	public void testSinglePushUnpush() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-        Object r2 = q.pop();
+		Object o1 = new Object();
 
-        assertEquals(o2, r2);
-        assertEquals(o1, q.first.getContent());
-        assertEquals(o1, q.last.getContent());
+		q.push(o1);
 
+		Object r = q.unpush();
 
-        Object r1 = q.pop();
-        assertEquals(o1, r1);
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		assertEquals(o1, r);
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
+	@Test
+	public void testDoublePushUnpush() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-    @Test
-    public void testSinglePushUnpush() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+		Object o1 = new Object();
+		Object o2 = new Object();
 
-        Object o1 = new Object();
+		q.push(o1);
+		q.push(o2);
 
-        q.push(o1);
+		assertEquals(o2, q.first.getContent());
+		assertEquals(o1, q.last.getContent());
 
-        Object r = q.unpush();
+		Object r2 = q.unpush();
 
-        assertEquals(o1, r);
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		assertEquals(o2, r2);
+		assertEquals(o1, q.first.getContent());
+		assertEquals(o1, q.last.getContent());
 
+		Object r1 = q.unpush();
+		assertEquals(o1, r1);
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
-    @Test
-    public void testDoublePushUnpush() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+	@Test
+	public void testSinglePushRemove() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-        Object o1 = new Object();
-        Object o2 = new Object();
+		Object o1 = new Object();
 
-        q.push(o1);
-        q.push(o2);
+		FastRemovalDequeue<Object>.Entry e1 = q.push(o1);
 
-        assertEquals(o2, q.first.getContent());
-        assertEquals(o1, q.last.getContent());
+		assertEquals(o1, e1.getContent());
 
-        Object r2 = q.unpush();
+		q.remove(e1);
 
-        assertEquals(o2, r2);
-        assertEquals(o1, q.first.getContent());
-        assertEquals(o1, q.last.getContent());
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 
+	@Test
+	public void testDoublePushRemove() throws Exception {
+		FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
 
-        Object r1 = q.unpush();
-        assertEquals(o1, r1);
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		Object o1 = new Object();
+		Object o2 = new Object();
 
+		FastRemovalDequeue<Object>.Entry e1 = q.push(o1);
+		FastRemovalDequeue<Object>.Entry e2 = q.push(o2);
 
-    @Test
-    public void testSinglePushRemove() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
+		assertEquals(o1, e1.getContent());
+		assertEquals(o2, e2.getContent());
 
-        Object o1 = new Object();
+		assertEquals(o2, q.first.getContent());
+		assertEquals(o1, q.last.getContent());
 
-        FastRemovalDequeue<Object>.Entry e1 = q.push(o1);
+		q.remove(e1);
 
-        assertEquals(o1, e1.getContent());
+		assertEquals(o2, q.first.getContent());
+		assertEquals(o2, q.last.getContent());
 
-        q.remove(e1);
+		q.remove(e2);
 
-        assertNull(q.first);
-        assertNull(q.last);
-    }
-
-
-    @Test
-    public void testDoublePushRemove() throws Exception {
-        FastRemovalDequeue<Object> q = new FastRemovalDequeue<Object>(2);
-
-        Object o1 = new Object();
-        Object o2 = new Object();
-
-        FastRemovalDequeue<Object>.Entry e1 = q.push(o1);
-        FastRemovalDequeue<Object>.Entry e2 = q.push(o2);
-
-        assertEquals(o1, e1.getContent());
-        assertEquals(o2, e2.getContent());
-
-        assertEquals(o2, q.first.getContent());
-        assertEquals(o1, q.last.getContent());
-
-        q.remove(e1);
-
-        assertEquals(o2, q.first.getContent());
-        assertEquals(o2, q.last.getContent());
-
-        q.remove(e2);
-
-        assertNull(q.first);
-        assertNull(q.last);
-    }
+		assertNull(q.first);
+		assertNull(q.last);
+	}
 }

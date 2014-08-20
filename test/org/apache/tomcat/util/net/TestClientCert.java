@@ -34,82 +34,85 @@ import org.apache.tomcat.util.buf.ByteChunk;
  */
 public class TestClientCert extends TomcatBaseTest {
 
-    @Test
-    public void testClientCertGet() throws Exception {
-        Assume.assumeTrue("SSL renegotiation has to be supported for this test",
-                TesterSupport.isRenegotiationSupported(getTomcatInstance()));
+	@Test
+	public void testClientCertGet() throws Exception {
+		Assume.assumeTrue(
+				"SSL renegotiation has to be supported for this test",
+				TesterSupport.isRenegotiationSupported(getTomcatInstance()));
 
-        // Unprotected resource
-        ByteChunk res =
-                getUrl("https://localhost:" + getPort() + "/unprotected");
-        assertEquals("OK", res.toString());
+		// Unprotected resource
+		ByteChunk res = getUrl("https://localhost:" + getPort()
+				+ "/unprotected");
+		assertEquals("OK", res.toString());
 
-        // Protected resource
-        res = getUrl("https://localhost:" + getPort() + "/protected");
-        assertEquals("OK", res.toString());
-    }
+		// Protected resource
+		res = getUrl("https://localhost:" + getPort() + "/protected");
+		assertEquals("OK", res.toString());
+	}
 
-    @Test
-    public void testClientCertPostSmaller() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        int bodySize = tomcat.getConnector().getMaxSavePostSize() / 2;
-        doTestClientCertPost(bodySize, false);
-    }
+	@Test
+	public void testClientCertPostSmaller() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		int bodySize = tomcat.getConnector().getMaxSavePostSize() / 2;
+		doTestClientCertPost(bodySize, false);
+	}
 
-    @Test
-    public void testClientCertPostSame() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        int bodySize = tomcat.getConnector().getMaxSavePostSize();
-        doTestClientCertPost(bodySize, false);
-    }
+	@Test
+	public void testClientCertPostSame() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		int bodySize = tomcat.getConnector().getMaxSavePostSize();
+		doTestClientCertPost(bodySize, false);
+	}
 
-    @Test
-    public void testClientCertPostLarger() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        int bodySize = tomcat.getConnector().getMaxSavePostSize() * 2;
-        doTestClientCertPost(bodySize, true);
-    }
+	@Test
+	public void testClientCertPostLarger() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		int bodySize = tomcat.getConnector().getMaxSavePostSize() * 2;
+		doTestClientCertPost(bodySize, true);
+	}
 
-    private void doTestClientCertPost(int bodySize, boolean expectProtectedFail)
-            throws Exception {
-        Assume.assumeTrue("SSL renegotiation has to be supported for this test",
-                TesterSupport.isRenegotiationSupported(getTomcatInstance()));
+	private void doTestClientCertPost(int bodySize, boolean expectProtectedFail)
+			throws Exception {
+		Assume.assumeTrue(
+				"SSL renegotiation has to be supported for this test",
+				TesterSupport.isRenegotiationSupported(getTomcatInstance()));
 
-        byte[] body = new byte[bodySize];
-        Arrays.fill(body, TesterSupport.DATA);
+		byte[] body = new byte[bodySize];
+		Arrays.fill(body, TesterSupport.DATA);
 
-        // Unprotected resource
-        ByteChunk res = postUrl(body,
-                "https://localhost:" + getPort() + "/unprotected");
-        assertEquals("OK-" + bodySize, res.toString());
+		// Unprotected resource
+		ByteChunk res = postUrl(body, "https://localhost:" + getPort()
+				+ "/unprotected");
+		assertEquals("OK-" + bodySize, res.toString());
 
-        // Protected resource
-        res.recycle();
-        int rc = postUrl(body, "https://localhost:" + getPort() + "/protected",
-                res, null);
-        if (expectProtectedFail) {
-            assertEquals(401, rc);
-        } else {
-            assertEquals("OK-" + bodySize, res.toString());
-        }
-    }
+		// Protected resource
+		res.recycle();
+		int rc = postUrl(body, "https://localhost:" + getPort() + "/protected",
+				res, null);
+		if (expectProtectedFail) {
+			assertEquals(401, rc);
+		} else {
+			assertEquals("OK-" + bodySize, res.toString());
+		}
+	}
 
-    @Override
-    public void setUp() throws Exception {
-        if (!TesterSupport.RFC_5746_SUPPORTED) {
-            // Make sure SSL renegotiation is not disabled in the JVM
-            System.setProperty("sun.security.ssl.allowUnsafeRenegotiation", "true");
-        }
+	@Override
+	public void setUp() throws Exception {
+		if (!TesterSupport.RFC_5746_SUPPORTED) {
+			// Make sure SSL renegotiation is not disabled in the JVM
+			System.setProperty("sun.security.ssl.allowUnsafeRenegotiation",
+					"true");
+		}
 
-        super.setUp();
+		super.setUp();
 
-        Tomcat tomcat = getTomcatInstance();
+		Tomcat tomcat = getTomcatInstance();
 
-        TesterSupport.configureClientCertContext(tomcat);
+		TesterSupport.configureClientCertContext(tomcat);
 
-        // Start Tomcat
-        tomcat.start();
+		// Start Tomcat
+		tomcat.start();
 
-        TesterSupport.configureClientSsl();
-    }
+		TesterSupport.configureClientSsl();
+	}
 }

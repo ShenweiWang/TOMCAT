@@ -45,50 +45,50 @@ import org.apache.juli.logging.LogFactory;
  */
 public class FailedRequestFilter extends FilterBase implements CometFilter {
 
-    private static final Log log = LogFactory.getLog(FailedRequestFilter.class);
+	private static final Log log = LogFactory.getLog(FailedRequestFilter.class);
 
-    @Override
-    protected Log getLogger() {
-        return log;
-    }
+	@Override
+	protected Log getLogger() {
+		return log;
+	}
 
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-            FilterChain chain) throws IOException, ServletException {
-        if (!isGoodRequest(request)) {
-            ((HttpServletResponse) response)
-                    .sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-        chain.doFilter(request, response);
-    }
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain chain) throws IOException, ServletException {
+		if (!isGoodRequest(request)) {
+			((HttpServletResponse) response)
+					.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+		chain.doFilter(request, response);
+	}
 
-    @Override
-    public void doFilterEvent(CometEvent event, CometFilterChain chain)
-            throws IOException, ServletException {
-        if (event.getEventType() == CometEvent.EventType.BEGIN
-                && !isGoodRequest(event.getHttpServletRequest())) {
-            event.getHttpServletResponse().sendError(
-                    HttpServletResponse.SC_BAD_REQUEST);
-            event.close();
-            return;
-        }
-        chain.doFilterEvent(event);
-    }
+	@Override
+	public void doFilterEvent(CometEvent event, CometFilterChain chain)
+			throws IOException, ServletException {
+		if (event.getEventType() == CometEvent.EventType.BEGIN
+				&& !isGoodRequest(event.getHttpServletRequest())) {
+			event.getHttpServletResponse().sendError(
+					HttpServletResponse.SC_BAD_REQUEST);
+			event.close();
+			return;
+		}
+		chain.doFilterEvent(event);
+	}
 
-    private boolean isGoodRequest(ServletRequest request) {
-        // Trigger parsing of parameters
-        request.getParameter("none");
-        // Detect failure
-        if (request.getAttribute(Globals.PARAMETER_PARSE_FAILED_ATTR) != null) {
-            return false;
-        }
-        return true;
-    }
+	private boolean isGoodRequest(ServletRequest request) {
+		// Trigger parsing of parameters
+		request.getParameter("none");
+		// Detect failure
+		if (request.getAttribute(Globals.PARAMETER_PARSE_FAILED_ATTR) != null) {
+			return false;
+		}
+		return true;
+	}
 
-    @Override
-    protected boolean isConfigProblemFatal() {
-        return true;
-    }
+	@Override
+	protected boolean isConfigProblemFatal() {
+		return true;
+	}
 
 }

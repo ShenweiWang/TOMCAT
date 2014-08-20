@@ -15,147 +15,139 @@
  * limitations under the License.
  */
 
-
 package org.apache.tomcat.util.modeler;
-
 
 import java.util.Locale;
 
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanParameterInfo;
 
-
 /**
- * <p>Internal configuration information for an <code>Operation</code>
- * descriptor.</p>
+ * <p>
+ * Internal configuration information for an <code>Operation</code> descriptor.
+ * </p>
  *
  * @author Craig R. McClanahan
  */
 public class OperationInfo extends FeatureInfo {
-    static final long serialVersionUID = 4418342922072614875L;
-    // ----------------------------------------------------------- Constructors
+	static final long serialVersionUID = 4418342922072614875L;
 
+	// ----------------------------------------------------------- Constructors
 
-    /**
-     * Standard zero-arguments constructor.
-     */
-    public OperationInfo() {
+	/**
+	 * Standard zero-arguments constructor.
+	 */
+	public OperationInfo() {
 
-        super();
+		super();
 
-    }
-   
-    // ----------------------------------------------------- Instance Variables
+	}
 
-    protected String impact = "UNKNOWN";
-    protected String role = "operation";
-    protected ParameterInfo parameters[] = new ParameterInfo[0];
+	// ----------------------------------------------------- Instance Variables
 
+	protected String impact = "UNKNOWN";
+	protected String role = "operation";
+	protected ParameterInfo parameters[] = new ParameterInfo[0];
 
-    // ------------------------------------------------------------- Properties
+	// ------------------------------------------------------------- Properties
 
-    /**
-     * The "impact" of this operation, which should be a (case-insensitive)
-     * string value "ACTION", "ACTION_INFO", "INFO", or "UNKNOWN".
-     */
-    public String getImpact() {
-        return (this.impact);
-    }
+	/**
+	 * The "impact" of this operation, which should be a (case-insensitive)
+	 * string value "ACTION", "ACTION_INFO", "INFO", or "UNKNOWN".
+	 */
+	public String getImpact() {
+		return (this.impact);
+	}
 
-    public void setImpact(String impact) {
-        if (impact == null)
-            this.impact = null;
-        else
-            this.impact = impact.toUpperCase(Locale.ENGLISH);
-    }
+	public void setImpact(String impact) {
+		if (impact == null)
+			this.impact = null;
+		else
+			this.impact = impact.toUpperCase(Locale.ENGLISH);
+	}
 
+	/**
+	 * The role of this operation ("getter", "setter", "operation", or
+	 * "constructor").
+	 */
+	public String getRole() {
+		return (this.role);
+	}
 
-    /**
-     * The role of this operation ("getter", "setter", "operation", or
-     * "constructor").
-     */
-    public String getRole() {
-        return (this.role);
-    }
+	public void setRole(String role) {
+		this.role = role;
+	}
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+	/**
+	 * The fully qualified Java class name of the return type for this
+	 * operation.
+	 */
+	public String getReturnType() {
+		if (type == null) {
+			type = "void";
+		}
+		return type;
+	}
 
+	public void setReturnType(String returnType) {
+		this.type = returnType;
+	}
 
-    /**
-     * The fully qualified Java class name of the return type for this
-     * operation.
-     */
-    public String getReturnType() {
-        if(type == null) {
-            type = "void";
-        }
-        return type;
-    }
+	/**
+	 * The set of parameters for this operation.
+	 */
+	public ParameterInfo[] getSignature() {
+		return (this.parameters);
+	}
 
-    public void setReturnType(String returnType) {
-        this.type = returnType;
-    }
+	// --------------------------------------------------------- Public Methods
 
-    /**
-     * The set of parameters for this operation.
-     */
-    public ParameterInfo[] getSignature() {
-        return (this.parameters);
-    }
+	/**
+	 * Add a new parameter to the set of arguments for this operation.
+	 *
+	 * @param parameter
+	 *            The new parameter descriptor
+	 */
+	public void addParameter(ParameterInfo parameter) {
 
-    // --------------------------------------------------------- Public Methods
+		synchronized (parameters) {
+			ParameterInfo results[] = new ParameterInfo[parameters.length + 1];
+			System.arraycopy(parameters, 0, results, 0, parameters.length);
+			results[parameters.length] = parameter;
+			parameters = results;
+			this.info = null;
+		}
 
+	}
 
-    /**
-     * Add a new parameter to the set of arguments for this operation.
-     *
-     * @param parameter The new parameter descriptor
-     */
-    public void addParameter(ParameterInfo parameter) {
+	/**
+	 * Create and return a <code>ModelMBeanOperationInfo</code> object that
+	 * corresponds to the attribute described by this instance.
+	 */
+	MBeanOperationInfo createOperationInfo() {
 
-        synchronized (parameters) {
-            ParameterInfo results[] = new ParameterInfo[parameters.length + 1];
-            System.arraycopy(parameters, 0, results, 0, parameters.length);
-            results[parameters.length] = parameter;
-            parameters = results;
-            this.info = null;
-        }
+		// Return our cached information (if any)
+		if (info == null) {
+			// Create and return a new information object
+			int impact = MBeanOperationInfo.UNKNOWN;
+			if ("ACTION".equals(getImpact()))
+				impact = MBeanOperationInfo.ACTION;
+			else if ("ACTION_INFO".equals(getImpact()))
+				impact = MBeanOperationInfo.ACTION_INFO;
+			else if ("INFO".equals(getImpact()))
+				impact = MBeanOperationInfo.INFO;
 
-    }
+			info = new MBeanOperationInfo(getName(), getDescription(),
+					getMBeanParameterInfo(), getReturnType(), impact);
+		}
+		return (MBeanOperationInfo) info;
+	}
 
-
-    /**
-     * Create and return a <code>ModelMBeanOperationInfo</code> object that
-     * corresponds to the attribute described by this instance.
-     */
-    MBeanOperationInfo createOperationInfo() {
-
-        // Return our cached information (if any)
-        if (info == null) {
-            // Create and return a new information object
-            int impact = MBeanOperationInfo.UNKNOWN;
-            if ("ACTION".equals(getImpact()))
-                impact = MBeanOperationInfo.ACTION;
-            else if ("ACTION_INFO".equals(getImpact()))
-                impact = MBeanOperationInfo.ACTION_INFO;
-            else if ("INFO".equals(getImpact()))
-                impact = MBeanOperationInfo.INFO;
-    
-            info = new MBeanOperationInfo(getName(), getDescription(), 
-                                          getMBeanParameterInfo(),
-                                          getReturnType(), impact);
-        }
-        return (MBeanOperationInfo)info;
-    }
-
-    protected MBeanParameterInfo[] getMBeanParameterInfo() {
-        ParameterInfo params[] = getSignature();
-        MBeanParameterInfo parameters[] =
-            new MBeanParameterInfo[params.length];
-        for (int i = 0; i < params.length; i++)
-            parameters[i] = params[i].createParameterInfo();
-        return parameters;
-    }
+	protected MBeanParameterInfo[] getMBeanParameterInfo() {
+		ParameterInfo params[] = getSignature();
+		MBeanParameterInfo parameters[] = new MBeanParameterInfo[params.length];
+		for (int i = 0; i < params.length; i++)
+			parameters[i] = params[i].createParameterInfo();
+		return parameters;
+	}
 }

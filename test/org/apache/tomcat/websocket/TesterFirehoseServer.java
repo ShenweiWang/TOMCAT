@@ -39,100 +39,99 @@ import org.apache.tomcat.websocket.server.WsContextListener;
  */
 public class TesterFirehoseServer {
 
-    public static final int MESSAGE_COUNT = 100000;
-    public static final String MESSAGE;
-    public static final int MESSAGE_SIZE = 1024;
-    public static final int WAIT_TIME_MILLIS = 60000;
-    public static final int SEND_TIME_OUT_MILLIS = 5000;
+	public static final int MESSAGE_COUNT = 100000;
+	public static final String MESSAGE;
+	public static final int MESSAGE_SIZE = 1024;
+	public static final int WAIT_TIME_MILLIS = 60000;
+	public static final int SEND_TIME_OUT_MILLIS = 5000;
 
-    static {
-        StringBuilder sb = new StringBuilder(MESSAGE_SIZE);
-        for (int i = 0; i < MESSAGE_SIZE; i++) {
-            sb.append('x');
-        }
-        MESSAGE = sb.toString();
-    }
+	static {
+		StringBuilder sb = new StringBuilder(MESSAGE_SIZE);
+		for (int i = 0; i < MESSAGE_SIZE; i++) {
+			sb.append('x');
+		}
+		MESSAGE = sb.toString();
+	}
 
+	public static class Config extends WsContextListener {
 
-    public static class Config extends WsContextListener {
+		public static final String PATH = "/firehose";
 
-        public static final String PATH = "/firehose";
+		@Override
+		public void contextInitialized(ServletContextEvent sce) {
+			super.contextInitialized(sce);
+			ServerContainer sc = (ServerContainer) sce
+					.getServletContext()
+					.getAttribute(
+							Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
+			try {
+				sc.addEndpoint(Endpoint.class);
+			} catch (DeploymentException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
 
-        @Override
-        public void contextInitialized(ServletContextEvent sce) {
-            super.contextInitialized(sce);
-            ServerContainer sc =
-                    (ServerContainer) sce.getServletContext().getAttribute(
-                            Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
-            try {
-                sc.addEndpoint(Endpoint.class);
-            } catch (DeploymentException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-    }
+	@ServerEndpoint(Config.PATH)
+	public static class Endpoint {
 
+		private static AtomicInteger openConnectionCount = new AtomicInteger(0);
+		private static AtomicInteger errorCount = new AtomicInteger(0);
 
-    @ServerEndpoint(Config.PATH)
-    public static class Endpoint {
+		private volatile boolean started = false;
 
-        private static AtomicInteger openConnectionCount = new AtomicInteger(0);
-        private static AtomicInteger errorCount = new AtomicInteger(0);
+		public static int getOpenConnectionCount() {
+			return openConnectionCount.intValue();
+		}
 
-        private volatile boolean started = false;
+		public static int getErrorCount() {
+			return errorCount.intValue();
+		}
 
-        public static int getOpenConnectionCount() {
-            return openConnectionCount.intValue();
-        }
+		@OnOpen
+		public void onOpen() {
+			openConnectionCount.incrementAndGet();
+		}
 
-        public static int getErrorCount() {
-            return errorCount.intValue();
-        }
+		@OnMessage
+		public void onMessage(Session session, String msg) throws IOException {
 
-        @OnOpen
-        public void onOpen() {
-            openConnectionCount.incrementAndGet();
-        }
+			if (started) {
+				return;
+			}
+			synchronized (this) {
+				if (started) {
+					return;
+				} else {
+					started = true;
+				}
+			}
 
-        @OnMessage
-        public void onMessage(Session session, String msg) throws IOException {
+			System.out.println("Received " + msg + ", now sending data");
 
-            if (started) {
-                return;
-            }
-            synchronized (this) {
-                if (started) {
-                    return;
-                } else {
-                    started = true;
-                }
-            }
+			session.getUserProperties().put(
+					"org.apache.tomcat.websocket.BLOCKING_SEND_TIMEOUT",
+					Long.valueOf(SEND_TIME_OUT_MILLIS));
 
-            System.out.println("Received " + msg + ", now sending data");
+			Basic remote = session.getBasicRemote();
+			remote.setBatchingAllowed(true);
 
-            session.getUserProperties().put(
-                    "org.apache.tomcat.websocket.BLOCKING_SEND_TIMEOUT",
-                    Long.valueOf(SEND_TIME_OUT_MILLIS));
+			for (int i = 0; i < MESSAGE_COUNT; i++) {
+				remote.sendText(MESSAGE);
+			}
 
-            Basic remote = session.getBasicRemote();
-            remote.setBatchingAllowed(true);
+			// Ensure remaining messages are flushed
+			remote.setBatchingAllowed(false);
+		}
 
-            for (int i = 0; i < MESSAGE_COUNT; i++) {
-                remote.sendText(MESSAGE);
-            }
+		@OnError
+		public void onError(@SuppressWarnings("unused") Throwable t) {
+			errorCount.incrementAndGet();
+		}
 
-            // Ensure remaining messages are flushed
-            remote.setBatchingAllowed(false);
-        }
-
-        @OnError
-        public void onError(@SuppressWarnings("unused") Throwable t) {
-            errorCount.incrementAndGet();
-        }
-
-        @OnClose
-        public void onClose() {
-            openConnectionCount.decrementAndGet();
-        }
-    }
+		@OnClose
+		public void onClose() {
+			openConnectionCount.decrementAndGet();
+		}
+	}
 }

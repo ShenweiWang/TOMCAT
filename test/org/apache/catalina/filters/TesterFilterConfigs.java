@@ -22,267 +22,235 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 
 public class TesterFilterConfigs {
-    public static final String HTTPS_WWW_APACHE_ORG = "https://www.apache.org";
-    public static final String HTTP_TOMCAT_APACHE_ORG =
-            "http://tomcat.apache.org";
-    public static final String EXPOSED_HEADERS = "X-CUSTOM-HEADER";
-    /**
-     * Any origin
-     */
-    public static final String ANY_ORIGIN = "*";
+	public static final String HTTPS_WWW_APACHE_ORG = "https://www.apache.org";
+	public static final String HTTP_TOMCAT_APACHE_ORG = "http://tomcat.apache.org";
+	public static final String EXPOSED_HEADERS = "X-CUSTOM-HEADER";
+	/**
+	 * Any origin
+	 */
+	public static final String ANY_ORIGIN = "*";
 
-    public static final TesterServletContext mockServletContext =
-            new TesterServletContext();
+	public static final TesterServletContext mockServletContext = new TesterServletContext();
 
-    public static FilterConfig getDefaultFilterConfig() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
-        final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials =
-                CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getDefaultFilterConfig() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
+		final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getFilterConfigAnyOriginAndSupportsCredentials() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS + ",PUT";
-        final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials = "true";
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getFilterConfigAnyOriginAndSupportsCredentials() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS
+				+ ",PUT";
+		final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = "true";
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig
-            getFilterConfigAnyOriginAndSupportsCredentialsDisabled() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS + ",PUT";
-        final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials = "false";
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getFilterConfigAnyOriginAndSupportsCredentialsDisabled() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS
+				+ ",PUT";
+		final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = "false";
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig
-            getFilterConfigSpecificOriginAndSupportsCredentialsDisabled() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS + ",PUT";
-        final String allowedOrigins =
-                HTTP_TOMCAT_APACHE_ORG + "," + HTTPS_WWW_APACHE_ORG;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials = "false";
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getFilterConfigSpecificOriginAndSupportsCredentialsDisabled() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS
+				+ ",PUT";
+		final String allowedOrigins = HTTP_TOMCAT_APACHE_ORG + ","
+				+ HTTPS_WWW_APACHE_ORG;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = "false";
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getFilterConfigWithExposedHeaders() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
-        final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
-        final String exposedHeaders = EXPOSED_HEADERS;
-        final String supportCredentials =
-                CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getFilterConfigWithExposedHeaders() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
+		final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
+		final String exposedHeaders = EXPOSED_HEADERS;
+		final String supportCredentials = CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getSecureFilterConfig() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS + ",PUT";
-        final String allowedOrigins = HTTPS_WWW_APACHE_ORG;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials = "true";
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getSecureFilterConfig() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS
+				+ ",PUT";
+		final String allowedOrigins = HTTPS_WWW_APACHE_ORG;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = "true";
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getNullFilterConfig() {
-        return generateFilterConfig(null, null, null, null, null, null, null);
-    }
+	public static FilterConfig getNullFilterConfig() {
+		return generateFilterConfig(null, null, null, null, null, null, null);
+	}
 
-    public static FilterConfig getSpecificOriginFilterConfig() {
-        final String allowedOrigins =
-                HTTPS_WWW_APACHE_ORG + "," + HTTP_TOMCAT_APACHE_ORG;
+	public static FilterConfig getSpecificOriginFilterConfig() {
+		final String allowedOrigins = HTTPS_WWW_APACHE_ORG + ","
+				+ HTTP_TOMCAT_APACHE_ORG;
 
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS + ",PUT";
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials =
-                CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS
+				+ ",PUT";
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getSpecificOriginFilterConfigNegativeMaxAge() {
-        final String allowedOrigins =
-                HTTPS_WWW_APACHE_ORG + "," + HTTP_TOMCAT_APACHE_ORG;
+	public static FilterConfig getSpecificOriginFilterConfigNegativeMaxAge() {
+		final String allowedOrigins = HTTPS_WWW_APACHE_ORG + ","
+				+ HTTP_TOMCAT_APACHE_ORG;
 
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS + ",PUT";
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials =
-                CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
-        final String preflightMaxAge = "-1";
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS
+				+ ",PUT";
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
+		final String preflightMaxAge = "-1";
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getFilterConfigInvalidMaxPreflightAge() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
-        final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials =
-                CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
-        final String preflightMaxAge = "abc";
-        final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
+	public static FilterConfig getFilterConfigInvalidMaxPreflightAge() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
+		final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
+		final String preflightMaxAge = "abc";
+		final String decorateRequest = CorsFilter.DEFAULT_DECORATE_REQUEST;
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getEmptyFilterConfig() {
-        final String allowedHttpHeaders = "";
-        final String allowedHttpMethods = "";
-        final String allowedOrigins = "";
-        final String exposedHeaders = "";
-        final String supportCredentials = "";
-        final String preflightMaxAge = "";
-        final String decorateRequest = "";
+	public static FilterConfig getEmptyFilterConfig() {
+		final String allowedHttpHeaders = "";
+		final String allowedHttpMethods = "";
+		final String allowedOrigins = "";
+		final String exposedHeaders = "";
+		final String supportCredentials = "";
+		final String preflightMaxAge = "";
+		final String decorateRequest = "";
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    public static FilterConfig getFilterConfigDecorateRequestDisabled() {
-        final String allowedHttpHeaders =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
-        final String allowedHttpMethods =
-                CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
-        final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
-        final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
-        final String supportCredentials =
-                CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
-        final String preflightMaxAge =
-                CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
-        final String decorateRequest = "false";
+	public static FilterConfig getFilterConfigDecorateRequestDisabled() {
+		final String allowedHttpHeaders = CorsFilter.DEFAULT_ALLOWED_HTTP_HEADERS;
+		final String allowedHttpMethods = CorsFilter.DEFAULT_ALLOWED_HTTP_METHODS;
+		final String allowedOrigins = CorsFilter.DEFAULT_ALLOWED_ORIGINS;
+		final String exposedHeaders = CorsFilter.DEFAULT_EXPOSED_HEADERS;
+		final String supportCredentials = CorsFilter.DEFAULT_SUPPORTS_CREDENTIALS;
+		final String preflightMaxAge = CorsFilter.DEFAULT_PREFLIGHT_MAXAGE;
+		final String decorateRequest = "false";
 
-        return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
-                allowedOrigins, exposedHeaders, supportCredentials,
-                preflightMaxAge, decorateRequest);
-    }
+		return generateFilterConfig(allowedHttpHeaders, allowedHttpMethods,
+				allowedOrigins, exposedHeaders, supportCredentials,
+				preflightMaxAge, decorateRequest);
+	}
 
-    private static FilterConfig generateFilterConfig(
-            final String allowedHttpHeaders, final String allowedHttpMethods,
-            final String allowedOrigins, final String exposedHeaders,
-            final String supportCredentials, final String preflightMaxAge,
-            final String decorateRequest) {
-        FilterConfig filterConfig = new FilterConfig() {
+	private static FilterConfig generateFilterConfig(
+			final String allowedHttpHeaders, final String allowedHttpMethods,
+			final String allowedOrigins, final String exposedHeaders,
+			final String supportCredentials, final String preflightMaxAge,
+			final String decorateRequest) {
+		FilterConfig filterConfig = new FilterConfig() {
 
-            @Override
-            public String getFilterName() {
-                return "cors-filter";
-            }
+			@Override
+			public String getFilterName() {
+				return "cors-filter";
+			}
 
-            @Override
-            public ServletContext getServletContext() {
-                return mockServletContext;
-            }
+			@Override
+			public ServletContext getServletContext() {
+				return mockServletContext;
+			}
 
-            @Override
-            public String getInitParameter(String name) {
-                if (CorsFilter.PARAM_CORS_ALLOWED_HEADERS
-                        .equalsIgnoreCase(name)) {
-                    return allowedHttpHeaders;
-                } else if (CorsFilter.PARAM_CORS_ALLOWED_METHODS
-                        .equalsIgnoreCase(name)) {
-                    return allowedHttpMethods;
-                } else if (CorsFilter.PARAM_CORS_ALLOWED_ORIGINS
-                        .equalsIgnoreCase(name)) {
-                    return allowedOrigins;
-                } else if (CorsFilter.PARAM_CORS_EXPOSED_HEADERS
-                        .equalsIgnoreCase(name)) {
-                    return exposedHeaders;
-                } else if (CorsFilter.PARAM_CORS_SUPPORT_CREDENTIALS
-                        .equalsIgnoreCase(name)) {
-                    return supportCredentials;
-                } else if (CorsFilter.PARAM_CORS_PREFLIGHT_MAXAGE
-                        .equalsIgnoreCase(name)) {
-                    return preflightMaxAge;
-                } else if (CorsFilter.PARAM_CORS_REQUEST_DECORATE
-                        .equalsIgnoreCase(name)) {
-                    return decorateRequest;
-                }
-                return null;
-            }
+			@Override
+			public String getInitParameter(String name) {
+				if (CorsFilter.PARAM_CORS_ALLOWED_HEADERS
+						.equalsIgnoreCase(name)) {
+					return allowedHttpHeaders;
+				} else if (CorsFilter.PARAM_CORS_ALLOWED_METHODS
+						.equalsIgnoreCase(name)) {
+					return allowedHttpMethods;
+				} else if (CorsFilter.PARAM_CORS_ALLOWED_ORIGINS
+						.equalsIgnoreCase(name)) {
+					return allowedOrigins;
+				} else if (CorsFilter.PARAM_CORS_EXPOSED_HEADERS
+						.equalsIgnoreCase(name)) {
+					return exposedHeaders;
+				} else if (CorsFilter.PARAM_CORS_SUPPORT_CREDENTIALS
+						.equalsIgnoreCase(name)) {
+					return supportCredentials;
+				} else if (CorsFilter.PARAM_CORS_PREFLIGHT_MAXAGE
+						.equalsIgnoreCase(name)) {
+					return preflightMaxAge;
+				} else if (CorsFilter.PARAM_CORS_REQUEST_DECORATE
+						.equalsIgnoreCase(name)) {
+					return decorateRequest;
+				}
+				return null;
+			}
 
-            @Override
-            public Enumeration<String> getInitParameterNames() {
-                return null;
-            }
-        };
+			@Override
+			public Enumeration<String> getInitParameterNames() {
+				return null;
+			}
+		};
 
-        return filterConfig;
-    }
+		return filterConfig;
+	}
 }

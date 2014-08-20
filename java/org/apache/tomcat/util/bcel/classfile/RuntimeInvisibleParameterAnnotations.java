@@ -23,36 +23,39 @@ import java.io.IOException;
 import org.apache.tomcat.util.bcel.Constants;
 
 /**
- * represents a parameter annotation that is represented in the class file
- * but is not provided to the JVM.
+ * represents a parameter annotation that is represented in the class file but
+ * is not provided to the JVM.
  * 
- * @author  <A HREF="mailto:dbrosius@qis.net">D. Brosius</A>
+ * @author <A HREF="mailto:dbrosius@qis.net">D. Brosius</A>
  * @since 6.0
  */
 public class RuntimeInvisibleParameterAnnotations extends ParameterAnnotations {
 
-    private static final long serialVersionUID = -6819370369102352536L;
+	private static final long serialVersionUID = -6819370369102352536L;
 
+	/**
+	 * @param name_index
+	 *            Index pointing to the name <em>Code</em>
+	 * @param length
+	 *            Content length in bytes
+	 * @param file
+	 *            Input stream
+	 * @param constant_pool
+	 *            Array of constants
+	 */
+	RuntimeInvisibleParameterAnnotations(int name_index, int length,
+			DataInputStream file, ConstantPool constant_pool)
+			throws IOException {
+		super(Constants.ATTR_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS,
+				name_index, length, file, constant_pool);
+	}
 
-    /**
-     * @param name_index Index pointing to the name <em>Code</em>
-     * @param length Content length in bytes
-     * @param file Input stream
-     * @param constant_pool Array of constants
-     */
-    RuntimeInvisibleParameterAnnotations(int name_index, int length, DataInputStream file,
-            ConstantPool constant_pool) throws IOException {
-        super(Constants.ATTR_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS, name_index, length, file,
-                constant_pool);
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool constant_pool ) {
-        Annotations c = (Annotations) clone();
-        return c;
-    }
+	/**
+	 * @return deep copy of this attribute
+	 */
+	@Override
+	public Attribute copy(ConstantPool constant_pool) {
+		Annotations c = (Annotations) clone();
+		return c;
+	}
 }

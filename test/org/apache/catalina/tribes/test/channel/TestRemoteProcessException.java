@@ -35,117 +35,130 @@ import org.apache.catalina.tribes.TesterUtil;
 import org.apache.catalina.tribes.group.GroupChannel;
 
 /**
- * <p>Title: </p>
+ * <p>
+ * Title:
+ * </p>
  *
- * <p>Description: </p>
+ * <p>
+ * Description:
+ * </p>
  *
- * <p>Company: </p>
+ * <p>
+ * Company:
+ * </p>
  *
  * @author not attributable
  * @version 1.0
  */
 public class TestRemoteProcessException {
-    private int msgCount = 10000;
-    private GroupChannel channel1;
-    private GroupChannel channel2;
-    private Listener listener1;
+	private int msgCount = 10000;
+	private GroupChannel channel1;
+	private GroupChannel channel2;
+	private Listener listener1;
 
-    @Before
-    public void setUp() throws Exception {
-        channel1 = new GroupChannel();
-        channel2 = new GroupChannel();
-        listener1 = new Listener();
-        channel2.addChannelListener(listener1);
-        TesterUtil.addRandomDomain(new ManagedChannel[] {channel1, channel2});
-        channel1.start(Channel.DEFAULT);
-        channel2.start(Channel.DEFAULT);
-    }
+	@Before
+	public void setUp() throws Exception {
+		channel1 = new GroupChannel();
+		channel2 = new GroupChannel();
+		listener1 = new Listener();
+		channel2.addChannelListener(listener1);
+		TesterUtil.addRandomDomain(new ManagedChannel[] { channel1, channel2 });
+		channel1.start(Channel.DEFAULT);
+		channel2.start(Channel.DEFAULT);
+	}
 
-    @After
-    public void tearDown() throws Exception {
-        channel1.stop(Channel.DEFAULT);
-        channel2.stop(Channel.DEFAULT);
-    }
+	@After
+	public void tearDown() throws Exception {
+		channel1.stop(Channel.DEFAULT);
+		channel2.stop(Channel.DEFAULT);
+	}
 
-    @Test
-    public void testDataSendSYNCACK() throws Exception {
-        System.err.println("Starting SYNC_ACK");
-        int errC=0, nerrC=0;
-        for (int i=0; i<msgCount; i++) {
-            boolean error = Data.r.nextBoolean();
-            channel1.send(channel1.getMembers(),Data.createRandomData(error),Channel.SEND_OPTIONS_SYNCHRONIZED_ACK|Channel.SEND_OPTIONS_USE_ACK);
-            if ( error ) errC++; else nerrC++;
-        }
-        System.err.println("Finished SYNC_ACK");
-        assertEquals("Checking failure messages.",errC,listener1.errCnt);
-        assertEquals("Checking success messages.",nerrC,listener1.noErrCnt);
-        assertEquals("Checking all messages.",msgCount,listener1.noErrCnt+listener1.errCnt);
-        System.out.println("Listener 1 stats:");
-        listener1.printStats(System.out);
-    }
+	@Test
+	public void testDataSendSYNCACK() throws Exception {
+		System.err.println("Starting SYNC_ACK");
+		int errC = 0, nerrC = 0;
+		for (int i = 0; i < msgCount; i++) {
+			boolean error = Data.r.nextBoolean();
+			channel1.send(channel1.getMembers(), Data.createRandomData(error),
+					Channel.SEND_OPTIONS_SYNCHRONIZED_ACK
+							| Channel.SEND_OPTIONS_USE_ACK);
+			if (error)
+				errC++;
+			else
+				nerrC++;
+		}
+		System.err.println("Finished SYNC_ACK");
+		assertEquals("Checking failure messages.", errC, listener1.errCnt);
+		assertEquals("Checking success messages.", nerrC, listener1.noErrCnt);
+		assertEquals("Checking all messages.", msgCount, listener1.noErrCnt
+				+ listener1.errCnt);
+		System.out.println("Listener 1 stats:");
+		listener1.printStats(System.out);
+	}
 
-    public static class Listener implements ChannelListener {
-        long noErrCnt = 0;
-        long errCnt = 0;
-        @Override
-        public boolean accept(Serializable s, Member m) {
-            return (s instanceof Data);
-        }
+	public static class Listener implements ChannelListener {
+		long noErrCnt = 0;
+		long errCnt = 0;
 
-        @Override
-        public void messageReceived(Serializable s, Member m) {
-            Data d = (Data)s;
-            if ( !Data.verify(d) ) {
-                System.err.println("ERROR");
-            } else {
-                if (d.error) {
-                    errCnt++;
-                    if ( (errCnt % 100) == 0) {
-                        printStats(System.err);
-                    }
-                    throw new IllegalArgumentException();
-                }
-                noErrCnt++;
-                if ( (noErrCnt % 100) == 0) {
-                    printStats(System.err);
-                }
-            }
-        }
+		@Override
+		public boolean accept(Serializable s, Member m) {
+			return (s instanceof Data);
+		}
 
-        public void printStats(PrintStream stream) {
-            stream.println("NORMAL:" + noErrCnt);
-            stream.println("FAILURES:" + errCnt);
-            stream.println("TOTAL:" + (errCnt+noErrCnt));
-        }
-    }
+		@Override
+		public void messageReceived(Serializable s, Member m) {
+			Data d = (Data) s;
+			if (!Data.verify(d)) {
+				System.err.println("ERROR");
+			} else {
+				if (d.error) {
+					errCnt++;
+					if ((errCnt % 100) == 0) {
+						printStats(System.err);
+					}
+					throw new IllegalArgumentException();
+				}
+				noErrCnt++;
+				if ((noErrCnt % 100) == 0) {
+					printStats(System.err);
+				}
+			}
+		}
 
-    public static class Data implements Serializable {
-        private static final long serialVersionUID = 1L;
-        public int length;
-        public byte[] data;
-        public byte key;
-        public boolean error = false;
-        public static Random r = new Random();
-        public static Data createRandomData(boolean error) {
-            int i = r.nextInt();
-            i = ( i % 127 );
-            int length = Math.abs(r.nextInt() % 65555);
-            Data d = new Data();
-            d.length = length;
-            d.key = (byte)i;
-            d.data = new byte[length];
-            Arrays.fill(d.data,d.key);
-            d.error = error;
-            return d;
-        }
+		public void printStats(PrintStream stream) {
+			stream.println("NORMAL:" + noErrCnt);
+			stream.println("FAILURES:" + errCnt);
+			stream.println("TOTAL:" + (errCnt + noErrCnt));
+		}
+	}
 
-        public static boolean verify(Data d) {
-            boolean result = (d.length == d.data.length);
-            for ( int i=0; result && (i<d.data.length); i++ ) result = result && d.data[i] == d.key;
-            return result;
-        }
-    }
+	public static class Data implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public int length;
+		public byte[] data;
+		public byte key;
+		public boolean error = false;
+		public static Random r = new Random();
 
+		public static Data createRandomData(boolean error) {
+			int i = r.nextInt();
+			i = (i % 127);
+			int length = Math.abs(r.nextInt() % 65555);
+			Data d = new Data();
+			d.length = length;
+			d.key = (byte) i;
+			d.data = new byte[length];
+			Arrays.fill(d.data, d.key);
+			d.error = error;
+			return d;
+		}
 
+		public static boolean verify(Data d) {
+			boolean result = (d.length == d.data.length);
+			for (int i = 0; result && (i < d.data.length); i++)
+				result = result && d.data[i] == d.key;
+			return result;
+		}
+	}
 
 }

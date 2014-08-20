@@ -27,23 +27,22 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestNode extends TomcatBaseTest {
 
-    @Test
-    public void testJspAttributeIsLiteral() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testJspAttributeIsLiteral() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir =
-            new File("test/webapp-3.0");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/bug5nnnn/bug55642a.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/bug5nnnn/bug55642a.jsp");
 
-        String result = res.toString();
-        
-        Assert.assertTrue(
-                result.indexOf("/bug5nnnn/bug55642b.jsp?foo=bar&a=1&b=2") > 0);
-    }
+		String result = res.toString();
+
+		Assert.assertTrue(result
+				.indexOf("/bug5nnnn/bug55642b.jsp?foo=bar&a=1&b=2") > 0);
+	}
 }

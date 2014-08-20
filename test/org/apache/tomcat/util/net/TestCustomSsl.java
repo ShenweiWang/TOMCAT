@@ -43,113 +43,113 @@ import org.apache.tomcat.util.net.jsse.TesterBug50640SslImpl;
  */
 public class TestCustomSsl extends TomcatBaseTest {
 
-    @Test
-    public void testCustomSslImplementation() throws Exception {
+	@Test
+	public void testCustomSslImplementation() throws Exception {
 
-        TesterSupport.configureClientSsl();
+		TesterSupport.configureClientSsl();
 
-        Tomcat tomcat = getTomcatInstance();
-        Connector connector = tomcat.getConnector();
+		Tomcat tomcat = getTomcatInstance();
+		Connector connector = tomcat.getConnector();
 
-        Assume.assumeFalse("This test is only for JSSE based SSL connectors",
-                connector.getProtocolHandlerClassName().contains("Apr"));
+		Assume.assumeFalse("This test is only for JSSE based SSL connectors",
+				connector.getProtocolHandlerClassName().contains("Apr"));
 
-        connector.setProperty("sslImplementationName",
-                "org.apache.tomcat.util.net.jsse.TesterBug50640SslImpl");
-        connector.setProperty(TesterBug50640SslImpl.PROPERTY_NAME,
-                TesterBug50640SslImpl.PROPERTY_VALUE);
+		connector.setProperty("sslImplementationName",
+				"org.apache.tomcat.util.net.jsse.TesterBug50640SslImpl");
+		connector.setProperty(TesterBug50640SslImpl.PROPERTY_NAME,
+				TesterBug50640SslImpl.PROPERTY_VALUE);
 
-        connector.setProperty("sslProtocol", "tls");
+		connector.setProperty("sslProtocol", "tls");
 
-        File keystoreFile =
-            new File("test/org/apache/tomcat/util/net/localhost.jks");
-        connector.setAttribute(
-                "keystoreFile", keystoreFile.getAbsolutePath());
+		File keystoreFile = new File(
+				"test/org/apache/tomcat/util/net/localhost.jks");
+		connector.setAttribute("keystoreFile", keystoreFile.getAbsolutePath());
 
-        connector.setSecure(true);
-        connector.setProperty("SSLEnabled", "true");
+		connector.setSecure(true);
+		connector.setProperty("SSLEnabled", "true");
 
-        File appDir = new File(getBuildDirectory(), "webapps/examples");
-        tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
+		File appDir = new File(getBuildDirectory(), "webapps/examples");
+		tomcat.addWebapp(null, "/examples", appDir.getAbsolutePath());
 
-        tomcat.start();
-        ByteChunk res = getUrl("https://localhost:" + getPort() +
-            "/examples/servlets/servlet/HelloWorldExample");
-        assertTrue(res.toString().indexOf("<h1>Hello World!</h1>") > 0);
-    }
+		tomcat.start();
+		ByteChunk res = getUrl("https://localhost:" + getPort()
+				+ "/examples/servlets/servlet/HelloWorldExample");
+		assertTrue(res.toString().indexOf("<h1>Hello World!</h1>") > 0);
+	}
 
-    @Test
-    public void testCustomTrustManager1() throws Exception {
-        doTestCustomTrustManager(false);
-    }
+	@Test
+	public void testCustomTrustManager1() throws Exception {
+		doTestCustomTrustManager(false);
+	}
 
-    @Test
-    public void testCustomTrustManager2() throws Exception {
-        doTestCustomTrustManager(true);
-    }
+	@Test
+	public void testCustomTrustManager2() throws Exception {
+		doTestCustomTrustManager(true);
+	}
 
-    private void doTestCustomTrustManager(boolean serverTrustAll)
-            throws Exception {
+	private void doTestCustomTrustManager(boolean serverTrustAll)
+			throws Exception {
 
-        if (!TesterSupport.RFC_5746_SUPPORTED) {
-            // Make sure SSL renegotiation is not disabled in the JVM
-            System.setProperty("sun.security.ssl.allowUnsafeRenegotiation",
-                    "true");
-        }
+		if (!TesterSupport.RFC_5746_SUPPORTED) {
+			// Make sure SSL renegotiation is not disabled in the JVM
+			System.setProperty("sun.security.ssl.allowUnsafeRenegotiation",
+					"true");
+		}
 
-        Tomcat tomcat = getTomcatInstance();
+		Tomcat tomcat = getTomcatInstance();
 
-        Assume.assumeTrue("SSL renegotiation has to be supported for this test",
-                TesterSupport.isRenegotiationSupported(getTomcatInstance()));
+		Assume.assumeTrue(
+				"SSL renegotiation has to be supported for this test",
+				TesterSupport.isRenegotiationSupported(getTomcatInstance()));
 
-        TesterSupport.configureClientCertContext(tomcat);
+		TesterSupport.configureClientCertContext(tomcat);
 
-        // Override the defaults
-        ProtocolHandler handler = tomcat.getConnector().getProtocolHandler();
-        if (handler instanceof AbstractHttp11JsseProtocol) {
-            ((AbstractHttp11JsseProtocol<?>) handler).setTruststoreFile(null);
-        } else {
-            // Unexpected
-            fail("Unexpected handler type");
-        }
-        if (serverTrustAll) {
-            tomcat.getConnector().setAttribute("trustManagerClassName",
-                    "org.apache.tomcat.util.net.TesterSupport$TrustAllCerts");
-        }
+		// Override the defaults
+		ProtocolHandler handler = tomcat.getConnector().getProtocolHandler();
+		if (handler instanceof AbstractHttp11JsseProtocol) {
+			((AbstractHttp11JsseProtocol<?>) handler).setTruststoreFile(null);
+		} else {
+			// Unexpected
+			fail("Unexpected handler type");
+		}
+		if (serverTrustAll) {
+			tomcat.getConnector().setAttribute("trustManagerClassName",
+					"org.apache.tomcat.util.net.TesterSupport$TrustAllCerts");
+		}
 
-        // Start Tomcat
-        tomcat.start();
+		// Start Tomcat
+		tomcat.start();
 
-        TesterSupport.configureClientSsl();
+		TesterSupport.configureClientSsl();
 
-        // Unprotected resource
-        ByteChunk res =
-                getUrl("https://localhost:" + getPort() + "/unprotected");
-        assertEquals("OK", res.toString());
+		// Unprotected resource
+		ByteChunk res = getUrl("https://localhost:" + getPort()
+				+ "/unprotected");
+		assertEquals("OK", res.toString());
 
-        // Protected resource
-        res.recycle();
-        int rc = -1;
-        try {
-            rc = getUrl("https://localhost:" + getPort() + "/protected", res,
-                null, null);
-        } catch (SocketException se) {
-            if (serverTrustAll) {
-                fail(se.getMessage());
-                se.printStackTrace();
-            }
-        } catch (SSLException he) {
-            if (serverTrustAll) {
-                fail(he.getMessage());
-                he.printStackTrace();
-            }
-        }
-        if (serverTrustAll) {
-            assertEquals(200, rc);
-            assertEquals("OK", res.toString());
-        } else {
-            assertTrue(rc != 200);
-            assertEquals("", res.toString());
-        }
-    }
+		// Protected resource
+		res.recycle();
+		int rc = -1;
+		try {
+			rc = getUrl("https://localhost:" + getPort() + "/protected", res,
+					null, null);
+		} catch (SocketException se) {
+			if (serverTrustAll) {
+				fail(se.getMessage());
+				se.printStackTrace();
+			}
+		} catch (SSLException he) {
+			if (serverTrustAll) {
+				fail(he.getMessage());
+				he.printStackTrace();
+			}
+		}
+		if (serverTrustAll) {
+			assertEquals(200, rc);
+			assertEquals("OK", res.toString());
+		} else {
+			assertTrue(rc != 200);
+			assertEquals("", res.toString());
+		}
+	}
 }

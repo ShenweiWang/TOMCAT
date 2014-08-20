@@ -22,53 +22,51 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
- * This class is derived from the abstract 
- * <A HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class 
+/**
+ * This class is derived from the abstract <A
+ * HREF="org.apache.tomcat.util.bcel.classfile.Constant.html">Constant</A> class
  * and represents a reference to a long object.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @see     Constant
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @see Constant
  */
 public final class ConstantLong extends Constant {
 
-    private static final long serialVersionUID = -1893131676489003562L;
-    private long bytes;
+	private static final long serialVersionUID = -1893131676489003562L;
+	private long bytes;
 
+	/**
+	 * @param bytes
+	 *            Data
+	 */
+	public ConstantLong(long bytes) {
+		super(Constants.CONSTANT_Long);
+		this.bytes = bytes;
+	}
 
-    /** 
-     * @param bytes Data
-     */
-    public ConstantLong(long bytes) {
-        super(Constants.CONSTANT_Long);
-        this.bytes = bytes;
-    }
+	/**
+	 * Initialize instance from file data.
+	 *
+	 * @param file
+	 *            Input stream
+	 * @throws IOException
+	 */
+	ConstantLong(DataInput file) throws IOException {
+		this(file.readLong());
+	}
 
+	/**
+	 * @return data, i.e., 8 bytes.
+	 */
+	public final long getBytes() {
+		return bytes;
+	}
 
-    /** 
-     * Initialize instance from file data.
-     *
-     * @param file Input stream
-     * @throws IOException
-     */
-    ConstantLong(DataInput file) throws IOException {
-        this(file.readLong());
-    }
-
-
-    /**
-     * @return data, i.e., 8 bytes.
-     */
-    public final long getBytes() {
-        return bytes;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(bytes = " + bytes + ")";
-    }
+	/**
+	 * @return String representation.
+	 */
+	@Override
+	public final String toString() {
+		return super.toString() + "(bytes = " + bytes + ")";
+	}
 }

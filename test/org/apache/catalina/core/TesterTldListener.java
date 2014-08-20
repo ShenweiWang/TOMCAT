@@ -22,30 +22,30 @@ import javax.servlet.ServletContextListener;
 
 public class TesterTldListener implements ServletContextListener {
 
-    private static StringBuilder log = new StringBuilder();
+	private static StringBuilder log = new StringBuilder();
 
-    public static String getLog() {
-        return log.toString();
-    }
+	public static String getLog() {
+		return log.toString();
+	}
 
-    @Override
-    public void contextInitialized(ServletContextEvent sce) {
+	@Override
+	public void contextInitialized(ServletContextEvent sce) {
 
-        ServletContext sc = sce.getServletContext();
+		ServletContext sc = sce.getServletContext();
 
-        // Try and use one of the Servlet 3.0 methods that should be blocked
-        try {
-            sc.getEffectiveMajorVersion();
-            log.append("FAIL");
-        } catch (UnsupportedOperationException uoe) {
-            log.append("PASS");
-        } catch (Exception e) {
-            log.append("FAIL");
-        }
-    }
+		// Try and use one of the Servlet 3.0 methods that should be blocked
+		try {
+			sc.getEffectiveMajorVersion();
+			log.append("FAIL");
+		} catch (UnsupportedOperationException uoe) {
+			log.append("PASS");
+		} catch (Exception e) {
+			log.append("FAIL");
+		}
+	}
 
-    @Override
-    public void contextDestroyed(ServletContextEvent sce) {
-        // NO-OP
-    }
+	@Override
+	public void contextDestroyed(ServletContextEvent sce) {
+		// NO-OP
+	}
 }

@@ -29,179 +29,176 @@ import javax.net.SocketFactory;
  */
 public class SimpleAjpClient {
 
-    private static final int AJP_PACKET_SIZE = 8192;
-    private static final byte[] AJP_CPING;
+	private static final int AJP_PACKET_SIZE = 8192;
+	private static final byte[] AJP_CPING;
 
-    static {
-        TesterAjpMessage ajpCping = new TesterAjpMessage(16);
-        ajpCping.reset();
-        ajpCping.appendByte(Constants.JK_AJP13_CPING_REQUEST);
-        ajpCping.end();
-        AJP_CPING = new byte[ajpCping.getLen()];
-        System.arraycopy(ajpCping.getBuffer(), 0, AJP_CPING, 0,
-                ajpCping.getLen());
-    }
+	static {
+		TesterAjpMessage ajpCping = new TesterAjpMessage(16);
+		ajpCping.reset();
+		ajpCping.appendByte(Constants.JK_AJP13_CPING_REQUEST);
+		ajpCping.end();
+		AJP_CPING = new byte[ajpCping.getLen()];
+		System.arraycopy(ajpCping.getBuffer(), 0, AJP_CPING, 0,
+				ajpCping.getLen());
+	}
 
-    private String host = "localhost";
-    private int port = -1;
-    private Socket socket = null;
+	private String host = "localhost";
+	private int port = -1;
+	private Socket socket = null;
 
-    public void setPort(int port) {
-        this.port = port;
-    }
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-    public int getPort() {
-        return port;
-    }
+	public int getPort() {
+		return port;
+	}
 
-    public void connect() throws IOException {
-        socket = SocketFactory.getDefault().createSocket(host, port);
-    }
+	public void connect() throws IOException {
+		socket = SocketFactory.getDefault().createSocket(host, port);
+	}
 
-    public void disconnect() throws IOException {
-        socket.close();
-        socket = null;
-    }
+	public void disconnect() throws IOException {
+		socket.close();
+		socket = null;
+	}
 
-    /**
-     * Create a message to request the given URL.
-     */
-    public TesterAjpMessage createForwardMessage(String url) {
-        return createForwardMessage(url, 2);
-    }
+	/**
+	 * Create a message to request the given URL.
+	 */
+	public TesterAjpMessage createForwardMessage(String url) {
+		return createForwardMessage(url, 2);
+	}
 
-    public TesterAjpMessage createForwardMessage(String url, int method) {
+	public TesterAjpMessage createForwardMessage(String url, int method) {
 
-        TesterAjpMessage message = new TesterAjpMessage(AJP_PACKET_SIZE);
-        message.reset();
+		TesterAjpMessage message = new TesterAjpMessage(AJP_PACKET_SIZE);
+		message.reset();
 
-        // Set the header bytes
-        message.getBuffer()[0] = 0x12;
-        message.getBuffer()[1] = 0x34;
+		// Set the header bytes
+		message.getBuffer()[0] = 0x12;
+		message.getBuffer()[1] = 0x34;
 
-        // Code 2 for forward request
-        message.appendByte(Constants.JK_AJP13_FORWARD_REQUEST);
+		// Code 2 for forward request
+		message.appendByte(Constants.JK_AJP13_FORWARD_REQUEST);
 
-        // HTTP method, GET = 2
-        message.appendByte(method);
+		// HTTP method, GET = 2
+		message.appendByte(method);
 
-        // Protocol
-        message.appendString("http");
+		// Protocol
+		message.appendString("http");
 
-        // Request URI
-        message.appendString(url);
+		// Request URI
+		message.appendString(url);
 
-        // Remote address
-        message.appendString("10.0.0.1");
+		// Remote address
+		message.appendString("10.0.0.1");
 
-        // Remote host
-        message.appendString("client.dev.local");
+		// Remote host
+		message.appendString("client.dev.local");
 
-        // Server name
-        message.appendString(host);
+		// Server name
+		message.appendString(host);
 
-        // Port
-        message.appendInt(port);
+		// Port
+		message.appendInt(port);
 
-        // Is ssl
-        message.appendByte(0x00);
+		// Is ssl
+		message.appendByte(0x00);
 
-        return message;
-    }
+		return message;
+	}
 
+	public TesterAjpMessage createBodyMessage(byte[] data) {
 
-    public TesterAjpMessage createBodyMessage(byte[] data) {
+		TesterAjpMessage message = new TesterAjpMessage(AJP_PACKET_SIZE);
+		message.reset();
 
-        TesterAjpMessage message = new TesterAjpMessage(AJP_PACKET_SIZE);
-        message.reset();
+		// Set the header bytes
+		message.getBuffer()[0] = 0x12;
+		message.getBuffer()[1] = 0x34;
 
-        // Set the header bytes
-        message.getBuffer()[0] = 0x12;
-        message.getBuffer()[1] = 0x34;
+		message.appendBytes(data, 0, data.length);
+		message.end();
 
-        message.appendBytes(data, 0, data.length);
-        message.end();
+		return message;
+	}
 
-        return message;
-    }
+	/**
+	 * Sends an TesterAjpMessage to the server and returns the response message.
+	 */
+	public TesterAjpMessage sendMessage(TesterAjpMessage headers)
+			throws IOException {
+		return sendMessage(headers, null);
+	}
 
+	public TesterAjpMessage sendMessage(TesterAjpMessage headers,
+			TesterAjpMessage body) throws IOException {
+		// Send the headers
+		socket.getOutputStream()
+				.write(headers.getBuffer(), 0, headers.getLen());
+		if (body != null) {
+			// Send the body of present
+			socket.getOutputStream().write(body.getBuffer(), 0, body.getLen());
+		}
+		// Read the response
+		return readMessage();
+	}
 
-    /**
-     * Sends an TesterAjpMessage to the server and returns the response message.
-     */
-    public TesterAjpMessage sendMessage(TesterAjpMessage headers)
-            throws IOException {
-        return sendMessage(headers, null);
-    }
+	/**
+	 * Tests the connection to the server and returns the CPONG response.
+	 */
+	public TesterAjpMessage cping() throws IOException {
+		// Send the ping message
+		socket.getOutputStream().write(AJP_CPING);
+		// Read the response
+		return readMessage();
+	}
 
-    public TesterAjpMessage sendMessage(TesterAjpMessage headers,
-            TesterAjpMessage body) throws IOException {
-        // Send the headers
-        socket.getOutputStream().write(
-                headers.getBuffer(), 0, headers.getLen());
-        if (body != null) {
-            // Send the body of present
-            socket.getOutputStream().write(
-                    body.getBuffer(), 0, body.getLen());
-        }
-        // Read the response
-        return readMessage();
-    }
+	/**
+	 * Reads a message from the server.
+	 */
+	public TesterAjpMessage readMessage() throws IOException {
 
-    /**
-     * Tests the connection to the server and returns the CPONG response.
-     */
-    public TesterAjpMessage cping() throws IOException {
-        // Send the ping message
-        socket.getOutputStream().write(AJP_CPING);
-        // Read the response
-        return readMessage();
-    }
+		InputStream is = socket.getInputStream();
 
-    /**
-     * Reads a message from the server.
-     */
-    public TesterAjpMessage readMessage() throws IOException {
+		TesterAjpMessage message = new TesterAjpMessage(AJP_PACKET_SIZE);
 
-        InputStream is = socket.getInputStream();
+		byte[] buf = message.getBuffer();
+		int headerLength = message.getHeaderLength();
 
-        TesterAjpMessage message = new TesterAjpMessage(AJP_PACKET_SIZE);
+		read(is, buf, 0, headerLength);
 
-        byte[] buf = message.getBuffer();
-        int headerLength = message.getHeaderLength();
+		int messageLength = message.processHeader(false);
+		if (messageLength < 0) {
+			throw new IOException("Invalid AJP message length");
+		} else if (messageLength == 0) {
+			return message;
+		} else {
+			if (messageLength > buf.length) {
+				throw new IllegalArgumentException("Message too long ["
+						+ Integer.valueOf(messageLength)
+						+ "] for buffer length [" + Integer.valueOf(buf.length)
+						+ "]");
+			}
+			read(is, buf, headerLength, messageLength);
+			return message;
+		}
+	}
 
-        read(is, buf, 0, headerLength);
+	protected boolean read(InputStream is, byte[] buf, int pos, int n)
+			throws IOException {
 
-        int messageLength = message.processHeader(false);
-        if (messageLength < 0) {
-            throw new IOException("Invalid AJP message length");
-        } else if (messageLength == 0) {
-            return message;
-        } else {
-            if (messageLength > buf.length) {
-                throw new IllegalArgumentException("Message too long [" +
-                        Integer.valueOf(messageLength) +
-                        "] for buffer length [" +
-                        Integer.valueOf(buf.length) + "]");
-            }
-            read(is, buf, headerLength, messageLength);
-            return message;
-        }
-    }
-
-    protected boolean read(InputStream is, byte[] buf, int pos, int n)
-        throws IOException {
-
-        int read = 0;
-        int res = 0;
-        while (read < n) {
-            res = is.read(buf, read + pos, n - read);
-            if (res > 0) {
-                read += res;
-            } else {
-                throw new IOException("Read failed");
-            }
-        }
-        return true;
-    }
+		int read = 0;
+		int res = 0;
+		while (read < n) {
+			res = is.read(buf, read + pos, n - read);
+			if (res > 0) {
+				read += res;
+			} else {
+				throw new IOException("Read failed");
+			}
+		}
+		return true;
+	}
 }

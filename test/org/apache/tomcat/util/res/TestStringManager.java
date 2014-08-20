@@ -23,26 +23,26 @@ import org.junit.Test;
 
 public class TestStringManager {
 
-    private static final StringManager sm =
-        StringManager.getManager("org.apache.naming");
+	private static final StringManager sm = StringManager
+			.getManager("org.apache.naming");
 
-    @Test
-    public void testNullKey() {
-        boolean iaeThrown = false;
+	@Test
+	public void testNullKey() {
+		boolean iaeThrown = false;
 
-        try {
-            sm.getString(null);
-        } catch (IllegalArgumentException iae) {
-            iaeThrown = true;
-        }
-        assertTrue("IAE not thrown on null key", iaeThrown);
-    }
+		try {
+			sm.getString(null);
+		} catch (IllegalArgumentException iae) {
+			iaeThrown = true;
+		}
+		assertTrue("IAE not thrown on null key", iaeThrown);
+	}
 
-    @Test
-    public void testBug46933() {
-        // Check null args are OK
-        sm.getString("namingContext.nameNotBound");
-        sm.getString("namingContext.nameNotBound", (Object[]) null);
-        sm.getString("namingContext.nameNotBound", new Object[1]);
-    }
+	@Test
+	public void testBug46933() {
+		// Check null args are OK
+		sm.getString("namingContext.nameNotBound");
+		sm.getString("namingContext.nameNotBound", (Object[]) null);
+		sm.getString("namingContext.nameNotBound", new Object[1]);
+	}
 }

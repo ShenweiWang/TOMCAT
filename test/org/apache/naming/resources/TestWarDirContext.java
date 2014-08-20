@@ -30,96 +30,87 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestWarDirContext extends TomcatBaseTest {
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
-        Tomcat tomcat = getTomcatInstance();
+		Tomcat tomcat = getTomcatInstance();
 
-        // The test fails if JreMemoryLeakPreventionListener is not
-        // present. The listener affects the JVM, and thus not only the current,
-        // but also the subsequent tests that are run in the same JVM. So it is
-        // fair to add it in every test.
-        tomcat.getServer().addLifecycleListener(
-                new JreMemoryLeakPreventionListener());
-    }
+		// The test fails if JreMemoryLeakPreventionListener is not
+		// present. The listener affects the JVM, and thus not only the current,
+		// but also the subsequent tests that are run in the same JVM. So it is
+		// fair to add it in every test.
+		tomcat.getServer().addLifecycleListener(
+				new JreMemoryLeakPreventionListener());
+	}
 
-    /**
-     * Check https://jira.springsource.org/browse/SPR-7350 isn't really an issue
-     */
-    @Test
-    public void testLookupException() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	/**
+	 * Check https://jira.springsource.org/browse/SPR-7350 isn't really an issue
+	 */
+	@Test
+	public void testLookupException() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk bc = getUrl("http://localhost:" + getPort() +
-                "/test/warDirContext.jsp");
-        assertEquals("<p>java.lang.ClassNotFoundException</p>",
-                bc.toString());
-    }
+		ByteChunk bc = getUrl("http://localhost:" + getPort()
+				+ "/test/warDirContext.jsp");
+		assertEquals("<p>java.lang.ClassNotFoundException</p>", bc.toString());
+	}
 
+	/**
+	 * Additional test following on from SPR-7350 above to check files that
+	 * contain JNDI reserved characters can be served when caching is enabled.
+	 */
+	@Test
+	public void testReservedJNDIFileNamesWithCache() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-    /**
-     * Additional test following on from SPR-7350 above to check files that
-     * contain JNDI reserved characters can be served when caching is enabled.
-     */
-    @Test
-    public void testReservedJNDIFileNamesWithCache() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		StandardContext ctxt = (StandardContext) tomcat.addWebapp(null,
+				"/test", appDir.getAbsolutePath());
+		ctxt.setCachingAllowed(true);
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        StandardContext ctxt = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
-        ctxt.setCachingAllowed(true);
+		tomcat.start();
 
-        tomcat.start();
+		// Should be found in resources.jar
+		ByteChunk bc = getUrl("http://localhost:" + getPort()
+				+ "/test/'singlequote.jsp");
+		assertEquals("<p>'singlequote.jsp in resources.jar</p>", bc.toString());
 
-        // Should be found in resources.jar
-        ByteChunk bc = getUrl("http://localhost:" + getPort() +
-                "/test/'singlequote.jsp");
-        assertEquals("<p>'singlequote.jsp in resources.jar</p>",
-                bc.toString());
+		// Should be found in file system
+		bc = getUrl("http://localhost:" + getPort() + "/test/'singlequote2.jsp");
+		assertEquals("<p>'singlequote2.jsp in file system</p>", bc.toString());
+	}
 
-        // Should be found in file system
-        bc = getUrl("http://localhost:" + getPort() +
-                "/test/'singlequote2.jsp");
-        assertEquals("<p>'singlequote2.jsp in file system</p>",
-                bc.toString());
-    }
+	/**
+	 * Additional test following on from SPR-7350 above to check files that
+	 * contain JNDI reserved characters can be served when caching is disabled.
+	 */
+	@Test
+	public void testReservedJNDIFileNamesNoCache() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
+		File appDir = new File("test/webapp-3.0-fragments");
+		// app dir is relative to server home
+		StandardContext ctxt = (StandardContext) tomcat.addWebapp(null,
+				"/test", appDir.getAbsolutePath());
+		ctxt.setCachingAllowed(false);
 
-    /**
-     * Additional test following on from SPR-7350 above to check files that
-     * contain JNDI reserved characters can be served when caching is disabled.
-     */
-    @Test
-    public void testReservedJNDIFileNamesNoCache() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		tomcat.start();
 
-        File appDir = new File("test/webapp-3.0-fragments");
-        // app dir is relative to server home
-        StandardContext ctxt = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
-        ctxt.setCachingAllowed(false);
+		// Should be found in resources.jar
+		ByteChunk bc = getUrl("http://localhost:" + getPort()
+				+ "/test/'singlequote.jsp");
+		assertEquals("<p>'singlequote.jsp in resources.jar</p>", bc.toString());
 
-        tomcat.start();
-
-        // Should be found in resources.jar
-        ByteChunk bc = getUrl("http://localhost:" + getPort() +
-                "/test/'singlequote.jsp");
-        assertEquals("<p>'singlequote.jsp in resources.jar</p>",
-                bc.toString());
-
-        // Should be found in file system
-        bc = getUrl("http://localhost:" + getPort() +
-                "/test/'singlequote2.jsp");
-        assertEquals("<p>'singlequote2.jsp in file system</p>",
-                bc.toString());
-    }
+		// Should be found in file system
+		bc = getUrl("http://localhost:" + getPort() + "/test/'singlequote2.jsp");
+		assertEquals("<p>'singlequote2.jsp in file system</p>", bc.toString());
+	}
 }

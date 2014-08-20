@@ -26,14 +26,14 @@ import javax.servlet.http.HttpServletResponse;
 
 public class TesterServlet extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 
-        resp.setContentType("text/plain");
-        PrintWriter out = resp.getWriter();
-        out.print("OK");
-    }
+		resp.setContentType("text/plain");
+		PrintWriter out = resp.getWriter();
+		out.print("OK");
+	}
 }

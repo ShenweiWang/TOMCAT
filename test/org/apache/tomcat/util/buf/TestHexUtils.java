@@ -26,17 +26,17 @@ import org.junit.Test;
  */
 public class TestHexUtils {
 
-    @Test
-    public void testGetDec() {
-        assertEquals(0, HexUtils.getDec('0'));
-        assertEquals(9, HexUtils.getDec('9'));
-        assertEquals(10, HexUtils.getDec('a'));
-        assertEquals(15, HexUtils.getDec('f'));
-        assertEquals(10, HexUtils.getDec('A'));
-        assertEquals(15, HexUtils.getDec('F'));
-        assertEquals(-1, HexUtils.getDec(0));
-        assertEquals(-1, HexUtils.getDec('Z'));
-        assertEquals(-1, HexUtils.getDec(255));
-        assertEquals(-1, HexUtils.getDec(-60));
-    }
+	@Test
+	public void testGetDec() {
+		assertEquals(0, HexUtils.getDec('0'));
+		assertEquals(9, HexUtils.getDec('9'));
+		assertEquals(10, HexUtils.getDec('a'));
+		assertEquals(15, HexUtils.getDec('f'));
+		assertEquals(10, HexUtils.getDec('A'));
+		assertEquals(15, HexUtils.getDec('F'));
+		assertEquals(-1, HexUtils.getDec(0));
+		assertEquals(-1, HexUtils.getDec('Z'));
+		assertEquals(-1, HexUtils.getDec(255));
+		assertEquals(-1, HexUtils.getDec(-60));
+	}
 }

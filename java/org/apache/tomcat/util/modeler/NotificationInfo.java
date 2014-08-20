@@ -15,127 +15,120 @@
  * limitations under the License.
  */
 
-
 package org.apache.tomcat.util.modeler;
-
 
 import javax.management.MBeanNotificationInfo;
 
-
 /**
- * <p>Internal configuration information for a <code>Notification</code>
- * descriptor.</p>
+ * <p>
+ * Internal configuration information for a <code>Notification</code>
+ * descriptor.
+ * </p>
  *
  * @author Craig R. McClanahan
  */
 
 public class NotificationInfo extends FeatureInfo {
-    static final long serialVersionUID = -6319885418912650856L;
+	static final long serialVersionUID = -6319885418912650856L;
 
-    // ----------------------------------------------------- Instance Variables
+	// ----------------------------------------------------- Instance Variables
 
+	/**
+	 * The <code>ModelMBeanNotificationInfo</code> object that corresponds to
+	 * this <code>NotificationInfo</code> instance.
+	 */
+	transient MBeanNotificationInfo info = null;
+	protected String notifTypes[] = new String[0];
 
-    /**
-     * The <code>ModelMBeanNotificationInfo</code> object that corresponds
-     * to this <code>NotificationInfo</code> instance.
-     */
-    transient MBeanNotificationInfo info = null;
-    protected String notifTypes[] = new String[0];
+	// ------------------------------------------------------------- Properties
 
-    // ------------------------------------------------------------- Properties
+	/**
+	 * Override the <code>description</code> property setter.
+	 *
+	 * @param description
+	 *            The new description
+	 */
+	@Override
+	public void setDescription(String description) {
+		super.setDescription(description);
+		this.info = null;
+	}
 
+	/**
+	 * Override the <code>name</code> property setter.
+	 *
+	 * @param name
+	 *            The new name
+	 */
+	@Override
+	public void setName(String name) {
+		super.setName(name);
+		this.info = null;
+	}
 
-    /**
-     * Override the <code>description</code> property setter.
-     *
-     * @param description The new description
-     */
-    @Override
-    public void setDescription(String description) {
-        super.setDescription(description);
-        this.info = null;
-    }
+	/**
+	 * The set of notification types for this MBean.
+	 */
+	public String[] getNotifTypes() {
+		return (this.notifTypes);
+	}
 
+	// --------------------------------------------------------- Public Methods
 
-    /**
-     * Override the <code>name</code> property setter.
-     *
-     * @param name The new name
-     */
-    @Override
-    public void setName(String name) {
-        super.setName(name);
-        this.info = null;
-    }
+	/**
+	 * Add a new notification type to the set managed by an MBean.
+	 *
+	 * @param notifType
+	 *            The new notification type
+	 */
+	public void addNotifType(String notifType) {
 
+		synchronized (notifTypes) {
+			String results[] = new String[notifTypes.length + 1];
+			System.arraycopy(notifTypes, 0, results, 0, notifTypes.length);
+			results[notifTypes.length] = notifType;
+			notifTypes = results;
+			this.info = null;
+		}
 
-    /**
-     * The set of notification types for this MBean.
-     */
-    public String[] getNotifTypes() {
-        return (this.notifTypes);
-    }
+	}
 
+	/**
+	 * Create and return a <code>ModelMBeanNotificationInfo</code> object that
+	 * corresponds to the attribute described by this instance.
+	 */
+	public MBeanNotificationInfo createNotificationInfo() {
 
-    // --------------------------------------------------------- Public Methods
+		// Return our cached information (if any)
+		if (info != null)
+			return (info);
 
+		// Create and return a new information object
+		info = new MBeanNotificationInfo(getNotifTypes(), getName(),
+				getDescription());
+		// Descriptor descriptor = info.getDescriptor();
+		// addFields(descriptor);
+		// info.setDescriptor(descriptor);
+		return (info);
 
-    /**
-     * Add a new notification type to the set managed by an MBean.
-     *
-     * @param notifType The new notification type
-     */
-    public void addNotifType(String notifType) {
+	}
 
-        synchronized (notifTypes) {
-            String results[] = new String[notifTypes.length + 1];
-            System.arraycopy(notifTypes, 0, results, 0, notifTypes.length);
-            results[notifTypes.length] = notifType;
-            notifTypes = results;
-            this.info = null;
-        }
+	/**
+	 * Return a string representation of this notification descriptor.
+	 */
+	@Override
+	public String toString() {
 
-    }
+		StringBuilder sb = new StringBuilder("NotificationInfo[");
+		sb.append("name=");
+		sb.append(name);
+		sb.append(", description=");
+		sb.append(description);
+		sb.append(", notifTypes=");
+		sb.append(notifTypes.length);
+		sb.append("]");
+		return (sb.toString());
 
-
-    /**
-     * Create and return a <code>ModelMBeanNotificationInfo</code> object that
-     * corresponds to the attribute described by this instance.
-     */
-    public MBeanNotificationInfo createNotificationInfo() {
-
-        // Return our cached information (if any)
-        if (info != null)
-            return (info);
-
-        // Create and return a new information object
-        info = new MBeanNotificationInfo
-            (getNotifTypes(), getName(), getDescription());
-        //Descriptor descriptor = info.getDescriptor();
-        //addFields(descriptor);
-        //info.setDescriptor(descriptor);
-        return (info);
-
-    }
-
-
-    /**
-     * Return a string representation of this notification descriptor.
-     */
-    @Override
-    public String toString() {
-
-        StringBuilder sb = new StringBuilder("NotificationInfo[");
-        sb.append("name=");
-        sb.append(name);
-        sb.append(", description=");
-        sb.append(description);
-        sb.append(", notifTypes=");
-        sb.append(notifTypes.length);
-        sb.append("]");
-        return (sb.toString());
-
-    }
-
+	}
 
 }

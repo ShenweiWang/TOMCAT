@@ -18,15 +18,16 @@
 package org.apache.el;
 
 public class TesterFunctions {
-    public static String trim(String input) {
-        return input.trim();
-    }
+	public static String trim(String input) {
+		return input.trim();
+	}
 
-    public static class Inner$Class {
+	public static class Inner$Class {
 
-        public static final String RETVAL = "Return from bug49555";
-        public static String bug49555() {
-            return RETVAL;
-        }
-    }
+		public static final String RETVAL = "Return from bug49555";
+
+		public static String bug49555() {
+			return RETVAL;
+		}
+	}
 }

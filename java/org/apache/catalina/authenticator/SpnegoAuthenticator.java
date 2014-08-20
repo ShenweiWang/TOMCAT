@@ -44,7 +44,6 @@ import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.Oid;
 
-
 /**
  * A SPNEGO authenticator that uses the SPNEGO/Kerberos support built in to Java
  * 6. Successful Kerberos authentication depends on the correct configuration of
@@ -54,285 +53,287 @@ import org.ietf.jgss.Oid;
  */
 public class SpnegoAuthenticator extends AuthenticatorBase {
 
-    private static final Log log = LogFactory.getLog(SpnegoAuthenticator.class);
-    
-    private String loginConfigName = Constants.DEFAULT_LOGIN_MODULE_NAME;
-    public String getLoginConfigName() {
-        return loginConfigName;
-    }
-    public void setLoginConfigName(String loginConfigName) {
-        this.loginConfigName = loginConfigName;
-    }
+	private static final Log log = LogFactory.getLog(SpnegoAuthenticator.class);
 
-    private boolean storeDelegatedCredential = true;
-    public boolean isStoreDelegatedCredential() {
-        return storeDelegatedCredential;
-    }
-    public void setStoreDelegatedCredential(
-            boolean storeDelegatedCredential) {
-        this.storeDelegatedCredential = storeDelegatedCredential;
-    }
+	private String loginConfigName = Constants.DEFAULT_LOGIN_MODULE_NAME;
 
-    private Pattern noKeepAliveUserAgents = null;
-    public String getNoKeepAliveUserAgents() {
-        Pattern p = noKeepAliveUserAgents;
-        if (p == null) {
-            return null;
-        } else {
-            return p.pattern();
-        }
-    }
-    public void setNoKeepAliveUserAgents(String noKeepAliveUserAgents) {
-        if (noKeepAliveUserAgents == null ||
-                noKeepAliveUserAgents.length() == 0) {
-            this.noKeepAliveUserAgents = null;
-        } else {
-            this.noKeepAliveUserAgents = Pattern.compile(noKeepAliveUserAgents);
-        }
-    }
+	public String getLoginConfigName() {
+		return loginConfigName;
+	}
 
+	public void setLoginConfigName(String loginConfigName) {
+		this.loginConfigName = loginConfigName;
+	}
 
-    @Override
-    protected String getAuthMethod() {
-        return Constants.SPNEGO_METHOD;
-    }
+	private boolean storeDelegatedCredential = true;
 
+	public boolean isStoreDelegatedCredential() {
+		return storeDelegatedCredential;
+	}
 
-    @Override
-    public String getInfo() {
-        return "org.apache.catalina.authenticator.SpnegoAuthenticator/1.0";
-    }
+	public void setStoreDelegatedCredential(boolean storeDelegatedCredential) {
+		this.storeDelegatedCredential = storeDelegatedCredential;
+	}
 
+	private Pattern noKeepAliveUserAgents = null;
 
-    @Override
-    protected void initInternal() throws LifecycleException {
-        super.initInternal();
+	public String getNoKeepAliveUserAgents() {
+		Pattern p = noKeepAliveUserAgents;
+		if (p == null) {
+			return null;
+		} else {
+			return p.pattern();
+		}
+	}
 
-        // Kerberos configuration file location
-        String krb5Conf = System.getProperty(Constants.KRB5_CONF_PROPERTY);
-        if (krb5Conf == null) {
-            // System property not set, use the Tomcat default
-            File krb5ConfFile = new File(Bootstrap.getCatalinaBase(),
-                    Constants.DEFAULT_KRB5_CONF);
-            System.setProperty(Constants.KRB5_CONF_PROPERTY,
-                    krb5ConfFile.getAbsolutePath());
-        }
+	public void setNoKeepAliveUserAgents(String noKeepAliveUserAgents) {
+		if (noKeepAliveUserAgents == null
+				|| noKeepAliveUserAgents.length() == 0) {
+			this.noKeepAliveUserAgents = null;
+		} else {
+			this.noKeepAliveUserAgents = Pattern.compile(noKeepAliveUserAgents);
+		}
+	}
 
-        // JAAS configuration file location
-        String jaasConf = System.getProperty(Constants.JAAS_CONF_PROPERTY);
-        if (jaasConf == null) {
-            // System property not set, use the Tomcat default
-            File jaasConfFile = new File(Bootstrap.getCatalinaBase(),
-                    Constants.DEFAULT_JAAS_CONF);
-            System.setProperty(Constants.JAAS_CONF_PROPERTY,
-                    jaasConfFile.getAbsolutePath());
-        }
-    }
+	@Override
+	protected String getAuthMethod() {
+		return Constants.SPNEGO_METHOD;
+	}
 
+	@Override
+	public String getInfo() {
+		return "org.apache.catalina.authenticator.SpnegoAuthenticator/1.0";
+	}
 
-    @Override
-    public boolean authenticate(Request request, HttpServletResponse response,
-            LoginConfig config) throws IOException {
+	@Override
+	protected void initInternal() throws LifecycleException {
+		super.initInternal();
 
-        // Have we already authenticated someone?
-        Principal principal = request.getUserPrincipal();
-        String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
-        if (principal != null) {
-            if (log.isDebugEnabled())
-                log.debug("Already authenticated '" + principal.getName() + "'");
-            // Associate the session with any existing SSO session
-            if (ssoId != null)
-                associate(ssoId, request.getSessionInternal(true));
-            return true;
-        }
+		// Kerberos configuration file location
+		String krb5Conf = System.getProperty(Constants.KRB5_CONF_PROPERTY);
+		if (krb5Conf == null) {
+			// System property not set, use the Tomcat default
+			File krb5ConfFile = new File(Bootstrap.getCatalinaBase(),
+					Constants.DEFAULT_KRB5_CONF);
+			System.setProperty(Constants.KRB5_CONF_PROPERTY,
+					krb5ConfFile.getAbsolutePath());
+		}
 
-        // Is there an SSO session against which we can try to reauthenticate?
-        if (ssoId != null) {
-            if (log.isDebugEnabled())
-                log.debug("SSO Id " + ssoId + " set; attempting " +
-                          "reauthentication");
-            /* Try to reauthenticate using data cached by SSO.  If this fails,
-               either the original SSO logon was of DIGEST or SSL (which
-               we can't reauthenticate ourselves because there is no
-               cached username and password), or the realm denied
-               the user's reauthentication for some reason.
-               In either case we have to prompt the user for a logon */
-            if (reauthenticateFromSSO(ssoId, request))
-                return true;
-        }
+		// JAAS configuration file location
+		String jaasConf = System.getProperty(Constants.JAAS_CONF_PROPERTY);
+		if (jaasConf == null) {
+			// System property not set, use the Tomcat default
+			File jaasConfFile = new File(Bootstrap.getCatalinaBase(),
+					Constants.DEFAULT_JAAS_CONF);
+			System.setProperty(Constants.JAAS_CONF_PROPERTY,
+					jaasConfFile.getAbsolutePath());
+		}
+	}
 
-        MessageBytes authorization = 
-            request.getCoyoteRequest().getMimeHeaders()
-            .getValue("authorization");
-        
-        if (authorization == null) {
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString("authenticator.noAuthHeader"));
-            }
-            response.setHeader("WWW-Authenticate", "Negotiate");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        }
-        
-        authorization.toBytes();
-        ByteChunk authorizationBC = authorization.getByteChunk();
+	@Override
+	public boolean authenticate(Request request, HttpServletResponse response,
+			LoginConfig config) throws IOException {
 
-        if (!authorizationBC.startsWithIgnoreCase("negotiate ", 0)) {
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString(
-                        "spnegoAuthenticator.authHeaderNotNego"));
-            }
-            response.setHeader("WWW-Authenticate", "Negotiate");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        }
+		// Have we already authenticated someone?
+		Principal principal = request.getUserPrincipal();
+		String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
+		if (principal != null) {
+			if (log.isDebugEnabled())
+				log.debug("Already authenticated '" + principal.getName() + "'");
+			// Associate the session with any existing SSO session
+			if (ssoId != null)
+				associate(ssoId, request.getSessionInternal(true));
+			return true;
+		}
 
-        authorizationBC.setOffset(authorizationBC.getOffset() + 10);
-                
-        byte[] decoded = Base64.decodeBase64(authorizationBC.getBuffer(),
-                authorizationBC.getOffset(),
-                authorizationBC.getLength());
+		// Is there an SSO session against which we can try to reauthenticate?
+		if (ssoId != null) {
+			if (log.isDebugEnabled())
+				log.debug("SSO Id " + ssoId + " set; attempting "
+						+ "reauthentication");
+			/*
+			 * Try to reauthenticate using data cached by SSO. If this fails,
+			 * either the original SSO logon was of DIGEST or SSL (which we
+			 * can't reauthenticate ourselves because there is no cached
+			 * username and password), or the realm denied the user's
+			 * reauthentication for some reason. In either case we have to
+			 * prompt the user for a logon
+			 */
+			if (reauthenticateFromSSO(ssoId, request))
+				return true;
+		}
 
-        if (decoded.length == 0) {
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString(
-                        "spnegoAuthenticator.authHeaderNoToken"));
-            }
-            response.setHeader("WWW-Authenticate", "Negotiate");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        }
+		MessageBytes authorization = request.getCoyoteRequest()
+				.getMimeHeaders().getValue("authorization");
 
-        LoginContext lc = null;
-        GSSContext gssContext = null;
-        byte[] outToken = null;
-        try {
-            try {
-                lc = new LoginContext(getLoginConfigName());
-                lc.login();
-            } catch (LoginException e) {
-                log.error(sm.getString("spnegoAuthenticator.serviceLoginFail"),
-                        e);
-                response.sendError(
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                return false;
-            }
-            // Assume the GSSContext is stateless
-            // TODO: Confirm this assumption
-            final GSSManager manager = GSSManager.getInstance();
-            // IBM JDK only understands indefinite lifetime
-            final int credentialLifetime;
-            if (Globals.IS_IBM_JVM) {
-                credentialLifetime = GSSCredential.INDEFINITE_LIFETIME;
-            } else {
-                credentialLifetime = GSSCredential.DEFAULT_LIFETIME;
-            }
-            final PrivilegedExceptionAction<GSSCredential> action =
-                new PrivilegedExceptionAction<GSSCredential>() {
-                    @Override
-                    public GSSCredential run() throws GSSException {
-                        return manager.createCredential(null,
-                                credentialLifetime,
-                                new Oid("1.3.6.1.5.5.2"),
-                                GSSCredential.ACCEPT_ONLY);
-                    }
-                };
-            gssContext = manager.createContext(Subject.doAs(lc.getSubject(), action));
+		if (authorization == null) {
+			if (log.isDebugEnabled()) {
+				log.debug(sm.getString("authenticator.noAuthHeader"));
+			}
+			response.setHeader("WWW-Authenticate", "Negotiate");
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			return false;
+		}
 
-            outToken = Subject.doAs(lc.getSubject(), new AcceptAction(gssContext, decoded));
+		authorization.toBytes();
+		ByteChunk authorizationBC = authorization.getByteChunk();
 
-            if (outToken == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug(sm.getString(
-                            "spnegoAuthenticator.ticketValidateFail"));
-                }
-                // Start again
-                response.setHeader("WWW-Authenticate", "Negotiate");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                return false;
-            }
+		if (!authorizationBC.startsWithIgnoreCase("negotiate ", 0)) {
+			if (log.isDebugEnabled()) {
+				log.debug(sm.getString("spnegoAuthenticator.authHeaderNotNego"));
+			}
+			response.setHeader("WWW-Authenticate", "Negotiate");
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			return false;
+		}
 
-            principal = context.getRealm().authenticate(gssContext,
-                    isStoreDelegatedCredential());
-        } catch (GSSException e) {
-            if (log.isDebugEnabled()) {
-                log.debug(sm.getString("spnegoAuthenticator.ticketValidateFail"), e);
-            }
-            response.setHeader("WWW-Authenticate", "Negotiate");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        } catch (PrivilegedActionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof GSSException) {
-                if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("spnegoAuthenticator.serviceLoginFail"), e);
-                }
-            } else {
-                log.error(sm.getString("spnegoAuthenticator.serviceLoginFail"), e);
-            }
-            response.setHeader("WWW-Authenticate", "Negotiate");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        } finally {
-            if (gssContext != null) {
-                try {
-                    gssContext.dispose();
-                } catch (GSSException e) {
-                    // Ignore
-                }
-            }
-            if (lc != null) {
-                try {
-                    lc.logout();
-                } catch (LoginException e) {
-                    // Ignore
-                }
-            }
-        }
+		authorizationBC.setOffset(authorizationBC.getOffset() + 10);
 
-        // Send response token on success and failure
-        response.setHeader("WWW-Authenticate", "Negotiate "
-                + Base64.encodeBase64String(outToken));
+		byte[] decoded = Base64.decodeBase64(authorizationBC.getBuffer(),
+				authorizationBC.getOffset(), authorizationBC.getLength());
 
-        if (principal != null) {
-            register(request, response, principal, Constants.SPNEGO_METHOD,
-                    principal.getName(), null);
+		if (decoded.length == 0) {
+			if (log.isDebugEnabled()) {
+				log.debug(sm.getString("spnegoAuthenticator.authHeaderNoToken"));
+			}
+			response.setHeader("WWW-Authenticate", "Negotiate");
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			return false;
+		}
 
-            Pattern p = noKeepAliveUserAgents;
-            if (p != null) {
-                MessageBytes ua =
-                        request.getCoyoteRequest().getMimeHeaders().getValue(
-                                "user-agent");
-                if (ua != null && p.matcher(ua.toString()).matches()) {
-                    response.setHeader("Connection", "close");
-                }
-            }
-            return true;
-        }
+		LoginContext lc = null;
+		GSSContext gssContext = null;
+		byte[] outToken = null;
+		try {
+			try {
+				lc = new LoginContext(getLoginConfigName());
+				lc.login();
+			} catch (LoginException e) {
+				log.error(sm.getString("spnegoAuthenticator.serviceLoginFail"),
+						e);
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				return false;
+			}
+			// Assume the GSSContext is stateless
+			// TODO: Confirm this assumption
+			final GSSManager manager = GSSManager.getInstance();
+			// IBM JDK only understands indefinite lifetime
+			final int credentialLifetime;
+			if (Globals.IS_IBM_JVM) {
+				credentialLifetime = GSSCredential.INDEFINITE_LIFETIME;
+			} else {
+				credentialLifetime = GSSCredential.DEFAULT_LIFETIME;
+			}
+			final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
+				@Override
+				public GSSCredential run() throws GSSException {
+					return manager
+							.createCredential(null, credentialLifetime,
+									new Oid("1.3.6.1.5.5.2"),
+									GSSCredential.ACCEPT_ONLY);
+				}
+			};
+			gssContext = manager.createContext(Subject.doAs(lc.getSubject(),
+					action));
 
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-        return false;
-    }
+			outToken = Subject.doAs(lc.getSubject(), new AcceptAction(
+					gssContext, decoded));
 
+			if (outToken == null) {
+				if (log.isDebugEnabled()) {
+					log.debug(sm
+							.getString("spnegoAuthenticator.ticketValidateFail"));
+				}
+				// Start again
+				response.setHeader("WWW-Authenticate", "Negotiate");
+				response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+				return false;
+			}
 
-    /**
-     * This class gets a gss credential via a privileged action.
-     */
-    private static class AcceptAction implements PrivilegedExceptionAction<byte[]> {
+			principal = context.getRealm().authenticate(gssContext,
+					isStoreDelegatedCredential());
+		} catch (GSSException e) {
+			if (log.isDebugEnabled()) {
+				log.debug(
+						sm.getString("spnegoAuthenticator.ticketValidateFail"),
+						e);
+			}
+			response.setHeader("WWW-Authenticate", "Negotiate");
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			return false;
+		} catch (PrivilegedActionException e) {
+			Throwable cause = e.getCause();
+			if (cause instanceof GSSException) {
+				if (log.isDebugEnabled()) {
+					log.debug(sm
+							.getString("spnegoAuthenticator.serviceLoginFail"),
+							e);
+				}
+			} else {
+				log.error(sm.getString("spnegoAuthenticator.serviceLoginFail"),
+						e);
+			}
+			response.setHeader("WWW-Authenticate", "Negotiate");
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			return false;
+		} finally {
+			if (gssContext != null) {
+				try {
+					gssContext.dispose();
+				} catch (GSSException e) {
+					// Ignore
+				}
+			}
+			if (lc != null) {
+				try {
+					lc.logout();
+				} catch (LoginException e) {
+					// Ignore
+				}
+			}
+		}
 
-        GSSContext gssContext;
+		// Send response token on success and failure
+		response.setHeader("WWW-Authenticate",
+				"Negotiate " + Base64.encodeBase64String(outToken));
 
-        byte[] decoded;
+		if (principal != null) {
+			register(request, response, principal, Constants.SPNEGO_METHOD,
+					principal.getName(), null);
 
-        AcceptAction(GSSContext context, byte[] decodedToken) {
-            this.gssContext = context;
-            this.decoded = decodedToken;
-        }
+			Pattern p = noKeepAliveUserAgents;
+			if (p != null) {
+				MessageBytes ua = request.getCoyoteRequest().getMimeHeaders()
+						.getValue("user-agent");
+				if (ua != null && p.matcher(ua.toString()).matches()) {
+					response.setHeader("Connection", "close");
+				}
+			}
+			return true;
+		}
 
-        @Override
-        public byte[] run() throws GSSException {
-            return gssContext.acceptSecContext(decoded,
-                    0, decoded.length);
-        }
-    }
+		response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+		return false;
+	}
+
+	/**
+	 * This class gets a gss credential via a privileged action.
+	 */
+	private static class AcceptAction implements
+			PrivilegedExceptionAction<byte[]> {
+
+		GSSContext gssContext;
+
+		byte[] decoded;
+
+		AcceptAction(GSSContext context, byte[] decodedToken) {
+			this.gssContext = context;
+			this.decoded = decodedToken;
+		}
+
+		@Override
+		public byte[] run() throws GSSException {
+			return gssContext.acceptSecContext(decoded, 0, decoded.length);
+		}
+	}
 }

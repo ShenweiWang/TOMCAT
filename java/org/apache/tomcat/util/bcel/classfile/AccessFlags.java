@@ -18,24 +18,23 @@
 package org.apache.tomcat.util.bcel.classfile;
 
 /**
- * Super class for all objects that have modifiers like private, final, ...
- * I.e. classes, fields, and methods.
+ * Super class for all objects that have modifiers like private, final, ... I.e.
+ * classes, fields, and methods.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public abstract class AccessFlags implements java.io.Serializable {
 
-    private static final long serialVersionUID = 2548932939969293935L;
-    protected int access_flags;
+	private static final long serialVersionUID = 2548932939969293935L;
+	protected int access_flags;
 
+	public AccessFlags() {
+	}
 
-    public AccessFlags() {
-    }
-
-    /**
-     * @return Access flags of the object aka. "modifiers".
-    */
-    public final int getAccessFlags() {
-        return access_flags;
-    }
+	/**
+	 * @return Access flags of the object aka. "modifiers".
+	 */
+	public final int getAccessFlags() {
+		return access_flags;
+	}
 }

@@ -43,110 +43,104 @@ import org.apache.tomcat.websocket.pojo.TesterUtil.SingletonConfigurator;
 
 public class TestPojoEndpointBase extends TomcatBaseTest {
 
-    @Test
-    public void testBug54716() throws Exception {
-        TestUtil.generateMask();
-        // Set up utility classes
-        Bug54716 server = new Bug54716();
-        SingletonConfigurator.setInstance(server);
-        ServerConfigListener.setPojoClazz(Bug54716.class);
+	@Test
+	public void testBug54716() throws Exception {
+		TestUtil.generateMask();
+		// Set up utility classes
+		Bug54716 server = new Bug54716();
+		SingletonConfigurator.setInstance(server);
+		ServerConfigListener.setPojoClazz(Bug54716.class);
 
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(ServerConfigListener.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(ServerConfigListener.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        WebSocketContainer wsContainer =
-                ContainerProvider.getWebSocketContainer();
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
 
+		tomcat.start();
 
-        tomcat.start();
+		Client client = new Client();
+		URI uri = new URI("ws://localhost:" + getPort() + "/");
 
-        Client client = new Client();
-        URI uri = new URI("ws://localhost:" + getPort() + "/");
+		wsContainer.connectToServer(client, uri);
 
-        wsContainer.connectToServer(client, uri);
+		// Server should close the connection after the exception on open.
+		boolean closed = client.waitForClose(5);
+		Assert.assertTrue("Server failed to close connection", closed);
+	}
 
-        // Server should close the connection after the exception on open.
-        boolean closed = client.waitForClose(5);
-        Assert.assertTrue("Server failed to close connection", closed);
-    }
+	@Test
+	public void testOnOpenPojoMethod() throws Exception {
+		// Set up utility classes
+		OnOpenServerEndpoint server = new OnOpenServerEndpoint();
+		SingletonConfigurator.setInstance(server);
+		ServerConfigListener.setPojoClazz(OnOpenServerEndpoint.class);
 
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(ServerConfigListener.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-    @Test
-    public void testOnOpenPojoMethod() throws Exception {
-        // Set up utility classes
-        OnOpenServerEndpoint server = new OnOpenServerEndpoint();
-        SingletonConfigurator.setInstance(server);
-        ServerConfigListener.setPojoClazz(OnOpenServerEndpoint.class);
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
 
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(ServerConfigListener.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		tomcat.start();
 
-        WebSocketContainer wsContainer =
-                ContainerProvider.getWebSocketContainer();
+		Client client = new Client();
+		URI uri = new URI("ws://localhost:" + getPort() + "/");
 
+		Session session = wsContainer.connectToServer(client, uri);
 
-        tomcat.start();
+		client.waitForClose(5);
+		Assert.assertTrue(session.isOpen());
+	}
 
-        Client client = new Client();
-        URI uri = new URI("ws://localhost:" + getPort() + "/");
+	@ServerEndpoint("/")
+	public static class OnOpenServerEndpoint {
 
-        Session session = wsContainer.connectToServer(client, uri);
+		@OnOpen
+		public void onOpen(@SuppressWarnings("unused") Session session,
+				EndpointConfig config) {
+			if (config == null) {
+				throw new RuntimeException();
+			}
+		}
 
-        client.waitForClose(5);
-        Assert.assertTrue(session.isOpen());
-    }
+		@OnError
+		public void onError(@SuppressWarnings("unused") Throwable t) {
+			throw new RuntimeException();
+		}
+	}
 
+	@ServerEndpoint("/")
+	public static class Bug54716 {
 
-    @ServerEndpoint("/")
-    public static class OnOpenServerEndpoint {
+		@OnOpen
+		public void onOpen() {
+			throw new RuntimeException();
+		}
+	}
 
-        @OnOpen
-        public void onOpen(@SuppressWarnings("unused") Session session,
-                EndpointConfig config) {
-            if (config == null) {
-                throw new RuntimeException();
-            }
-        }
+	@ClientEndpoint
+	public static final class Client {
 
-        @OnError
-        public void onError(@SuppressWarnings("unused") Throwable t){
-            throw new RuntimeException();
-        }
-    }
+		private final CountDownLatch closeLatch = new CountDownLatch(1);
 
+		@OnClose
+		public void onClose() {
+			closeLatch.countDown();
+		}
 
-    @ServerEndpoint("/")
-    public static class Bug54716 {
-
-        @OnOpen
-        public void onOpen() {
-            throw new RuntimeException();
-        }
-    }
-
-
-    @ClientEndpoint
-    public static final class Client {
-
-        private final CountDownLatch closeLatch = new CountDownLatch(1);
-
-        @OnClose
-        public void onClose() {
-            closeLatch.countDown();
-        }
-
-        public boolean waitForClose(int seconds) throws InterruptedException {
-            return closeLatch.await(seconds, TimeUnit.SECONDS);
-        }
-    }
+		public boolean waitForClose(int seconds) throws InterruptedException {
+			return closeLatch.await(seconds, TimeUnit.SECONDS);
+		}
+	}
 }

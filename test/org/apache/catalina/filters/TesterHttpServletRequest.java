@@ -45,407 +45,405 @@ import javax.servlet.http.Part;
 
 public class TesterHttpServletRequest implements HttpServletRequest {
 
-    private Map<String, Object> attributes = new HashMap<String,Object>();
-    private Map<String, List<String>> headers =
-            new HashMap<String,List<String>>();
-    private String method;
-    private String contentType;
+	private Map<String, Object> attributes = new HashMap<String, Object>();
+	private Map<String, List<String>> headers = new HashMap<String, List<String>>();
+	private String method;
+	private String contentType;
 
-    @Override
-    public Object getAttribute(String name) {
-        return attributes.get(name);
-    }
+	@Override
+	public Object getAttribute(String name) {
+		return attributes.get(name);
+	}
 
-    @Override
-    public Enumeration<String> getAttributeNames() {
-        return Collections.enumeration(attributes.keySet());
-    }
+	@Override
+	public Enumeration<String> getAttributeNames() {
+		return Collections.enumeration(attributes.keySet());
+	}
 
-    @Override
-    public String getCharacterEncoding() {
+	@Override
+	public String getCharacterEncoding() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public void setCharacterEncoding(String env)
-            throws UnsupportedEncodingException {
+	@Override
+	public void setCharacterEncoding(String env)
+			throws UnsupportedEncodingException {
 
-    }
+	}
 
-    @Override
-    public int getContentLength() {
+	@Override
+	public int getContentLength() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getContentType() {
-        return this.contentType;
-    }
+	@Override
+	public String getContentType() {
+		return this.contentType;
+	}
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
 
-    @Override
-    public ServletInputStream getInputStream() throws IOException {
+	@Override
+	public ServletInputStream getInputStream() throws IOException {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getParameter(String name) {
+	@Override
+	public String getParameter(String name) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Enumeration<String> getParameterNames() {
+	@Override
+	public Enumeration<String> getParameterNames() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String[] getParameterValues(String name) {
+	@Override
+	public String[] getParameterValues(String name) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Map<String,String[]> getParameterMap() {
+	@Override
+	public Map<String, String[]> getParameterMap() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getProtocol() {
+	@Override
+	public String getProtocol() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getScheme() {
+	@Override
+	public String getScheme() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getServerName() {
+	@Override
+	public String getServerName() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public int getServerPort() {
+	@Override
+	public int getServerPort() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public BufferedReader getReader() throws IOException {
+	@Override
+	public BufferedReader getReader() throws IOException {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getRemoteAddr() {
+	@Override
+	public String getRemoteAddr() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getRemoteHost() {
+	@Override
+	public String getRemoteHost() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public void setAttribute(String name, Object o) {
-        attributes.put(name, o);
-    }
+	@Override
+	public void setAttribute(String name, Object o) {
+		attributes.put(name, o);
+	}
 
-    @Override
-    public void removeAttribute(String name) {
-        attributes.remove(name);
-    }
+	@Override
+	public void removeAttribute(String name) {
+		attributes.remove(name);
+	}
 
-    @Override
-    public Locale getLocale() {
+	@Override
+	public Locale getLocale() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Enumeration<Locale> getLocales() {
+	@Override
+	public Enumeration<Locale> getLocales() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isSecure() {
+	@Override
+	public boolean isSecure() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public RequestDispatcher getRequestDispatcher(String path) {
+	@Override
+	public RequestDispatcher getRequestDispatcher(String path) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getRealPath(String path) {
+	@Override
+	public String getRealPath(String path) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public int getRemotePort() {
+	@Override
+	public int getRemotePort() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getLocalName() {
+	@Override
+	public String getLocalName() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getLocalAddr() {
+	@Override
+	public String getLocalAddr() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public int getLocalPort() {
+	@Override
+	public int getLocalPort() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getAuthType() {
+	@Override
+	public String getAuthType() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Cookie[] getCookies() {
+	@Override
+	public Cookie[] getCookies() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public long getDateHeader(String name) {
+	@Override
+	public long getDateHeader(String name) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getHeader(String name) {
-        List<String> list = headers.get(name);
-        if (list != null) {
-            return list.get(0);
-            // return CorsFilter.join(new HashSet<>(list), ",");
-        }
-        return null;
-    }
+	@Override
+	public String getHeader(String name) {
+		List<String> list = headers.get(name);
+		if (list != null) {
+			return list.get(0);
+			// return CorsFilter.join(new HashSet<>(list), ",");
+		}
+		return null;
+	}
 
-    public void setHeader(String name, String value) {
-        List<String> values = new ArrayList<String>();
-        values.add(value);
-        headers.put(name, values);
-    }
+	public void setHeader(String name, String value) {
+		List<String> values = new ArrayList<String>();
+		values.add(value);
+		headers.put(name, values);
+	}
 
-    @Override
-    public Enumeration<String> getHeaders(String name) {
+	@Override
+	public Enumeration<String> getHeaders(String name) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Enumeration<String> getHeaderNames() {
-        return Collections.enumeration(headers.keySet());
-    }
+	@Override
+	public Enumeration<String> getHeaderNames() {
+		return Collections.enumeration(headers.keySet());
+	}
 
-    @Override
-    public int getIntHeader(String name) {
+	@Override
+	public int getIntHeader(String name) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getMethod() {
-        return method;
-    }
+	@Override
+	public String getMethod() {
+		return method;
+	}
 
-    public void setMethod(String method) {
-        this.method = method;
-    }
+	public void setMethod(String method) {
+		this.method = method;
+	}
 
-    @Override
-    public String getPathInfo() {
+	@Override
+	public String getPathInfo() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getPathTranslated() {
+	@Override
+	public String getPathTranslated() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getContextPath() {
+	@Override
+	public String getContextPath() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getQueryString() {
+	@Override
+	public String getQueryString() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getRemoteUser() {
+	@Override
+	public String getRemoteUser() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isUserInRole(String role) {
+	@Override
+	public boolean isUserInRole(String role) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Principal getUserPrincipal() {
+	@Override
+	public Principal getUserPrincipal() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getRequestedSessionId() {
+	@Override
+	public String getRequestedSessionId() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getRequestURI() {
+	@Override
+	public String getRequestURI() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public StringBuffer getRequestURL() {
+	@Override
+	public StringBuffer getRequestURL() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public String getServletPath() {
+	@Override
+	public String getServletPath() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public HttpSession getSession(boolean create) {
+	@Override
+	public HttpSession getSession(boolean create) {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public HttpSession getSession() {
+	@Override
+	public HttpSession getSession() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isRequestedSessionIdValid() {
+	@Override
+	public boolean isRequestedSessionIdValid() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isRequestedSessionIdFromCookie() {
+	@Override
+	public boolean isRequestedSessionIdFromCookie() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isRequestedSessionIdFromURL() {
+	@Override
+	public boolean isRequestedSessionIdFromURL() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isRequestedSessionIdFromUrl() {
+	@Override
+	public boolean isRequestedSessionIdFromUrl() {
 
-        throw new RuntimeException("Not implemented");
-    }
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public ServletContext getServletContext() {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public ServletContext getServletContext() {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public AsyncContext startAsync() throws IllegalStateException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public AsyncContext startAsync() throws IllegalStateException {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public AsyncContext startAsync(ServletRequest servletRequest,
-            ServletResponse servletResponse) throws IllegalStateException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public AsyncContext startAsync(ServletRequest servletRequest,
+			ServletResponse servletResponse) throws IllegalStateException {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isAsyncStarted() {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public boolean isAsyncStarted() {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean isAsyncSupported() {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public boolean isAsyncSupported() {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public AsyncContext getAsyncContext() {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public AsyncContext getAsyncContext() {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public DispatcherType getDispatcherType() {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public DispatcherType getDispatcherType() {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public boolean authenticate(HttpServletResponse response)
-            throws IOException, ServletException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public boolean authenticate(HttpServletResponse response)
+			throws IOException, ServletException {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public void login(String username, String password)
-            throws ServletException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public void login(String username, String password) throws ServletException {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public void logout() throws ServletException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public void logout() throws ServletException {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Collection<Part> getParts() throws IOException, ServletException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public Collection<Part> getParts() throws IOException, ServletException {
+		throw new RuntimeException("Not implemented");
+	}
 
-    @Override
-    public Part getPart(String name) throws IOException, ServletException {
-        throw new RuntimeException("Not implemented");
-    }
+	@Override
+	public Part getPart(String name) throws IOException, ServletException {
+		throw new RuntimeException("Not implemented");
+	}
 }

@@ -34,84 +34,78 @@ import org.apache.tomcat.util.threads.ThreadPoolExecutor;
  */
 public class AsyncChannelGroupUtil {
 
-    private static final StringManager sm =
-            StringManager.getManager(Constants.PACKAGE_NAME);
+	private static final StringManager sm = StringManager
+			.getManager(Constants.PACKAGE_NAME);
 
-    private static AsynchronousChannelGroup group = null;
-    private static int usageCount = 0;
-    private static final Object lock = new Object();
+	private static AsynchronousChannelGroup group = null;
+	private static int usageCount = 0;
+	private static final Object lock = new Object();
 
+	private AsyncChannelGroupUtil() {
+		// Hide the default constructor
+	}
 
-    private AsyncChannelGroupUtil() {
-        // Hide the default constructor
-    }
+	public static AsynchronousChannelGroup register() {
+		synchronized (lock) {
+			if (usageCount == 0) {
+				group = createAsynchronousChannelGroup();
+			}
+			usageCount++;
+			return group;
+		}
+	}
 
+	public static void unregister() {
+		synchronized (lock) {
+			usageCount--;
+			if (usageCount == 0) {
+				group.shutdown();
+				group = null;
+			}
+		}
+	}
 
-    public static AsynchronousChannelGroup register() {
-        synchronized (lock) {
-            if (usageCount == 0) {
-                group = createAsynchronousChannelGroup();
-            }
-            usageCount++;
-            return group;
-        }
-    }
+	private static AsynchronousChannelGroup createAsynchronousChannelGroup() {
+		// Need to do this with the right thread context class loader else the
+		// first web app to call this will trigger a leak
+		ClassLoader original = Thread.currentThread().getContextClassLoader();
 
+		try {
+			Thread.currentThread().setContextClassLoader(
+					AsyncIOThreadFactory.class.getClassLoader());
 
-    public static void unregister() {
-        synchronized (lock) {
-            usageCount--;
-            if (usageCount == 0) {
-                group.shutdown();
-                group = null;
-            }
-        }
-    }
+			// These are the same settings as the default
+			// AsynchronousChannelGroup
+			int initialSize = Runtime.getRuntime().availableProcessors();
+			ExecutorService executorService = new ThreadPoolExecutor(0,
+					Integer.MAX_VALUE, Long.MAX_VALUE, TimeUnit.MILLISECONDS,
+					new SynchronousQueue<Runnable>(),
+					new AsyncIOThreadFactory());
 
+			try {
+				return AsynchronousChannelGroup.withCachedThreadPool(
+						executorService, initialSize);
+			} catch (IOException e) {
+				// No good reason for this to happen.
+				throw new IllegalStateException(
+						sm.getString("asyncChannelGroup.createFail"));
+			}
+		} finally {
+			Thread.currentThread().setContextClassLoader(original);
+		}
+	}
 
-    private static AsynchronousChannelGroup createAsynchronousChannelGroup() {
-        // Need to do this with the right thread context class loader else the
-        // first web app to call this will trigger a leak
-        ClassLoader original = Thread.currentThread().getContextClassLoader();
+	private static class AsyncIOThreadFactory implements ThreadFactory {
 
-        try {
-            Thread.currentThread().setContextClassLoader(
-                    AsyncIOThreadFactory.class.getClassLoader());
+		private AtomicInteger count = new AtomicInteger(0);
 
-            // These are the same settings as the default
-            // AsynchronousChannelGroup
-            int initialSize = Runtime.getRuntime().availableProcessors();
-            ExecutorService executorService = new ThreadPoolExecutor(
-                    0,
-                    Integer.MAX_VALUE,
-                    Long.MAX_VALUE, TimeUnit.MILLISECONDS,
-                    new SynchronousQueue<Runnable>(),
-                    new AsyncIOThreadFactory());
-
-            try {
-                return AsynchronousChannelGroup.withCachedThreadPool(
-                        executorService, initialSize);
-            } catch (IOException e) {
-                // No good reason for this to happen.
-                throw new IllegalStateException(sm.getString("asyncChannelGroup.createFail"));
-            }
-        } finally {
-            Thread.currentThread().setContextClassLoader(original);
-        }
-    }
-
-
-    private static class AsyncIOThreadFactory implements ThreadFactory {
-
-        private AtomicInteger count = new AtomicInteger(0);
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r);
-            t.setName("WebSocketClient-AsyncIO-" + count.incrementAndGet());
-            t.setContextClassLoader(this.getClass().getClassLoader());
-            t.setDaemon(true);
-            return t;
-        }
-    }
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = new Thread(r);
+			t.setName("WebSocketClient-AsyncIO-" + count.incrementAndGet());
+			t.setContextClassLoader(this.getClass().getClassLoader());
+			t.setDaemon(true);
+			return t;
+		}
+	}
 }

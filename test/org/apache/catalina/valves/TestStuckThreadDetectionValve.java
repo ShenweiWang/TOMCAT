@@ -35,128 +35,128 @@ import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestStuckThreadDetectionValve extends TomcatBaseTest {
-    private StandardContext context;
-    private Tomcat tomcat;
+	private StandardContext context;
+	private Tomcat tomcat;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        tomcat = getTomcatInstance();
-        File docBase = new File(System.getProperty("java.io.tmpdir"));
-        context = (StandardContext) tomcat.addContext("",
-                docBase.getAbsolutePath());
-    }
+	@Override
+	@Before
+	public void setUp() throws Exception {
+		super.setUp();
+		tomcat = getTomcatInstance();
+		File docBase = new File(System.getProperty("java.io.tmpdir"));
+		context = (StandardContext) tomcat.addContext("",
+				docBase.getAbsolutePath());
+	}
 
-    @Test
-    public void testDetection() throws Exception {
-        // second, we test the actual effect of the flag on the startup
-        StuckingServlet stuckingServlet = new StuckingServlet(6000L);
-        Wrapper servlet = Tomcat.addServlet(context, "myservlet",
-                stuckingServlet);
-        servlet.addMapping("/myservlet");
+	@Test
+	public void testDetection() throws Exception {
+		// second, we test the actual effect of the flag on the startup
+		StuckingServlet stuckingServlet = new StuckingServlet(6000L);
+		Wrapper servlet = Tomcat.addServlet(context, "myservlet",
+				stuckingServlet);
+		servlet.addMapping("/myservlet");
 
-        StuckThreadDetectionValve valve = new StuckThreadDetectionValve();
-        valve.setThreshold(2);
-        context.addValve(valve);
-        context.setBackgroundProcessorDelay(1);
-        tomcat.start();
+		StuckThreadDetectionValve valve = new StuckThreadDetectionValve();
+		valve.setThreshold(2);
+		context.addValve(valve);
+		context.setBackgroundProcessorDelay(1);
+		tomcat.start();
 
-        Assert.assertEquals(0, valve.getStuckThreadIds().length);
+		Assert.assertEquals(0, valve.getStuckThreadIds().length);
 
-        final ByteChunk result = new ByteChunk();
-        Thread asyncThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    getUrl("http://localhost:" + getPort() + "/myservlet",
-                            result, null);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+		final ByteChunk result = new ByteChunk();
+		Thread asyncThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					getUrl("http://localhost:" + getPort() + "/myservlet",
+							result, null);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-        };
-        asyncThread.start();
-        try {
-            Thread.sleep(500L);
-            Assert.assertEquals(0, valve.getStuckThreadIds().length);
+		};
+		asyncThread.start();
+		try {
+			Thread.sleep(500L);
+			Assert.assertEquals(0, valve.getStuckThreadIds().length);
 
-            Thread.sleep(3000L);
-            Assert.assertEquals(1, valve.getStuckThreadIds().length);
-        } finally {
-            asyncThread.join();
-        }
-        Assert.assertFalse(stuckingServlet.wasInterrupted);
-        Assert.assertTrue(result.toString().startsWith("OK"));
-    }
+			Thread.sleep(3000L);
+			Assert.assertEquals(1, valve.getStuckThreadIds().length);
+		} finally {
+			asyncThread.join();
+		}
+		Assert.assertFalse(stuckingServlet.wasInterrupted);
+		Assert.assertTrue(result.toString().startsWith("OK"));
+	}
 
-    @Test
-    public void testInterruption() throws Exception {
-        // second, we test the actual effect of the flag on the startup
-        StuckingServlet stuckingServlet = new StuckingServlet(
-                TimeUnit.SECONDS.toMillis(20L));
-        Wrapper servlet = Tomcat.addServlet(context, "myservlet",
-                stuckingServlet);
-        servlet.addMapping("/myservlet");
+	@Test
+	public void testInterruption() throws Exception {
+		// second, we test the actual effect of the flag on the startup
+		StuckingServlet stuckingServlet = new StuckingServlet(
+				TimeUnit.SECONDS.toMillis(20L));
+		Wrapper servlet = Tomcat.addServlet(context, "myservlet",
+				stuckingServlet);
+		servlet.addMapping("/myservlet");
 
-        StuckThreadDetectionValve valve = new StuckThreadDetectionValve();
-        valve.setThreshold(2);
-        valve.setInterruptThreadThreshold(5);
-        context.addValve(valve);
-        context.setBackgroundProcessorDelay(1);
-        tomcat.start();
+		StuckThreadDetectionValve valve = new StuckThreadDetectionValve();
+		valve.setThreshold(2);
+		valve.setInterruptThreadThreshold(5);
+		context.addValve(valve);
+		context.setBackgroundProcessorDelay(1);
+		tomcat.start();
 
-        Assert.assertEquals(0, valve.getStuckThreadIds().length);
+		Assert.assertEquals(0, valve.getStuckThreadIds().length);
 
-        final ByteChunk result = new ByteChunk();
-        Thread asyncThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    getUrl("http://localhost:" + getPort() + "/myservlet",
-                            result, null);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+		final ByteChunk result = new ByteChunk();
+		Thread asyncThread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					getUrl("http://localhost:" + getPort() + "/myservlet",
+							result, null);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-        };
-        asyncThread.start();
-        try {
-            Thread.sleep(4000L);
-            Assert.assertEquals(1, valve.getStuckThreadIds().length);
+		};
+		asyncThread.start();
+		try {
+			Thread.sleep(4000L);
+			Assert.assertEquals(1, valve.getStuckThreadIds().length);
 
-            Thread.sleep(4000L);
-            Assert.assertTrue(stuckingServlet.wasInterrupted);
-            Assert.assertEquals(0, valve.getStuckThreadIds().length);
-        } finally {
-            asyncThread.join();
-        }
-        Assert.assertTrue(result.toString().startsWith("OK"));
-    }
+			Thread.sleep(4000L);
+			Assert.assertTrue(stuckingServlet.wasInterrupted);
+			Assert.assertEquals(0, valve.getStuckThreadIds().length);
+		} finally {
+			asyncThread.join();
+		}
+		Assert.assertTrue(result.toString().startsWith("OK"));
+	}
 
-    private class StuckingServlet extends HttpServlet {
+	private class StuckingServlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
-        private final long delay;
-        boolean wasInterrupted = false;
+		private static final long serialVersionUID = 1L;
+		private final long delay;
+		boolean wasInterrupted = false;
 
-        StuckingServlet(long delay) {
-            this.delay = delay;
-        }
+		StuckingServlet(long delay) {
+			this.delay = delay;
+		}
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException {
-            try {
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                wasInterrupted = true;
-            }
-            resp.setContentType("text/plain");
-            resp.getWriter().println("OK");
-        }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws IOException {
+			try {
+				Thread.sleep(delay);
+			} catch (InterruptedException e) {
+				wasInterrupted = true;
+			}
+			resp.setContentType("text/plain");
+			resp.getWriter().println("OK");
+		}
 
-    }
+	}
 }

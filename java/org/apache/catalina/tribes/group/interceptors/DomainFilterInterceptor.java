@@ -27,98 +27,109 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
 /**
- * <p>Title: Member domain filter interceptor </p>
+ * <p>
+ * Title: Member domain filter interceptor
+ * </p>
  *
- * <p>Description: Filters membership based on domain.
+ * <p>
+ * Description: Filters membership based on domain.
  * </p>
  *
  * @author Filip Hanik
  * @version 1.0
  */
 public class DomainFilterInterceptor extends ChannelInterceptorBase {
-    private static final Log log = LogFactory.getLog(DomainFilterInterceptor.class);
-    protected Membership membership = null;
-    
-    protected byte[] domain = new byte[0];
+	private static final Log log = LogFactory
+			.getLog(DomainFilterInterceptor.class);
+	protected Membership membership = null;
 
-    @Override
-    public void messageReceived(ChannelMessage msg) {
-        //should we filter incoming based on domain?
-        super.messageReceived(msg);
-    }//messageReceived
+	protected byte[] domain = new byte[0];
 
+	@Override
+	public void messageReceived(ChannelMessage msg) {
+		// should we filter incoming based on domain?
+		super.messageReceived(msg);
+	}// messageReceived
 
-    @Override
-    public void memberAdded(Member member) {
-        if ( membership == null ) setupMembership();
-        boolean notify = false;
-        synchronized (membership) {
-            notify = Arrays.equals(domain,member.getDomain());
-            if ( notify ) notify = membership.memberAlive((MemberImpl)member);
-        }
-        if ( notify ) {
-            super.memberAdded(member);
-        } else {
-            if(log.isInfoEnabled()) log.info("Member was refused to join cluster["+member+"]");
-        }
-    }
+	@Override
+	public void memberAdded(Member member) {
+		if (membership == null)
+			setupMembership();
+		boolean notify = false;
+		synchronized (membership) {
+			notify = Arrays.equals(domain, member.getDomain());
+			if (notify)
+				notify = membership.memberAlive((MemberImpl) member);
+		}
+		if (notify) {
+			super.memberAdded(member);
+		} else {
+			if (log.isInfoEnabled())
+				log.info("Member was refused to join cluster[" + member + "]");
+		}
+	}
 
-    @Override
-    public void memberDisappeared(Member member) {
-        if ( membership == null ) setupMembership();
-        boolean notify = false;
-        synchronized (membership) {
-            notify = Arrays.equals(domain,member.getDomain());
-            membership.removeMember((MemberImpl)member);
-        }
-        if ( notify ) super.memberDisappeared(member);
-    }
+	@Override
+	public void memberDisappeared(Member member) {
+		if (membership == null)
+			setupMembership();
+		boolean notify = false;
+		synchronized (membership) {
+			notify = Arrays.equals(domain, member.getDomain());
+			membership.removeMember((MemberImpl) member);
+		}
+		if (notify)
+			super.memberDisappeared(member);
+	}
 
-    @Override
-    public boolean hasMembers() {
-        if ( membership == null ) setupMembership();
-        return membership.hasMembers();
-    }
+	@Override
+	public boolean hasMembers() {
+		if (membership == null)
+			setupMembership();
+		return membership.hasMembers();
+	}
 
-    @Override
-    public Member[] getMembers() {
-        if ( membership == null ) setupMembership();
-        return membership.getMembers();
-    }
+	@Override
+	public Member[] getMembers() {
+		if (membership == null)
+			setupMembership();
+		return membership.getMembers();
+	}
 
-    @Override
-    public Member getMember(Member mbr) {
-        if ( membership == null ) setupMembership();
-        return membership.getMember(mbr);
-    }
+	@Override
+	public Member getMember(Member mbr) {
+		if (membership == null)
+			setupMembership();
+		return membership.getMember(mbr);
+	}
 
-    @Override
-    public Member getLocalMember(boolean incAlive) {
-        return super.getLocalMember(incAlive);
-    }
+	@Override
+	public Member getLocalMember(boolean incAlive) {
+		return super.getLocalMember(incAlive);
+	}
 
+	protected synchronized void setupMembership() {
+		if (membership == null) {
+			membership = new Membership((MemberImpl) super.getLocalMember(true));
+		}
 
-    protected synchronized void setupMembership() {
-        if ( membership == null ) {
-            membership = new Membership((MemberImpl)super.getLocalMember(true));
-        }
+	}
 
-    }
+	public byte[] getDomain() {
+		return domain;
+	}
 
-    public byte[] getDomain() {
-        return domain;
-    }
+	public void setDomain(byte[] domain) {
+		this.domain = domain;
+	}
 
-    public void setDomain(byte[] domain) {
-        this.domain = domain;
-    }
-
-    public void setDomain(String domain) {
-        if ( domain == null ) return;
-        if (domain.startsWith("{"))
-            setDomain(org.apache.catalina.tribes.util.Arrays.fromString(domain));
-        else
-            setDomain(org.apache.catalina.tribes.util.Arrays.convert(domain));
-    }
+	public void setDomain(String domain) {
+		if (domain == null)
+			return;
+		if (domain.startsWith("{"))
+			setDomain(org.apache.catalina.tribes.util.Arrays.fromString(domain));
+		else
+			setDomain(org.apache.catalina.tribes.util.Arrays.convert(domain));
+	}
 
 }

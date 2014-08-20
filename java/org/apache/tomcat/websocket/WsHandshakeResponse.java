@@ -27,21 +27,18 @@ import javax.websocket.HandshakeResponse;
  */
 public class WsHandshakeResponse implements HandshakeResponse {
 
-    private final Map<String,List<String>> headers;
+	private final Map<String, List<String>> headers;
 
+	public WsHandshakeResponse() {
+		this(new HashMap<String, List<String>>());
+	}
 
-    public WsHandshakeResponse() {
-        this(new HashMap<String,List<String>>());
-    }
+	public WsHandshakeResponse(Map<String, List<String>> headers) {
+		this.headers = headers;
+	}
 
-
-    public WsHandshakeResponse(Map<String,List<String>> headers) {
-        this.headers = headers;
-    }
-
-
-    @Override
-    public Map<String,List<String>> getHeaders() {
-        return headers;
-    }
+	@Override
+	public Map<String, List<String>> getHeaders() {
+		return headers;
+	}
 }

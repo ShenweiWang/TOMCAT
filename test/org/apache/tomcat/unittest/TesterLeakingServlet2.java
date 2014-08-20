@@ -25,28 +25,27 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 public class TesterLeakingServlet2 extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    protected void doGet(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException,
-            IOException {
+	@Override
+	protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
 
-        List<TesterCounter> counterList = TesterThreadScopedHolder.getFromHolder();
-        TesterCounter counter;
-        if (counterList == null) {
-            counter = new TesterCounter();
-            TesterThreadScopedHolder.saveInHolder(Arrays.asList(counter));
-        } else {
-            counter = counterList.get(0);
-        }
+		List<TesterCounter> counterList = TesterThreadScopedHolder
+				.getFromHolder();
+		TesterCounter counter;
+		if (counterList == null) {
+			counter = new TesterCounter();
+			TesterThreadScopedHolder.saveInHolder(Arrays.asList(counter));
+		} else {
+			counter = counterList.get(0);
+		}
 
-        counter.increment();
-        response.getWriter().println(
-                "The current thread served this servlet "
-                        + counter.getCount() + " times");
-    }
+		counter.increment();
+		response.getWriter().println(
+				"The current thread served this servlet " + counter.getCount()
+						+ " times");
+	}
 }

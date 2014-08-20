@@ -23,25 +23,28 @@ import org.apache.catalina.Session;
 
 /**
  * Comparator which reverse the sort order
+ * 
  * @author C&eacute;drik LIME
  */
 public class ReverseComparator implements Comparator<Session> {
-    protected Comparator<Session> comparator;
+	protected Comparator<Session> comparator;
 
-    /**
+	/**
      * 
      */
-    public ReverseComparator(Comparator<Session> comparator) {
-        super();
-        this.comparator = comparator;
-    }
+	public ReverseComparator(Comparator<Session> comparator) {
+		super();
+		this.comparator = comparator;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public int compare(Session o1, Session o2) {
-        int returnValue = comparator.compare(o1, o2);
-        return (- returnValue);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public int compare(Session o1, Session o2) {
+		int returnValue = comparator.compare(o1, o2);
+		return (-returnValue);
+	}
 }

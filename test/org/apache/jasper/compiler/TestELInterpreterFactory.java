@@ -33,70 +33,72 @@ import org.apache.jasper.compiler.ELInterpreterFactory.DefaultELInterpreter;
 
 public class TestELInterpreterFactory extends TomcatBaseTest {
 
-    public static class SimpleELInterpreter implements ELInterpreter {
+	public static class SimpleELInterpreter implements ELInterpreter {
 
-        @Override
-        public String interpreterCall(JspCompilationContext context,
-                boolean isTagFile, String expression, Class<?> expectedType,
-                String fnmapvar, boolean xmlEscape) {
-            return expression;
-        }
-    }
+		@Override
+		public String interpreterCall(JspCompilationContext context,
+				boolean isTagFile, String expression, Class<?> expectedType,
+				String fnmapvar, boolean xmlEscape) {
+			return expression;
+		}
+	}
 
-    @Test
-    public void testBug54239() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug54239() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ServletContext context = ctx.getServletContext();
+		ServletContext context = ctx.getServletContext();
 
-        ELInterpreter interpreter =
-                ELInterpreterFactory.getELInterpreter(context);
-        Assert.assertNotNull(interpreter);
-        Assert.assertTrue(interpreter instanceof DefaultELInterpreter);
+		ELInterpreter interpreter = ELInterpreterFactory
+				.getELInterpreter(context);
+		Assert.assertNotNull(interpreter);
+		Assert.assertTrue(interpreter instanceof DefaultELInterpreter);
 
-        context.removeAttribute(ELInterpreter.class.getName());
+		context.removeAttribute(ELInterpreter.class.getName());
 
-        context.setAttribute(ELInterpreter.class.getName(),
-                SimpleELInterpreter.class.getName());
-        interpreter = ELInterpreterFactory.getELInterpreter(context);
-        Assert.assertNotNull(interpreter);
-        Assert.assertTrue(interpreter instanceof SimpleELInterpreter);
+		context.setAttribute(ELInterpreter.class.getName(),
+				SimpleELInterpreter.class.getName());
+		interpreter = ELInterpreterFactory.getELInterpreter(context);
+		Assert.assertNotNull(interpreter);
+		Assert.assertTrue(interpreter instanceof SimpleELInterpreter);
 
-        context.removeAttribute(ELInterpreter.class.getName());
+		context.removeAttribute(ELInterpreter.class.getName());
 
-        SimpleELInterpreter simpleInterpreter = new SimpleELInterpreter();
-        context.setAttribute(ELInterpreter.class.getName(), simpleInterpreter);
-        interpreter = ELInterpreterFactory.getELInterpreter(context);
-        Assert.assertNotNull(interpreter);
-        Assert.assertTrue(interpreter instanceof SimpleELInterpreter);
-        Assert.assertTrue(interpreter == simpleInterpreter);
+		SimpleELInterpreter simpleInterpreter = new SimpleELInterpreter();
+		context.setAttribute(ELInterpreter.class.getName(), simpleInterpreter);
+		interpreter = ELInterpreterFactory.getELInterpreter(context);
+		Assert.assertNotNull(interpreter);
+		Assert.assertTrue(interpreter instanceof SimpleELInterpreter);
+		Assert.assertTrue(interpreter == simpleInterpreter);
 
-        context.removeAttribute(ELInterpreter.class.getName());
+		context.removeAttribute(ELInterpreter.class.getName());
 
-        ctx.stop();
-        ctx.addApplicationListener(Bug54239Listener.class.getName());
-        ctx.start();
+		ctx.stop();
+		ctx.addApplicationListener(Bug54239Listener.class.getName());
+		ctx.start();
 
-        interpreter = ELInterpreterFactory.getELInterpreter(ctx.getServletContext());
-        Assert.assertNotNull(interpreter);
-        Assert.assertTrue(interpreter instanceof SimpleELInterpreter);
-    }
+		interpreter = ELInterpreterFactory.getELInterpreter(ctx
+				.getServletContext());
+		Assert.assertNotNull(interpreter);
+		Assert.assertTrue(interpreter instanceof SimpleELInterpreter);
+	}
 
-    public static class Bug54239Listener implements ServletContextListener {
+	public static class Bug54239Listener implements ServletContextListener {
 
-        @Override
-        public void contextInitialized(ServletContextEvent sce) {
-            sce.getServletContext().setInitParameter(ELInterpreter.class.getName(),
-                    SimpleELInterpreter.class.getName());
-        }
+		@Override
+		public void contextInitialized(ServletContextEvent sce) {
+			sce.getServletContext().setInitParameter(
+					ELInterpreter.class.getName(),
+					SimpleELInterpreter.class.getName());
+		}
 
-        @Override
-        public void contextDestroyed(ServletContextEvent sce) {
-            // NO-OP
-        }
-    }
+		@Override
+		public void contextDestroyed(ServletContextEvent sce) {
+			// NO-OP
+		}
+	}
 }

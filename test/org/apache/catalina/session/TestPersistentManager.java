@@ -43,193 +43,195 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestPersistentManager extends TomcatBaseTest {
 
-    private final String ACTIVITY_CHECK = "org.apache.catalina.session.StandardSession.ACTIVITY_CHECK";
+	private final String ACTIVITY_CHECK = "org.apache.catalina.session.StandardSession.ACTIVITY_CHECK";
 
-    private String oldActivityCheck;
+	private String oldActivityCheck;
 
-    /**
-     * As documented in config/manager.html, the "ACTIVITY_CHECK" property must
-     * be set to "true" for PersistentManager to function correctly.
-     */
-    @Before
-    public void setActivityCheck() {
-        oldActivityCheck = System.setProperty(ACTIVITY_CHECK, "true");
-    }
+	/**
+	 * As documented in config/manager.html, the "ACTIVITY_CHECK" property must
+	 * be set to "true" for PersistentManager to function correctly.
+	 */
+	@Before
+	public void setActivityCheck() {
+		oldActivityCheck = System.setProperty(ACTIVITY_CHECK, "true");
+	}
 
-    @After
-    public void resetActivityCheck() {
-        if (oldActivityCheck != null) {
-            System.setProperty(ACTIVITY_CHECK, oldActivityCheck);
-        } else {
-            System.clearProperty(ACTIVITY_CHECK);
-        }
-    }
+	@After
+	public void resetActivityCheck() {
+		if (oldActivityCheck != null) {
+			System.setProperty(ACTIVITY_CHECK, oldActivityCheck);
+		} else {
+			System.clearProperty(ACTIVITY_CHECK);
+		}
+	}
 
-    /**
-     * Wait enough for the system clock to update its value. On some systems
-     * (e.g. old Windows) the clock granularity is tens of milliseconds.
-     */
-    private void waitForClockUpdate() throws InterruptedException {
-        long startTime = System.currentTimeMillis();
-        int waitTime = 1;
-        do {
-            Thread.sleep(waitTime);
-            waitTime *= 10;
-        } while (System.currentTimeMillis() == startTime);
-    }
+	/**
+	 * Wait enough for the system clock to update its value. On some systems
+	 * (e.g. old Windows) the clock granularity is tens of milliseconds.
+	 */
+	private void waitForClockUpdate() throws InterruptedException {
+		long startTime = System.currentTimeMillis();
+		int waitTime = 1;
+		do {
+			Thread.sleep(waitTime);
+			waitTime *= 10;
+		} while (System.currentTimeMillis() == startTime);
+	}
 
-    /**
-     * Wait while session access counter has a positive value.
-     */
-    private void waitWhileSessionIsActive(StandardSession session)
-            throws InterruptedException {
-        long maxWaitTime = System.currentTimeMillis() + 60000;
-        AtomicInteger accessCount = session.accessCount;
-        while (accessCount.get() > 0) {
-            // Wait until o.a.c.connector.Request.recycle() completes,
-            // as it updates lastAccessedTime.
-            Assert.assertTrue(System.currentTimeMillis() < maxWaitTime);
-            Thread.sleep(200);
-        }
-    }
+	/**
+	 * Wait while session access counter has a positive value.
+	 */
+	private void waitWhileSessionIsActive(StandardSession session)
+			throws InterruptedException {
+		long maxWaitTime = System.currentTimeMillis() + 60000;
+		AtomicInteger accessCount = session.accessCount;
+		while (accessCount.get() > 0) {
+			// Wait until o.a.c.connector.Request.recycle() completes,
+			// as it updates lastAccessedTime.
+			Assert.assertTrue(System.currentTimeMillis() < maxWaitTime);
+			Thread.sleep(200);
+		}
+	}
 
-    @Test
-    public void backsUpOnce_56698() throws IOException, LifecycleException,
-            InterruptedException {
+	@Test
+	public void backsUpOnce_56698() throws IOException, LifecycleException,
+			InterruptedException {
 
-        // Setup Tomcat instance
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx = tomcat.addContext("",
-                System.getProperty("java.io.tmpdir"));
+		// Setup Tomcat instance
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, "DummyServlet", new DummyServlet());
-        ctx.addServletMapping("/dummy", "DummyServlet");
+		Tomcat.addServlet(ctx, "DummyServlet", new DummyServlet());
+		ctx.addServletMapping("/dummy", "DummyServlet");
 
-        PersistentManager manager = new PersistentManager();
-        DummyStore store = new DummyStore();
+		PersistentManager manager = new PersistentManager();
+		DummyStore store = new DummyStore();
 
-        manager.setStore(store);
-        manager.setMaxIdleBackup(0);
-        manager.setDistributable(true);
-        ctx.setManager(manager);
-        tomcat.start();
-        String sessionId = getUrl("http://localhost:" + getPort() + "/dummy")
-                .toString();
+		manager.setStore(store);
+		manager.setMaxIdleBackup(0);
+		manager.setDistributable(true);
+		ctx.setManager(manager);
+		tomcat.start();
+		String sessionId = getUrl("http://localhost:" + getPort() + "/dummy")
+				.toString();
 
-        // Note: PersistenceManager.findSession() silently updates
-        // session.lastAccessedTime, so call it only once before other work.
-        Session session = manager.findSession(sessionId);
+		// Note: PersistenceManager.findSession() silently updates
+		// session.lastAccessedTime, so call it only once before other work.
+		Session session = manager.findSession(sessionId);
 
-        // Wait until request processing ends, as Request.recycle() updates
-        // session.lastAccessedTime via session.endAccess().
-        waitWhileSessionIsActive((StandardSession) session);
+		// Wait until request processing ends, as Request.recycle() updates
+		// session.lastAccessedTime via session.endAccess().
+		waitWhileSessionIsActive((StandardSession) session);
 
-        long lastAccessedTime = session.getLastAccessedTimeInternal();
+		long lastAccessedTime = session.getLastAccessedTimeInternal();
 
-        // Session should be idle at least for 0 second (maxIdleBackup)
-        // to be eligible for persistence, thus no need to wait.
+		// Session should be idle at least for 0 second (maxIdleBackup)
+		// to be eligible for persistence, thus no need to wait.
 
-        // Waiting a bit, to catch changes in last accessed time of a session
-        waitForClockUpdate();
+		// Waiting a bit, to catch changes in last accessed time of a session
+		waitForClockUpdate();
 
-        manager.processPersistenceChecks();
-        Assert.assertEquals(Arrays.asList(sessionId), store.getSavedIds());
-        Assert.assertEquals(lastAccessedTime, session.getLastAccessedTimeInternal());
+		manager.processPersistenceChecks();
+		Assert.assertEquals(Arrays.asList(sessionId), store.getSavedIds());
+		Assert.assertEquals(lastAccessedTime,
+				session.getLastAccessedTimeInternal());
 
-        // session was not accessed, so no save will be performed
-        waitForClockUpdate();
-        manager.processPersistenceChecks();
-        Assert.assertEquals(Arrays.asList(sessionId), store.getSavedIds());
-        Assert.assertEquals(lastAccessedTime, session.getLastAccessedTimeInternal());
+		// session was not accessed, so no save will be performed
+		waitForClockUpdate();
+		manager.processPersistenceChecks();
+		Assert.assertEquals(Arrays.asList(sessionId), store.getSavedIds());
+		Assert.assertEquals(lastAccessedTime,
+				session.getLastAccessedTimeInternal());
 
-        // access session
-        session.access();
-        session.endAccess();
+		// access session
+		session.access();
+		session.endAccess();
 
-        // session was accessed, so it will be saved once again
-        manager.processPersistenceChecks();
-        Assert.assertEquals(Arrays.asList(sessionId, sessionId),
-                store.getSavedIds());
+		// session was accessed, so it will be saved once again
+		manager.processPersistenceChecks();
+		Assert.assertEquals(Arrays.asList(sessionId, sessionId),
+				store.getSavedIds());
 
-        // session was not accessed, so once again no save will happen
-        manager.processPersistenceChecks();
-        Assert.assertEquals(Arrays.asList(sessionId, sessionId),
-                store.getSavedIds());
-    }
+		// session was not accessed, so once again no save will happen
+		manager.processPersistenceChecks();
+		Assert.assertEquals(Arrays.asList(sessionId, sessionId),
+				store.getSavedIds());
+	}
 
-    private static class DummyServlet extends HttpServlet {
+	private static class DummyServlet extends HttpServlet {
 
-        private static final long serialVersionUID = -3696433049266123995L;
+		private static final long serialVersionUID = -3696433049266123995L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.getWriter().print(req.getSession().getId());
-        }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.getWriter().print(req.getSession().getId());
+		}
 
-    }
+	}
 
-    private static class DummyStore implements Store {
+	private static class DummyStore implements Store {
 
-        private Manager manager;
-        private List<String> savedIds = new ArrayList<String>();
+		private Manager manager;
+		private List<String> savedIds = new ArrayList<String>();
 
-        List<String> getSavedIds() {
-            return savedIds;
-        }
+		List<String> getSavedIds() {
+			return savedIds;
+		}
 
-        @Override
-        public Manager getManager() {
-            return this.manager;
-        }
+		@Override
+		public Manager getManager() {
+			return this.manager;
+		}
 
-        @Override
-        public void setManager(Manager manager) {
-            this.manager = manager;
-        }
+		@Override
+		public void setManager(Manager manager) {
+			this.manager = manager;
+		}
 
-        @Override
-        public int getSize() throws IOException {
-            return 0;
-        }
+		@Override
+		public int getSize() throws IOException {
+			return 0;
+		}
 
-        @Override
-        public void addPropertyChangeListener(PropertyChangeListener listener) {
-        }
+		@Override
+		public void addPropertyChangeListener(PropertyChangeListener listener) {
+		}
 
-        @Override
-        public String[] keys() throws IOException {
-            return null;
-        }
+		@Override
+		public String[] keys() throws IOException {
+			return null;
+		}
 
-        @Override
-        public Session load(String id) throws ClassNotFoundException,
-                IOException {
-            // TODO Auto-generated method stub
-            return null;
-        }
+		@Override
+		public Session load(String id) throws ClassNotFoundException,
+				IOException {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-        @Override
-        public void remove(String id) throws IOException {
-        }
+		@Override
+		public void remove(String id) throws IOException {
+		}
 
-        @Override
-        public void clear() throws IOException {
-        }
+		@Override
+		public void clear() throws IOException {
+		}
 
-        @Override
-        public void removePropertyChangeListener(PropertyChangeListener listener) {
-        }
+		@Override
+		public void removePropertyChangeListener(PropertyChangeListener listener) {
+		}
 
-        @Override
-        public void save(Session session) throws IOException {
-            savedIds.add(session.getId());
-        }
+		@Override
+		public void save(Session session) throws IOException {
+			savedIds.add(session.getId());
+		}
 
-        @Override
-        public String getInfo() {
-            return null;
-        }
-    }
+		@Override
+		public String getInfo() {
+			return null;
+		}
+	}
 }

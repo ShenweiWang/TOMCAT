@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package javax.persistence;
 
 import java.lang.annotation.ElementType;
@@ -25,7 +24,6 @@ import java.lang.annotation.Target;
 
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-
 public @interface PersistenceContexts {
-   PersistenceContext[] value();
+	PersistenceContext[] value();
 }

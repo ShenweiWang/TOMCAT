@@ -42,109 +42,106 @@ import org.apache.tomcat.websocket.pojo.TesterUtil.SingletonConfigurator;
 
 public class TestPojoMethodMapping extends TomcatBaseTest {
 
-    private static final String PARAM_ONE = "abcde";
-    private static final String PARAM_TWO = "12345";
-    private static final String PARAM_THREE = "true";
+	private static final String PARAM_ONE = "abcde";
+	private static final String PARAM_TWO = "12345";
+	private static final String PARAM_THREE = "true";
 
-    @Test
-    public void test() throws Exception {
+	@Test
+	public void test() throws Exception {
 
-        // Set up utility classes
-        Server server = new Server();
-        SingletonConfigurator.setInstance(server);
-        ServerConfigListener.setPojoClazz(Server.class);
+		// Set up utility classes
+		Server server = new Server();
+		SingletonConfigurator.setInstance(server);
+		ServerConfigListener.setPojoClazz(Server.class);
 
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(ServerConfigListener.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(ServerConfigListener.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        WebSocketContainer wsContainer =
-                ContainerProvider.getWebSocketContainer();
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
 
+		tomcat.start();
 
-        tomcat.start();
+		SimpleClient client = new SimpleClient();
+		URI uri = new URI("ws://localhost:" + getPort() + "/" + PARAM_ONE + "/"
+				+ PARAM_TWO + "/" + PARAM_THREE);
 
-        SimpleClient client = new SimpleClient();
-        URI uri = new URI("ws://localhost:" + getPort() + "/" + PARAM_ONE +
-                "/" + PARAM_TWO + "/" + PARAM_THREE);
+		Session session = wsContainer.connectToServer(client, uri);
+		session.getBasicRemote().sendText("NO-OP");
+		session.close();
 
-        Session session = wsContainer.connectToServer(client, uri);
-        session.getBasicRemote().sendText("NO-OP");
-        session.close();
+		// Give server 5s to close
+		int count = 0;
+		while (count < 50) {
+			if (server.isClosed()) {
+				break;
+			}
+			count++;
+			Thread.sleep(100);
+		}
+		if (count == 50) {
+			Assert.fail("Server did not process an onClose event within 5 "
+					+ "seconds of the client sending a close message");
+		}
 
-        // Give server 5s to close
-        int count = 0;
-        while (count < 50) {
-            if (server.isClosed()) {
-                break;
-            }
-            count++;
-            Thread.sleep(100);
-        }
-        if (count == 50) {
-            Assert.fail("Server did not process an onClose event within 5 " +
-                    "seconds of the client sending a close message");
-        }
+		// Check no errors
+		List<String> errors = server.getErrors();
+		for (String error : errors) {
+			System.err.println(error);
+		}
+		Assert.assertEquals("Found errors", 0, errors.size());
+	}
 
-        // Check no errors
-        List<String> errors = server.getErrors();
-        for (String error : errors) {
-            System.err.println(error);
-        }
-        Assert.assertEquals("Found errors", 0, errors.size());
-    }
+	@ServerEndpoint(value = "/{one}/{two}/{three}", configurator = SingletonConfigurator.class)
+	public static final class Server {
 
+		private final List<String> errors = new ArrayList<String>();
+		private volatile boolean closed;
 
-    @ServerEndpoint(value="/{one}/{two}/{three}",
-            configurator=SingletonConfigurator.class)
-    public static final class Server {
+		@OnOpen
+		public void onOpen(@PathParam("one") String p1,
+				@PathParam("two") int p2, @PathParam("three") boolean p3) {
+			checkParams("onOpen", p1, p2, p3);
+		}
 
-        private final List<String> errors = new ArrayList<String>();
-        private volatile boolean closed;
+		@OnMessage
+		public void onMessage(@SuppressWarnings("unused") String msg,
+				@PathParam("one") String p1, @PathParam("two") int p2,
+				@PathParam("three") boolean p3) {
+			checkParams("onMessage", p1, p2, p3);
+		}
 
-        @OnOpen
-        public void onOpen(@PathParam("one") String p1, @PathParam("two")int p2,
-                @PathParam("three")boolean p3) {
-            checkParams("onOpen", p1, p2, p3);
-        }
+		@OnClose
+		public void onClose(@PathParam("one") String p1,
+				@PathParam("two") int p2, @PathParam("three") boolean p3) {
+			checkParams("onClose", p1, p2, p3);
+			closed = true;
+		}
 
-        @OnMessage
-        public void onMessage(@SuppressWarnings("unused") String msg,
-                @PathParam("one") String p1, @PathParam("two")int p2,
-                @PathParam("three")boolean p3) {
-            checkParams("onMessage", p1, p2, p3);
-        }
+		public List<String> getErrors() {
+			return errors;
+		}
 
-        @OnClose
-        public void onClose(@PathParam("one") String p1,
-                @PathParam("two")int p2, @PathParam("three")boolean p3) {
-            checkParams("onClose", p1, p2, p3);
-            closed = true;
-        }
+		public boolean isClosed() {
+			return closed;
+		}
 
-        public List<String> getErrors() {
-            return errors;
-        }
+		private void checkParams(String method, String p1, int p2, boolean p3) {
+			checkParam(method, PARAM_ONE, p1);
+			checkParam(method, PARAM_TWO, Integer.toString(p2));
+			checkParam(method, PARAM_THREE, Boolean.toString(p3));
+		}
 
-        public boolean isClosed() {
-            return closed;
-        }
-
-        private void checkParams(String method, String p1, int p2, boolean p3) {
-            checkParam(method, PARAM_ONE, p1);
-            checkParam(method, PARAM_TWO, Integer.toString(p2));
-            checkParam(method, PARAM_THREE, Boolean.toString(p3));
-        }
-
-        private void checkParam(String method, String expected, String actual) {
-            if (!expected.equals(actual)) {
-                errors.add("Method [" + method + "]. Expected [" + expected +
-                        "] was + [" + actual + "]");
-            }
-        }
-    }
+		private void checkParam(String method, String expected, String actual) {
+			if (!expected.equals(actual)) {
+				errors.add("Method [" + method + "]. Expected [" + expected
+						+ "] was + [" + actual + "]");
+			}
+		}
+	}
 }

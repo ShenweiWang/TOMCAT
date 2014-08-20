@@ -23,15 +23,14 @@ import org.junit.Test;
 
 public class TestConversions {
 
-    @Test
-    public void testByteArrayToLong() throws IOException {
-        assertEquals(0L, Conversions.byteArrayToLong(new byte[] { 0 }));
-        assertEquals(1L, Conversions.byteArrayToLong(new byte[] { 1 }));
-        assertEquals(0xFF, Conversions.byteArrayToLong(new byte[] { -1 }));
-        assertEquals(0xFFFF,
-                Conversions.byteArrayToLong(new byte[] { -1, -1 }));
-        assertEquals(0xFFFFFF,
-                Conversions.byteArrayToLong(new byte[] { -1, -1, -1 }));
-    }
+	@Test
+	public void testByteArrayToLong() throws IOException {
+		assertEquals(0L, Conversions.byteArrayToLong(new byte[] { 0 }));
+		assertEquals(1L, Conversions.byteArrayToLong(new byte[] { 1 }));
+		assertEquals(0xFF, Conversions.byteArrayToLong(new byte[] { -1 }));
+		assertEquals(0xFFFF, Conversions.byteArrayToLong(new byte[] { -1, -1 }));
+		assertEquals(0xFFFFFF,
+				Conversions.byteArrayToLong(new byte[] { -1, -1, -1 }));
+	}
 
 }

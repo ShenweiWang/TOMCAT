@@ -36,77 +36,77 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestTomcatClassLoader extends TomcatBaseTest {
 
-    @Test
-    public void testDefaultClassLoader() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testDefaultClassLoader() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, "ClassLoaderReport", new ClassLoaderReport(null));
-        ctx.addServletMapping("/", "ClassLoaderReport");
+		Tomcat.addServlet(ctx, "ClassLoaderReport", new ClassLoaderReport(null));
+		ctx.addServletMapping("/", "ClassLoaderReport");
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
-        assertEquals("WEBAPP,SYSTEM,OTHER,", res.toString());
-    }
+		ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
+		assertEquals("WEBAPP,SYSTEM,OTHER,", res.toString());
+	}
 
-    @Test
-    public void testNonDefaultClassLoader() throws Exception {
+	@Test
+	public void testNonDefaultClassLoader() throws Exception {
 
-        ClassLoader cl = new URLClassLoader(new URL[0],
-                Thread.currentThread().getContextClassLoader());
+		ClassLoader cl = new URLClassLoader(new URL[0], Thread.currentThread()
+				.getContextClassLoader());
 
-        Thread.currentThread().setContextClassLoader(cl);
+		Thread.currentThread().setContextClassLoader(cl);
 
-        Tomcat tomcat = getTomcatInstance();
-        tomcat.getServer().setParentClassLoader(cl);
+		Tomcat tomcat = getTomcatInstance();
+		tomcat.getServer().setParentClassLoader(cl);
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, "ClassLoaderReport", new ClassLoaderReport(cl));
-        ctx.addServletMapping("/", "ClassLoaderReport");
+		Tomcat.addServlet(ctx, "ClassLoaderReport", new ClassLoaderReport(cl));
+		ctx.addServletMapping("/", "ClassLoaderReport");
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
-        assertEquals("WEBAPP,CUSTOM,SYSTEM,OTHER,", res.toString());
-    }
+		ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
+		assertEquals("WEBAPP,CUSTOM,SYSTEM,OTHER,", res.toString());
+	}
 
-    private static final class ClassLoaderReport extends HttpServlet {
-        private static final long serialVersionUID = 1L;
+	private static final class ClassLoaderReport extends HttpServlet {
+		private static final long serialVersionUID = 1L;
 
-        private transient ClassLoader custom;
+		private transient ClassLoader custom;
 
-        public ClassLoaderReport(ClassLoader custom) {
-            this.custom = custom;
-        }
+		public ClassLoaderReport(ClassLoader custom) {
+			this.custom = custom;
+		}
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            resp.setContentType("text/plain");
-            PrintWriter out = resp.getWriter();
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.setContentType("text/plain");
+			PrintWriter out = resp.getWriter();
 
-            ClassLoader system = ClassLoader.getSystemClassLoader();
+			ClassLoader system = ClassLoader.getSystemClassLoader();
 
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            while (cl != null) {
-                if (system == cl) {
-                    out.print("SYSTEM,");
-                } else if (custom == cl) {
-                    out.print("CUSTOM,");
-                } else if (cl instanceof WebappClassLoader) {
-                    out.print("WEBAPP,");
-                } else {
-                    out.print("OTHER,");
-                }
-                cl = cl.getParent();
-            }
-        }
-    }
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			while (cl != null) {
+				if (system == cl) {
+					out.print("SYSTEM,");
+				} else if (custom == cl) {
+					out.print("CUSTOM,");
+				} else if (cl instanceof WebappClassLoader) {
+					out.print("WEBAPP,");
+				} else {
+					out.print("OTHER,");
+				}
+				cl = cl.getParent();
+			}
+		}
+	}
 }

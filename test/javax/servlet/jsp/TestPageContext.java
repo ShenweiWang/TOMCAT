@@ -29,20 +29,20 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestPageContext extends TomcatBaseTest {
 
-    @Test
-    public void testBug49196() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug49196() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug49nnn/bug49196.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug49nnn/bug49196.jsp");
 
-        String result = res.toString();
-        assertTrue(result.contains("OK"));
-    }
+		String result = res.toString();
+		assertTrue(result.contains("OK"));
+	}
 }

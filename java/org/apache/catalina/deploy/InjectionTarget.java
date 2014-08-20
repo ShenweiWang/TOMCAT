@@ -17,33 +17,32 @@
 package org.apache.catalina.deploy;
 
 public class InjectionTarget {
-    private String targetClass;
-    private String targetName;
+	private String targetClass;
+	private String targetName;
 
+	public InjectionTarget() {
+		// NOOP
+	}
 
-    public InjectionTarget() {
-        // NOOP
-    }
+	public InjectionTarget(String targetClass, String targetName) {
+		this.targetClass = targetClass;
+		this.targetName = targetName;
+	}
 
-    public InjectionTarget(String targetClass, String targetName) {
-        this.targetClass = targetClass;
-        this.targetName = targetName;
-    }
+	public String getTargetClass() {
+		return targetClass;
+	}
 
-    public String getTargetClass() {
-        return targetClass;
-    }
+	public void setTargetClass(String targetClass) {
+		this.targetClass = targetClass;
+	}
 
-    public void setTargetClass(String targetClass) {
-        this.targetClass = targetClass;
-    }
+	public String getTargetName() {
+		return targetName;
+	}
 
-    public String getTargetName() {
-        return targetName;
-    }
-
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
-    }
+	public void setTargetName(String targetName) {
+		this.targetName = targetName;
+	}
 
 }

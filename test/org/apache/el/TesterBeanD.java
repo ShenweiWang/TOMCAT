@@ -24,17 +24,17 @@ import java.util.List;
  */
 public class TesterBeanD {
 
-    private List<Object> things = new ArrayList<Object>();
+	private List<Object> things = new ArrayList<Object>();
 
-    public void addThing(String thing) {
-        things.add(thing);
-    }
+	public void addThing(String thing) {
+		things.add(thing);
+	}
 
-    public void addThing(Class<?> clazz) {
-        things.add(clazz);
-    }
+	public void addThing(Class<?> clazz) {
+		things.add(clazz);
+	}
 
-    public List<Object> getThings() {
-        return things;
-    }
+	public List<Object> getThings() {
+		return things;
+	}
 }

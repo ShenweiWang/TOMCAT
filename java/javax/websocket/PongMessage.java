@@ -23,8 +23,8 @@ import java.nio.ByteBuffer;
  * applications to process the response to any Pings they send.
  */
 public interface PongMessage {
-    /**
-     * Obtain the payload of the Pong message as a ByteBuffer.
-     */
-    ByteBuffer getApplicationData();
+	/**
+	 * Obtain the payload of the Pong message as a ByteBuffer.
+	 */
+	ByteBuffer getApplicationData();
 }

@@ -38,73 +38,72 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestStandardContextAliases extends TomcatBaseTest {
 
-    @Test
-    public void testDirContextAliases() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testDirContextAliases() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        StandardContext ctx = (StandardContext)
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		StandardContext ctx = (StandardContext) tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        File lib = new File("webapps/examples/WEB-INF/lib");
-        ctx.setAliases("/WEB-INF/lib=" + lib.getCanonicalPath());
+		File lib = new File("webapps/examples/WEB-INF/lib");
+		ctx.setAliases("/WEB-INF/lib=" + lib.getCanonicalPath());
 
-        Tomcat.addServlet(ctx, "test", new TestServlet());
-        ctx.addServletMapping("/", "test");
+		Tomcat.addServlet(ctx, "test", new TestServlet());
+		ctx.addServletMapping("/", "test");
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
+		ByteChunk res = getUrl("http://localhost:" + getPort() + "/");
 
-        String result = res.toString();
+		String result = res.toString();
 
-        assertTrue(result.indexOf("00-PASS") > -1);
-        assertTrue(result.indexOf("01-PASS") > -1);
-        assertTrue(result.indexOf("02-PASS") > -1);
-    }
+		assertTrue(result.indexOf("00-PASS") > -1);
+		assertTrue(result.indexOf("01-PASS") > -1);
+		assertTrue(result.indexOf("02-PASS") > -1);
+	}
 
+	/**
+	 * Looks for the JSTL JARs in WEB-INF/lib.
+	 */
+	public static class TestServlet extends HttpServlet {
 
-    /**
-     * Looks for the JSTL JARs in WEB-INF/lib.
-     */
-    public static class TestServlet extends HttpServlet {
+		private static final long serialVersionUID = 1L;
 
-        private static final long serialVersionUID = 1L;
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
+			resp.setContentType("text/plain");
 
-            resp.setContentType("text/plain");
+			ServletContext context = getServletContext();
 
-            ServletContext context = getServletContext();
+			// Check resources individually
+			URL url = context.getResource("/WEB-INF/lib/jstl.jar");
+			if (url != null) {
+				resp.getWriter().write("00-PASS\n");
+			}
 
-            // Check resources individually
-            URL url = context.getResource("/WEB-INF/lib/jstl.jar");
-            if (url != null) {
-                resp.getWriter().write("00-PASS\n");
-            }
+			url = context.getResource("/WEB-INF/lib/standard.jar");
+			if (url != null) {
+				resp.getWriter().write("01-PASS\n");
+			}
 
-            url = context.getResource("/WEB-INF/lib/standard.jar");
-            if (url != null) {
-                resp.getWriter().write("01-PASS\n");
-            }
+			// Check a directory listing
+			Set<String> libs = context.getResourcePaths("/WEB-INF/lib");
+			if (libs == null) {
+				return;
+			}
 
-            // Check a directory listing
-            Set<String> libs = context.getResourcePaths("/WEB-INF/lib");
-            if (libs == null) {
-                return;
-            }
+			if (!libs.contains("/WEB-INF/lib/jstl.jar")) {
+				return;
+			}
+			if (!libs.contains("/WEB-INF/lib/standard.jar")) {
+				return;
+			}
 
-            if (!libs.contains("/WEB-INF/lib/jstl.jar")) {
-                return;
-            }
-            if (!libs.contains("/WEB-INF/lib/standard.jar")) {
-                return;
-            }
+			resp.getWriter().write("02-PASS\n");
+		}
 
-            resp.getWriter().write("02-PASS\n");
-        }
-
-    }
+	}
 }

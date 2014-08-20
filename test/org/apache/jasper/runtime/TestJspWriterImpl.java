@@ -29,42 +29,42 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestJspWriterImpl extends TomcatBaseTest {
 
-    @Test
-    public void bug54241a() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void bug54241a() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = new ByteChunk();
+		ByteChunk res = new ByteChunk();
 
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/test/bug5nnnn/bug54241a.jsp", res, null);
+		int rc = getUrl("http://localhost:" + getPort()
+				+ "/test/bug5nnnn/bug54241a.jsp", res, null);
 
-        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
+		Assert.assertEquals(HttpServletResponse.SC_OK, rc);
 
-        String body = res.toString();
-        Assert.assertTrue(body.contains("01: null"));
-        Assert.assertTrue(body.contains("02: null"));
-    }
+		String body = res.toString();
+		Assert.assertTrue(body.contains("01: null"));
+		Assert.assertTrue(body.contains("02: null"));
+	}
 
-    @Test
-    public void bug54241b() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void bug54241b() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = new ByteChunk();
+		ByteChunk res = new ByteChunk();
 
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/test/bug5nnnn/bug54241b.jsp", res, null);
+		int rc = getUrl("http://localhost:" + getPort()
+				+ "/test/bug5nnnn/bug54241b.jsp", res, null);
 
-        Assert.assertEquals(res.toString(),
-                HttpServletResponse.SC_INTERNAL_SERVER_ERROR, rc);
-    }
+		Assert.assertEquals(res.toString(),
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, rc);
+	}
 }

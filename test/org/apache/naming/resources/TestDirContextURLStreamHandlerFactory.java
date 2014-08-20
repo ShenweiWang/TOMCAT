@@ -28,55 +28,55 @@ import org.junit.Test;
 
 public class TestDirContextURLStreamHandlerFactory {
 
-    @Test
-    public void testUserSuppliedFactory() throws Exception {
+	@Test
+	public void testUserSuppliedFactory() throws Exception {
 
-        URL url = null;
+		URL url = null;
 
-        // Initially unknown
-        try {
-            url = new URL("foo://www.apache.org");
-        } catch (MalformedURLException ignore) {
-            // Ignore
-        }
-        assertNull(url);
+		// Initially unknown
+		try {
+			url = new URL("foo://www.apache.org");
+		} catch (MalformedURLException ignore) {
+			// Ignore
+		}
+		assertNull(url);
 
-        // Set the factory
-        URL.setURLStreamHandlerFactory(
-                DirContextURLStreamHandlerFactory.getInstance());
+		// Set the factory
+		URL.setURLStreamHandlerFactory(DirContextURLStreamHandlerFactory
+				.getInstance());
 
-        // Still unknown
-        try {
-            url = new URL("foo://www.apache.org");
-        } catch (MalformedURLException ignore) {
-            // Ignore
-        }
-        assertNull(url);
+		// Still unknown
+		try {
+			url = new URL("foo://www.apache.org");
+		} catch (MalformedURLException ignore) {
+			// Ignore
+		}
+		assertNull(url);
 
-        // Register a user factory
-        DirContextURLStreamHandlerFactory.addUserFactory(
-                new FooURLStreamHandlerFactory());
+		// Register a user factory
+		DirContextURLStreamHandlerFactory
+				.addUserFactory(new FooURLStreamHandlerFactory());
 
-        // Now it works
-        try {
-            url = new URL("foo://www.apache.org");
-        } catch (MalformedURLException ignore) {
-            // Ignore
-        }
-        assertNotNull(url);
-    }
+		// Now it works
+		try {
+			url = new URL("foo://www.apache.org");
+		} catch (MalformedURLException ignore) {
+			// Ignore
+		}
+		assertNotNull(url);
+	}
 
-    public static class FooURLStreamHandlerFactory
-            implements URLStreamHandlerFactory {
+	public static class FooURLStreamHandlerFactory implements
+			URLStreamHandlerFactory {
 
-        @Override
-        public URLStreamHandler createURLStreamHandler(String protocol) {
-            if ("foo".equals(protocol)) {
-                // This is good enough for this test but not for actual use
-                return new DirContextURLStreamHandler();
-            } else {
-                return null;
-            }
-        }
-    }
+		@Override
+		public URLStreamHandler createURLStreamHandler(String protocol) {
+			if ("foo".equals(protocol)) {
+				// This is good enough for this test but not for actual use
+				return new DirContextURLStreamHandler();
+			} else {
+				return null;
+			}
+		}
+	}
 }

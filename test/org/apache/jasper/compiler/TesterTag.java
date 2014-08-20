@@ -24,5 +24,5 @@ import javax.servlet.jsp.tagext.TagSupport;
  */
 public class TesterTag extends TagSupport {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 }

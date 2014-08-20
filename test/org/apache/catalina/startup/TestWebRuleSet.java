@@ -32,130 +32,123 @@ import org.apache.tomcat.util.digester.Digester;
 
 public class TestWebRuleSet {
 
-    private Digester fragmentDigester = new Digester();
-    private WebRuleSet fragmentRuleSet = new WebRuleSet(true);
+	private Digester fragmentDigester = new Digester();
+	private WebRuleSet fragmentRuleSet = new WebRuleSet(true);
 
-    private Digester webDigester = new Digester();
-    private WebRuleSet webRuleSet = new WebRuleSet(false);
+	private Digester webDigester = new Digester();
+	private WebRuleSet webRuleSet = new WebRuleSet(false);
 
-    public TestWebRuleSet() {
-        fragmentDigester.addRuleSet(fragmentRuleSet);
-        webDigester.addRuleSet(webRuleSet);
-    }
+	public TestWebRuleSet() {
+		fragmentDigester.addRuleSet(fragmentRuleSet);
+		webDigester.addRuleSet(webRuleSet);
+	}
 
+	@Test
+	public void testSingleNameInWebFragmentXml() throws Exception {
 
-    @Test
-    public void testSingleNameInWebFragmentXml() throws Exception {
+		WebXml webXml = new WebXml();
 
-        WebXml webXml = new WebXml();
+		parse(webXml, "web-fragment-1name.xml", true, true);
+		assertEquals("name1", webXml.getName());
+	}
 
-        parse(webXml, "web-fragment-1name.xml", true, true);
-        assertEquals("name1", webXml.getName());
-    }
+	@Test
+	public void testMultipleNameInWebFragmentXml() throws Exception {
+		parse(new WebXml(), "web-fragment-2name.xml", true, false);
+	}
 
+	@Test
+	public void testSingleOrderingInWebFragmentXml() throws Exception {
 
-    @Test
-    public void testMultipleNameInWebFragmentXml() throws Exception {
-        parse(new WebXml(), "web-fragment-2name.xml", true, false);
-    }
+		WebXml webXml = new WebXml();
 
+		parse(webXml, "web-fragment-1ordering.xml", true, true);
+		assertEquals(1, webXml.getBeforeOrdering().size());
+		assertTrue(webXml.getBeforeOrdering().contains("bar"));
+	}
 
-    @Test
-    public void testSingleOrderingInWebFragmentXml() throws Exception {
+	@Test
+	public void testMultipleOrderingInWebFragmentXml() throws Exception {
+		parse(new WebXml(), "web-fragment-2ordering.xml", true, false);
+	}
 
-        WebXml webXml = new WebXml();
+	@Test
+	public void testSingleOrderingInWebXml() throws Exception {
 
-        parse(webXml, "web-fragment-1ordering.xml", true, true);
-        assertEquals(1, webXml.getBeforeOrdering().size());
-        assertTrue(webXml.getBeforeOrdering().contains("bar"));
-    }
+		WebXml webXml = new WebXml();
 
+		parse(webXml, "web-1ordering.xml", false, true);
+		assertEquals(1, webXml.getAbsoluteOrdering().size());
+		assertTrue(webXml.getAbsoluteOrdering().contains("bar"));
+	}
 
-    @Test
-    public void testMultipleOrderingInWebFragmentXml() throws Exception {
-        parse(new WebXml(), "web-fragment-2ordering.xml", true, false);
-    }
+	@Test
+	public void testMultipleOrderingInWebXml() throws Exception {
+		parse(new WebXml(), "web-2ordering.xml", false, false);
+	}
 
+	@Test
+	public void testRecycle() throws Exception {
+		// Name
+		parse(new WebXml(), "web-fragment-2name.xml", true, false);
+		parse(new WebXml(), "web-fragment-1name.xml", true, true);
+		parse(new WebXml(), "web-fragment-2name.xml", true, false);
+		parse(new WebXml(), "web-fragment-1name.xml", true, true);
 
-    @Test
-    public void testSingleOrderingInWebXml() throws Exception {
+		// Relative ordering
+		parse(new WebXml(), "web-fragment-2ordering.xml", true, false);
+		parse(new WebXml(), "web-fragment-1ordering.xml", true, true);
+		parse(new WebXml(), "web-fragment-2ordering.xml", true, false);
+		parse(new WebXml(), "web-fragment-1ordering.xml", true, true);
 
-        WebXml webXml = new WebXml();
+		// Absolute ordering
+		parse(new WebXml(), "web-2ordering.xml", false, false);
+		parse(new WebXml(), "web-1ordering.xml", false, true);
+		parse(new WebXml(), "web-2ordering.xml", false, false);
+		parse(new WebXml(), "web-1ordering.xml", false, true);
+	}
 
-        parse(webXml, "web-1ordering.xml", false, true);
-        assertEquals(1, webXml.getAbsoluteOrdering().size());
-        assertTrue(webXml.getAbsoluteOrdering().contains("bar"));
-    }
+	@Test
+	public void testLifecycleMethodsDefinitions() throws Exception {
+		// post-construct and pre-destroy
+		parse(new WebXml(), "web-1lifecyclecallback.xml", false, true);
+		// conflicting post-construct definitions
+		parse(new WebXml(), "web-2lifecyclecallback.xml", false, false);
+	}
 
+	private synchronized void parse(WebXml webXml, String target,
+			boolean fragment, boolean expected) throws FileNotFoundException {
 
-    @Test
-    public void testMultipleOrderingInWebXml() throws Exception {
-        parse(new WebXml(), "web-2ordering.xml", false, false);
-    }
+		Digester d;
+		if (fragment) {
+			d = fragmentDigester;
+			fragmentRuleSet.recycle();
+		} else {
+			d = webDigester;
+			webRuleSet.recycle();
+		}
 
+		d.push(webXml);
 
-    @Test
-    public void testRecycle() throws Exception {
-        // Name
-        parse(new WebXml(), "web-fragment-2name.xml", true, false);
-        parse(new WebXml(), "web-fragment-1name.xml", true, true);
-        parse(new WebXml(), "web-fragment-2name.xml", true, false);
-        parse(new WebXml(), "web-fragment-1name.xml", true, true);
+		File f = new File("test/org/apache/catalina/startup/" + target);
+		InputStream is = new FileInputStream(f);
 
-        // Relative ordering
-        parse(new WebXml(), "web-fragment-2ordering.xml", true, false);
-        parse(new WebXml(), "web-fragment-1ordering.xml", true, true);
-        parse(new WebXml(), "web-fragment-2ordering.xml", true, false);
-        parse(new WebXml(), "web-fragment-1ordering.xml", true, true);
+		boolean result = true;
 
-        // Absolute ordering
-        parse(new WebXml(), "web-2ordering.xml", false, false);
-        parse(new WebXml(), "web-1ordering.xml", false, true);
-        parse(new WebXml(), "web-2ordering.xml", false, false);
-        parse(new WebXml(), "web-1ordering.xml", false, true);
-}
+		try {
+			d.parse(is);
+		} catch (Exception e) {
+			if (expected) {
+				// Didn't expect an exception
+				e.printStackTrace();
+			}
+			result = false;
+		}
 
-    @Test
-    public void testLifecycleMethodsDefinitions() throws Exception {
-        // post-construct and pre-destroy
-        parse(new WebXml(), "web-1lifecyclecallback.xml", false, true);
-        // conflicting post-construct definitions
-        parse(new WebXml(), "web-2lifecyclecallback.xml", false, false);
-    }
-
-    private synchronized void parse(WebXml webXml, String target,
-            boolean fragment, boolean expected) throws FileNotFoundException {
-
-        Digester d;
-        if (fragment) {
-            d = fragmentDigester;
-            fragmentRuleSet.recycle();
-        } else {
-            d = webDigester;
-            webRuleSet.recycle();
-        }
-
-        d.push(webXml);
-
-        File f = new File("test/org/apache/catalina/startup/" + target);
-        InputStream is = new FileInputStream(f);
-
-        boolean result = true;
-
-        try {
-            d.parse(is);
-        } catch (Exception e) {
-            if (expected) {
-                // Didn't expect an exception
-                e.printStackTrace();
-            }
-            result = false;
-        }
-
-        if (expected) {
-            assertTrue(result);
-        } else {
-            assertFalse(result);
-        }
-    }
+		if (expected) {
+			assertTrue(result);
+		} else {
+			assertFalse(result);
+		}
+	}
 }

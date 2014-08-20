@@ -28,37 +28,36 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 /**
  * Unit test for the {@link ProxyDirContext}.
+ * 
  * @author Marc Guillemot
  */
 public class TestProxyDirContext extends TomcatBaseTest {
 
-    /**
-     * lookup doesn't always throw the same exception.
-     */
-    @Test
-    public void testLookupException() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	/**
+	 * lookup doesn't always throw the same exception.
+	 */
+	@Test
+	public void testLookupException() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        StandardContext ctx = (StandardContext)
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.setCacheTTL(500);
-        tomcat.start();
+		// Must have a real docBase - just use temp
+		StandardContext ctx = (StandardContext) tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.setCacheTTL(500);
+		tomcat.start();
 
-        try {
-            ctx.getResources().lookup("/WEB-INF/web.xml");
-            fail();
-        }
-        catch (final NameNotFoundException e) {
-            // as expected
-        }
-        Thread.sleep(600); // see ProxyDirContext.cacheTTL
-        try {
-            ctx.getResources().lookup("/WEB-INF/web.xml");
-            fail();
-        }
-        catch (final NameNotFoundException e) {
-            // as expected
-        }
-    }
+		try {
+			ctx.getResources().lookup("/WEB-INF/web.xml");
+			fail();
+		} catch (final NameNotFoundException e) {
+			// as expected
+		}
+		Thread.sleep(600); // see ProxyDirContext.cacheTTL
+		try {
+			ctx.getResources().lookup("/WEB-INF/web.xml");
+			fail();
+		} catch (final NameNotFoundException e) {
+			// as expected
+		}
+	}
 }

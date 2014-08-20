@@ -22,17 +22,17 @@ import java.security.Principal;
 
 public class TesterPrincipal implements Principal, Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private String name;
+	private String name;
 
-    public TesterPrincipal(String theName) {
-        name = theName;
-    }
+	public TesterPrincipal(String theName) {
+		name = theName;
+	}
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
 }

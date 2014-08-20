@@ -21,20 +21,20 @@ import org.apache.tomcat.util.net.ServerSocketFactory;
 
 public class TesterBug50640SslImpl extends JSSEImplementation {
 
-    public static final String PROPERTY_NAME = "bug50640";
-    public static final String PROPERTY_VALUE = "pass";
+	public static final String PROPERTY_NAME = "bug50640";
+	public static final String PROPERTY_VALUE = "pass";
 
-    @Override
-    public ServerSocketFactory getServerSocketFactory(
-            AbstractEndpoint<?> endpoint)  {
+	@Override
+	public ServerSocketFactory getServerSocketFactory(
+			AbstractEndpoint<?> endpoint) {
 
-        // Check the custom attribute is visible & correcly set
-        String flag = endpoint.getProperty(PROPERTY_NAME);
-        if (PROPERTY_VALUE.equals(flag)) {
-            return super.getServerSocketFactory(endpoint);
-        } else {
-            return null;
-        }
-    }
+		// Check the custom attribute is visible & correcly set
+		String flag = endpoint.getProperty(PROPERTY_NAME);
+		if (PROPERTY_VALUE.equals(flag)) {
+			return super.getServerSocketFactory(endpoint);
+		} else {
+			return null;
+		}
+	}
 
 }

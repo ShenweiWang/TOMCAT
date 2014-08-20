@@ -23,94 +23,97 @@ import java.io.IOException;
 import org.apache.tomcat.util.bcel.Constants;
 
 /**
- * This class represents a stack map attribute used for
- * preverification of Java classes for the <a
- * href="http://java.sun.com/j2me/"> Java 2 Micro Edition</a>
+ * This class represents a stack map attribute used for preverification of Java
+ * classes for the <a href="http://java.sun.com/j2me/"> Java 2 Micro Edition</a>
  * (J2ME). This attribute is used by the <a
- * href="http://java.sun.com/products/cldc/">KVM</a> and contained
- * within the Code attribute of a method. See CLDC specification
- * &sect;5.3.1.2
+ * href="http://java.sun.com/products/cldc/">KVM</a> and contained within the
+ * Code attribute of a method. See CLDC specification &sect;5.3.1.2
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @see     Code
- * @see     StackMapEntry
- * @see     StackMapType
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @see Code
+ * @see StackMapEntry
+ * @see StackMapType
  */
 public final class StackMapTable extends Attribute {
 
-    private static final long serialVersionUID = -2931695092763099621L;
-    private int map_length;
-    private StackMapTableEntry[] map; // Table of stack map entries
+	private static final long serialVersionUID = -2931695092763099621L;
+	private int map_length;
+	private StackMapTableEntry[] map; // Table of stack map entries
 
+	/*
+	 * @param name_index Index of name
+	 * 
+	 * @param length Content length in bytes
+	 * 
+	 * @param map Table of stack map entries
+	 * 
+	 * @param constant_pool Array of constants
+	 */
+	public StackMapTable(int name_index, int length, StackMapTableEntry[] map,
+			ConstantPool constant_pool) {
+		super(Constants.ATTR_STACK_MAP_TABLE, name_index, length, constant_pool);
+		setStackMapTable(map);
+	}
 
-    /*
-     * @param name_index Index of name
-     * @param length Content length in bytes
-     * @param map Table of stack map entries
-     * @param constant_pool Array of constants
-     */
-    public StackMapTable(int name_index, int length, StackMapTableEntry[] map, ConstantPool constant_pool) {
-        super(Constants.ATTR_STACK_MAP_TABLE, name_index, length, constant_pool);
-        setStackMapTable(map);
-    }
+	/**
+	 * Construct object from file stream.
+	 * 
+	 * @param name_index
+	 *            Index of name
+	 * @param length
+	 *            Content length in bytes
+	 * @param file
+	 *            Input stream
+	 * @param constant_pool
+	 *            Array of constants
+	 * @throws IOException
+	 */
+	StackMapTable(int name_index, int length, DataInputStream file,
+			ConstantPool constant_pool) throws IOException {
+		this(name_index, length, (StackMapTableEntry[]) null, constant_pool);
+		map_length = file.readUnsignedShort();
+		map = new StackMapTableEntry[map_length];
+		for (int i = 0; i < map_length; i++) {
+			map[i] = new StackMapTableEntry(file, constant_pool);
+		}
+	}
 
+	/**
+	 * @param map
+	 *            Array of stack map entries
+	 */
+	public final void setStackMapTable(StackMapTableEntry[] map) {
+		this.map = map;
+		map_length = (map == null) ? 0 : map.length;
+	}
 
-    /**
-     * Construct object from file stream.
-     * @param name_index Index of name
-     * @param length Content length in bytes
-     * @param file Input stream
-     * @param constant_pool Array of constants
-     * @throws IOException
-     */
-    StackMapTable(int name_index, int length, DataInputStream file, ConstantPool constant_pool)
-            throws IOException {
-        this(name_index, length, (StackMapTableEntry[]) null, constant_pool);
-        map_length = file.readUnsignedShort();
-        map = new StackMapTableEntry[map_length];
-        for (int i = 0; i < map_length; i++) {
-            map[i] = new StackMapTableEntry(file, constant_pool);
-        }
-    }
+	/**
+	 * @return String representation.
+	 */
+	@Override
+	public final String toString() {
+		StringBuilder buf = new StringBuilder("StackMapTable(");
+		for (int i = 0; i < map_length; i++) {
+			buf.append(map[i].toString());
+			if (i < map_length - 1) {
+				buf.append(", ");
+			}
+		}
+		buf.append(')');
+		return buf.toString();
+	}
 
-
-    /**
-     * @param map Array of stack map entries
-     */
-    public final void setStackMapTable( StackMapTableEntry[] map ) {
-        this.map = map;
-        map_length = (map == null) ? 0 : map.length;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        StringBuilder buf = new StringBuilder("StackMapTable(");
-        for (int i = 0; i < map_length; i++) {
-            buf.append(map[i].toString());
-            if (i < map_length - 1) {
-                buf.append(", ");
-            }
-        }
-        buf.append(')');
-        return buf.toString();
-    }
-
-
-    /**
-     * @return deep copy of this attribute
-     */
-    @Override
-    public Attribute copy( ConstantPool _constant_pool ) {
-        StackMapTable c = (StackMapTable) clone();
-        c.map = new StackMapTableEntry[map_length];
-        for (int i = 0; i < map_length; i++) {
-            c.map[i] = map[i].copy();
-        }
-        c.constant_pool = _constant_pool;
-        return c;
-    }
+	/**
+	 * @return deep copy of this attribute
+	 */
+	@Override
+	public Attribute copy(ConstantPool _constant_pool) {
+		StackMapTable c = (StackMapTable) clone();
+		c.map = new StackMapTableEntry[map_length];
+		for (int i = 0; i < map_length; i++) {
+			c.map[i] = map[i].copy();
+		}
+		c.constant_pool = _constant_pool;
+		return c;
+	}
 }

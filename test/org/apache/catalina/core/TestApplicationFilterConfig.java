@@ -33,37 +33,37 @@ import org.apache.tomcat.util.modeler.Registry;
 
 public class TestApplicationFilterConfig extends TomcatBaseTest {
 
-    @Test
-    public void testBug54170() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug54170() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, "HelloWorld", new HelloWorldServlet());
-        ctx.addServletMapping("/", "HelloWorld");
+		Tomcat.addServlet(ctx, "HelloWorld", new HelloWorldServlet());
+		ctx.addServletMapping("/", "HelloWorld");
 
-        // Add a filter with a name that should be escaped if used in a JMX
-        // object name
-        FilterDef filterDef = new FilterDef();
-        filterDef.setFilterClass(AddDefaultCharsetFilter.class.getName());
-        filterDef.setFilterName("bug54170*");
-        ctx.addFilterDef(filterDef);
+		// Add a filter with a name that should be escaped if used in a JMX
+		// object name
+		FilterDef filterDef = new FilterDef();
+		filterDef.setFilterClass(AddDefaultCharsetFilter.class.getName());
+		filterDef.setFilterName("bug54170*");
+		ctx.addFilterDef(filterDef);
 
-        tomcat.start();
+		tomcat.start();
 
-        final MBeanServer mbeanServer =
-                Registry.getRegistry(null, null).getMBeanServer();
+		final MBeanServer mbeanServer = Registry.getRegistry(null, null)
+				.getMBeanServer();
 
-        // There should be one Servlet MBean registered
-        Set<ObjectName> servlets = mbeanServer.queryNames(
-                new ObjectName("Tomcat:j2eeType=Servlet,*"), null);
-        Assert.assertEquals(1, servlets.size());
+		// There should be one Servlet MBean registered
+		Set<ObjectName> servlets = mbeanServer.queryNames(new ObjectName(
+				"Tomcat:j2eeType=Servlet,*"), null);
+		Assert.assertEquals(1, servlets.size());
 
-        // There should be one Filter MBean registered
-        Set<ObjectName> filters = mbeanServer.queryNames(
-                new ObjectName("Tomcat:j2eeType=Filter,*"), null);
-        Assert.assertEquals(1, filters.size());
-    }
+		// There should be one Filter MBean registered
+		Set<ObjectName> filters = mbeanServer.queryNames(new ObjectName(
+				"Tomcat:j2eeType=Filter,*"), null);
+		Assert.assertEquals(1, filters.size());
+	}
 }

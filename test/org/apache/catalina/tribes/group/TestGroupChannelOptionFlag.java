@@ -28,71 +28,82 @@ import org.apache.catalina.tribes.ChannelException;
 import org.apache.catalina.tribes.ChannelInterceptor;
 
 /**
- * <p>Title: </p>
+ * <p>
+ * Title:
+ * </p>
  *
- * <p>Description: </p>
+ * <p>
+ * Description:
+ * </p>
  *
- * <p>Company: </p>
+ * <p>
+ * Company:
+ * </p>
  *
  * @author not attributable
  * @version 1.0
  */
 public class TestGroupChannelOptionFlag {
-    private GroupChannel channel = null;
+	private GroupChannel channel = null;
 
-    @Before
-    public void setUp() throws Exception {
-        channel = new GroupChannel();
-    }
+	@Before
+	public void setUp() throws Exception {
+		channel = new GroupChannel();
+	}
 
-    @After
-    public void tearDown() throws Exception {
-        if ( channel != null ) try {channel.stop(Channel.DEFAULT);}catch ( Exception ignore) { /* Ignore */ }
-        channel = null;
-    }
+	@After
+	public void tearDown() throws Exception {
+		if (channel != null)
+			try {
+				channel.stop(Channel.DEFAULT);
+			} catch (Exception ignore) { /* Ignore */
+			}
+		channel = null;
+	}
 
-    @Test
-    public void testOptionConflict() throws Exception {
-        boolean error = false;
-        channel.setOptionCheck(true);
-        ChannelInterceptor i = new TestInterceptor();
-        i.setOptionFlag(128);
-        channel.addInterceptor(i);
-        i = new TestInterceptor();
-        i.setOptionFlag(128);
-        channel.addInterceptor(i);
-        try {
-            channel.start(Channel.DEFAULT);
-        }catch ( ChannelException x ) {
-            if ( x.getMessage().indexOf("option flag conflict") >= 0 ) error = true;
-        }
-        assertTrue(error);
-    }
+	@Test
+	public void testOptionConflict() throws Exception {
+		boolean error = false;
+		channel.setOptionCheck(true);
+		ChannelInterceptor i = new TestInterceptor();
+		i.setOptionFlag(128);
+		channel.addInterceptor(i);
+		i = new TestInterceptor();
+		i.setOptionFlag(128);
+		channel.addInterceptor(i);
+		try {
+			channel.start(Channel.DEFAULT);
+		} catch (ChannelException x) {
+			if (x.getMessage().indexOf("option flag conflict") >= 0)
+				error = true;
+		}
+		assertTrue(error);
+	}
 
-    @Test
-    public void testOptionNoConflict() throws Exception {
-        boolean error = false;
-        channel.setOptionCheck(true);
-        ChannelInterceptor i = new TestInterceptor();
-        i.setOptionFlag(128);
-        channel.addInterceptor(i);
-        i = new TestInterceptor();
-        i.setOptionFlag(64);
-        channel.addInterceptor(i);
-        i = new TestInterceptor();
-        i.setOptionFlag(256);
-        channel.addInterceptor(i);
-        try {
-            channel.start(Channel.DEFAULT);
-        }catch ( ChannelException x ) {
-            if ( x.getMessage().indexOf("option flag conflict") >= 0 ) error = true;
-        }
-        assertFalse(error);
-    }
+	@Test
+	public void testOptionNoConflict() throws Exception {
+		boolean error = false;
+		channel.setOptionCheck(true);
+		ChannelInterceptor i = new TestInterceptor();
+		i.setOptionFlag(128);
+		channel.addInterceptor(i);
+		i = new TestInterceptor();
+		i.setOptionFlag(64);
+		channel.addInterceptor(i);
+		i = new TestInterceptor();
+		i.setOptionFlag(256);
+		channel.addInterceptor(i);
+		try {
+			channel.start(Channel.DEFAULT);
+		} catch (ChannelException x) {
+			if (x.getMessage().indexOf("option flag conflict") >= 0)
+				error = true;
+		}
+		assertFalse(error);
+	}
 
-    public static class TestInterceptor extends ChannelInterceptorBase {
-        // Just use base class
-    }
-
+	public static class TestInterceptor extends ChannelInterceptorBase {
+		// Just use base class
+	}
 
 }

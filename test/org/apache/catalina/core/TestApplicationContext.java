@@ -32,106 +32,98 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestApplicationContext extends TomcatBaseTest {
 
-    @Test
-    public void testBug53257() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53257() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/test/bug53257/index.jsp");
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/test/bug53257/index.jsp");
 
-        String result = res.toString();
-        String[] lines = result.split("\n");
-        for (String line : lines) {
-            if (line.startsWith("FAIL")) {
-                Assert.fail(line);
-            }
-        }
-    }
+		String result = res.toString();
+		String[] lines = result.split("\n");
+		for (String line : lines) {
+			if (line.startsWith("FAIL")) {
+				Assert.fail(line);
+			}
+		}
+	}
 
+	@Test
+	public void testBug53467() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-    @Test
-    public void testBug53467() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
 
-        File appDir = new File("test/webapp-3.0");
-        // app dir is relative to server home
-        tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        tomcat.start();
+		ByteChunk res = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort()
+				+ "/test/bug5nnnn/bug53467].jsp", res, null);
 
-        ByteChunk res = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort() +
-                "/test/bug5nnnn/bug53467].jsp", res, null);
+		Assert.assertEquals(HttpServletResponse.SC_OK, rc);
+		Assert.assertTrue(res.toString().contains("<p>OK</p>"));
+	}
 
-        Assert.assertEquals(HttpServletResponse.SC_OK, rc);
-        Assert.assertTrue(res.toString().contains("<p>OK</p>"));
-    }
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddFilterWithFilterNameNull() {
+		getServletContext().addFilter(null, (Filter) null);
+	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddFilterWithFilterNameEmptyString() {
+		getServletContext().addFilter("", (Filter) null);
+	}
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddFilterWithFilterNameNull() {
-        getServletContext().addFilter(null, (Filter) null);
-    }
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddServletWithServletNameNull() {
+		getServletContext().addServlet(null, (Servlet) null);
+	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddServletWithServletNameEmptyString() {
+		getServletContext().addServlet("", (Servlet) null);
+	}
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddFilterWithFilterNameEmptyString() {
-        getServletContext().addFilter("", (Filter) null);
-    }
+	@Test
+	public void testGetJspConfigDescriptor() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		StandardContext standardContext = (StandardContext) tomcat.addWebapp(
+				null, "/test", appDir.getAbsolutePath());
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddServletWithServletNameNull() {
-        getServletContext().addServlet(null, (Servlet) null);
-    }
+		ServletContext servletContext = standardContext.getServletContext();
 
+		Assert.assertNull(servletContext.getJspConfigDescriptor());
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddServletWithServletNameEmptyString() {
-        getServletContext().addServlet("", (Servlet) null);
-    }
+		tomcat.start();
 
+		Assert.assertNotNull(servletContext.getJspConfigDescriptor());
+	}
 
-    @Test
-    public void testGetJspConfigDescriptor() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	private ServletContext getServletContext() {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        // app dir is relative to server home
-        StandardContext standardContext = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		// app dir is relative to server home
+		StandardContext standardContext = (StandardContext) tomcat.addWebapp(
+				null, "/test", appDir.getAbsolutePath());
 
-        ServletContext servletContext = standardContext.getServletContext();
+		return standardContext.getServletContext();
+	}
 
-        Assert.assertNull(servletContext.getJspConfigDescriptor());
-
-        tomcat.start();
-
-        Assert.assertNotNull(servletContext.getJspConfigDescriptor());
-    }
-
-
-    private ServletContext getServletContext() {
-        Tomcat tomcat = getTomcatInstance();
-
-        File appDir = new File("test/webapp-3.0");
-        // app dir is relative to server home
-        StandardContext standardContext = (StandardContext) tomcat.addWebapp(
-                null, "/test", appDir.getAbsolutePath());
-
-        return standardContext.getServletContext();
-    }
-
-
-    @Test(expected = IllegalStateException.class)
-    public void testSetInitParameter() throws Exception {
-        getTomcatInstance().start();
-        getServletContext().setInitParameter("name", "value");
-    }
+	@Test(expected = IllegalStateException.class)
+	public void testSetInitParameter() throws Exception {
+		getTomcatInstance().start();
+		getServletContext().setInitParameter("name", "value");
+	}
 }

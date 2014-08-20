@@ -44,125 +44,124 @@ import org.apache.tomcat.websocket.TesterMessageCountClient.TesterProgrammaticEn
 
 public class TestWebSocketFrameClientSSL extends TomcatBaseTest {
 
+	@Test
+	public void testConnectToServerEndpointSSL() throws Exception {
 
-    @Test
-    public void testConnectToServerEndpointSSL() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(TesterFirehoseServer.Config.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(TesterFirehoseServer.Config.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		TesterSupport.initSsl(tomcat);
 
+		tomcat.start();
 
-        TesterSupport.initSsl(tomcat);
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
+		ClientEndpointConfig clientEndpointConfig = ClientEndpointConfig.Builder
+				.create().build();
+		URL truststoreUrl = this.getClass().getClassLoader()
+				.getResource("org/apache/tomcat/util/net/ca.jks");
+		File truststoreFile = new File(truststoreUrl.toURI());
+		clientEndpointConfig.getUserProperties().put(
+				WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
+				truststoreFile.getAbsolutePath());
+		Session wsSession = wsContainer.connectToServer(
+				TesterProgrammaticEndpoint.class, clientEndpointConfig,
+				new URI("wss://localhost:" + getPort()
+						+ TesterFirehoseServer.Config.PATH));
+		CountDownLatch latch = new CountDownLatch(
+				TesterFirehoseServer.MESSAGE_COUNT);
+		BasicText handler = new BasicText(latch);
+		wsSession.addMessageHandler(handler);
+		wsSession.getBasicRemote().sendText("Hello");
 
-        tomcat.start();
+		System.out.println("Sent Hello message, waiting for data");
 
-        WebSocketContainer wsContainer =
-                ContainerProvider.getWebSocketContainer();
-        ClientEndpointConfig clientEndpointConfig =
-                ClientEndpointConfig.Builder.create().build();
-        URL truststoreUrl = this.getClass().getClassLoader().getResource(
-                "org/apache/tomcat/util/net/ca.jks");
-        File truststoreFile = new File(truststoreUrl.toURI());
-        clientEndpointConfig.getUserProperties().put(
-                WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
-                truststoreFile.getAbsolutePath());
-        Session wsSession = wsContainer.connectToServer(
-                TesterProgrammaticEndpoint.class,
-                clientEndpointConfig,
-                new URI("wss://localhost:" + getPort() +
-                        TesterFirehoseServer.Config.PATH));
-        CountDownLatch latch =
-                new CountDownLatch(TesterFirehoseServer.MESSAGE_COUNT);
-        BasicText handler = new BasicText(latch);
-        wsSession.addMessageHandler(handler);
-        wsSession.getBasicRemote().sendText("Hello");
+		// Ignore the latch result as the message count test below will tell us
+		// if the right number of messages arrived
+		handler.getLatch().await(TesterFirehoseServer.WAIT_TIME_MILLIS,
+				TimeUnit.MILLISECONDS);
 
-        System.out.println("Sent Hello message, waiting for data");
+		Queue<String> messages = handler.getMessages();
+		Assert.assertEquals(TesterFirehoseServer.MESSAGE_COUNT, messages.size());
+		for (String message : messages) {
+			Assert.assertEquals(TesterFirehoseServer.MESSAGE, message);
+		}
+	}
 
-        // Ignore the latch result as the message count test below will tell us
-        // if the right number of messages arrived
-        handler.getLatch().await(TesterFirehoseServer.WAIT_TIME_MILLIS,
-                TimeUnit.MILLISECONDS);
+	@Test
+	public void testBug56032() throws Exception {
+		// TODO Investigate options to get this test to pass with the HTTP BIO
+		// connector.
+		Assume.assumeFalse(
+				"Skip this test on BIO. TODO: investigate options to make it pass with HTTP BIO connector",
+				getTomcatInstance().getConnector().getProtocol()
+						.equals("HTTP/1.1"));
 
-        Queue<String> messages = handler.getMessages();
-        Assert.assertEquals(
-                TesterFirehoseServer.MESSAGE_COUNT, messages.size());
-        for (String message : messages) {
-            Assert.assertEquals(TesterFirehoseServer.MESSAGE, message);
-        }
-    }
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(TesterFirehoseServer.Config.class.getName());
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
+		TesterSupport.initSsl(tomcat);
 
-    @Test
-    public void testBug56032() throws Exception {
-        // TODO Investigate options to get this test to pass with the HTTP BIO
-        //      connector.
-        Assume.assumeFalse(
-                "Skip this test on BIO. TODO: investigate options to make it pass with HTTP BIO connector",
-                getTomcatInstance().getConnector().getProtocol().equals("HTTP/1.1"));
+		tomcat.start();
 
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(TesterFirehoseServer.Config.class.getName());
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
+		ClientEndpointConfig clientEndpointConfig = ClientEndpointConfig.Builder
+				.create().build();
+		clientEndpointConfig.getUserProperties().put(
+				WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
+				"test/org/apache/tomcat/util/net/ca.jks");
+		Session wsSession = wsContainer.connectToServer(
+				TesterProgrammaticEndpoint.class, clientEndpointConfig,
+				new URI("wss://localhost:" + getPort()
+						+ TesterFirehoseServer.Config.PATH));
 
-        TesterSupport.initSsl(tomcat);
+		// Process incoming messages very slowly
+		MessageHandler handler = new SleepingText(5000);
+		wsSession.addMessageHandler(handler);
+		wsSession.getBasicRemote().sendText("Hello");
 
-        tomcat.start();
+		// Wait long enough for the buffers to fill and the send to timeout
+		int count = 0;
+		int limit = TesterFirehoseServer.WAIT_TIME_MILLIS / 100;
 
-        WebSocketContainer wsContainer =
-                ContainerProvider.getWebSocketContainer();
-        ClientEndpointConfig clientEndpointConfig =
-                ClientEndpointConfig.Builder.create().build();
-        clientEndpointConfig.getUserProperties().put(
-                WsWebSocketContainer.SSL_TRUSTSTORE_PROPERTY,
-                "test/org/apache/tomcat/util/net/ca.jks");
-        Session wsSession = wsContainer.connectToServer(
-                TesterProgrammaticEndpoint.class,
-                clientEndpointConfig,
-                new URI("wss://localhost:" + getPort() +
-                        TesterFirehoseServer.Config.PATH));
+		System.err.println("Waiting for server to report an error");
+		while (TesterFirehoseServer.Endpoint.getErrorCount() == 0
+				&& count < limit) {
+			Thread.sleep(100);
+			count++;
+		}
 
-        // Process incoming messages very slowly
-        MessageHandler handler = new SleepingText(5000);
-        wsSession.addMessageHandler(handler);
-        wsSession.getBasicRemote().sendText("Hello");
+		if (TesterFirehoseServer.Endpoint.getErrorCount() == 0) {
+			Assert.fail("No error reported by Endpoint when timeout was expected");
+		}
 
-        // Wait long enough for the buffers to fill and the send to timeout
-        int count = 0;
-        int limit = TesterFirehoseServer.WAIT_TIME_MILLIS / 100;
+		// Wait up to another 20 seconds for the connection to be closed
+		System.err.println("Waiting for connection to be closed");
+		count = 0;
+		limit = (TesterFirehoseServer.SEND_TIME_OUT_MILLIS * 4) / 100;
+		while (TesterFirehoseServer.Endpoint.getOpenConnectionCount() != 0
+				&& count < limit) {
+			Thread.sleep(100);
+			count++;
+		}
 
-        System.err.println("Waiting for server to report an error");
-        while (TesterFirehoseServer.Endpoint.getErrorCount() == 0 && count < limit) {
-            Thread.sleep(100);
-            count ++;
-        }
-
-        if (TesterFirehoseServer.Endpoint.getErrorCount() == 0) {
-            Assert.fail("No error reported by Endpoint when timeout was expected");
-        }
-
-        // Wait up to another 20 seconds for the connection to be closed
-        System.err.println("Waiting for connection to be closed");
-        count = 0;
-        limit = (TesterFirehoseServer.SEND_TIME_OUT_MILLIS * 4) / 100;
-        while (TesterFirehoseServer.Endpoint.getOpenConnectionCount() != 0 && count < limit) {
-            Thread.sleep(100);
-            count ++;
-        }
-
-        int openConnectionCount = TesterFirehoseServer.Endpoint.getOpenConnectionCount();
-        if (openConnectionCount != 0) {
-            Assert.fail("There are [" + openConnectionCount + "] connections still open");
-        }
-    }
+		int openConnectionCount = TesterFirehoseServer.Endpoint
+				.getOpenConnectionCount();
+		if (openConnectionCount != 0) {
+			Assert.fail("There are [" + openConnectionCount
+					+ "] connections still open");
+		}
+	}
 
 }

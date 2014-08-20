@@ -35,94 +35,92 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestCsrfPreventionFilter extends TomcatBaseTest {
 
-    private static final String RESULT_NONCE =
-        Constants.CSRF_NONCE_SESSION_ATTR_NAME + "=TESTNONCE";
+	private static final String RESULT_NONCE = Constants.CSRF_NONCE_SESSION_ATTR_NAME
+			+ "=TESTNONCE";
 
-    private final HttpServletResponse wrapper =
-        new CsrfPreventionFilter.CsrfResponseWrapper(
-                new NonEncodingResponse(), "TESTNONCE");
+	private final HttpServletResponse wrapper = new CsrfPreventionFilter.CsrfResponseWrapper(
+			new NonEncodingResponse(), "TESTNONCE");
 
-    @Test
-    public void testAddNonceNoQueryNoAnchor() throws Exception {
-        assertEquals("/test?" + RESULT_NONCE ,
-                wrapper.encodeRedirectURL("/test"));
-    }
+	@Test
+	public void testAddNonceNoQueryNoAnchor() throws Exception {
+		assertEquals("/test?" + RESULT_NONCE,
+				wrapper.encodeRedirectURL("/test"));
+	}
 
-    @Test
-    public void testAddNonceQueryNoAnchor() throws Exception {
-        assertEquals("/test?a=b&" + RESULT_NONCE ,
-                wrapper.encodeRedirectURL("/test?a=b"));
-    }
+	@Test
+	public void testAddNonceQueryNoAnchor() throws Exception {
+		assertEquals("/test?a=b&" + RESULT_NONCE,
+				wrapper.encodeRedirectURL("/test?a=b"));
+	}
 
-    @Test
-    public void testAddNonceNoQueryAnchor() throws Exception {
-        assertEquals("/test?" + RESULT_NONCE + "#c",
-                wrapper.encodeRedirectURL("/test#c"));
-    }
+	@Test
+	public void testAddNonceNoQueryAnchor() throws Exception {
+		assertEquals("/test?" + RESULT_NONCE + "#c",
+				wrapper.encodeRedirectURL("/test#c"));
+	}
 
-    @Test
-    public void testAddNonceQueryAnchor() throws Exception {
-        assertEquals("/test?a=b&" + RESULT_NONCE + "#c",
-                wrapper.encodeRedirectURL("/test?a=b#c"));
-    }
+	@Test
+	public void testAddNonceQueryAnchor() throws Exception {
+		assertEquals("/test?a=b&" + RESULT_NONCE + "#c",
+				wrapper.encodeRedirectURL("/test?a=b#c"));
+	}
 
-    @Test
-    public void testLruCacheSerializable() throws Exception {
-        LruCache<String> cache = new LruCache<String>(5);
-        cache.add("key1");
-        cache.add("key2");
-        cache.add("key3");
-        cache.add("key4");
-        cache.add("key5");
-        cache.add("key6");
+	@Test
+	public void testLruCacheSerializable() throws Exception {
+		LruCache<String> cache = new LruCache<String>(5);
+		cache.add("key1");
+		cache.add("key2");
+		cache.add("key3");
+		cache.add("key4");
+		cache.add("key5");
+		cache.add("key6");
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(cache);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(cache);
 
-        ByteArrayInputStream bais =
-            new ByteArrayInputStream(baos.toByteArray());
-        ObjectInputStream ois = new ObjectInputStream(bais);
-        @SuppressWarnings("unchecked")
-        LruCache<String> cache2 = (LruCache<String>) ois.readObject();
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		ObjectInputStream ois = new ObjectInputStream(bais);
+		@SuppressWarnings("unchecked")
+		LruCache<String> cache2 = (LruCache<String>) ois.readObject();
 
-        cache2.add("key7");
-        assertFalse(cache2.contains("key1"));
-        assertFalse(cache2.contains("key2"));
-        assertTrue(cache2.contains("key3"));
-        assertTrue(cache2.contains("key4"));
-        assertTrue(cache2.contains("key5"));
-        assertTrue(cache2.contains("key6"));
-        assertTrue(cache2.contains("key7"));
-    }
+		cache2.add("key7");
+		assertFalse(cache2.contains("key1"));
+		assertFalse(cache2.contains("key2"));
+		assertTrue(cache2.contains("key3"));
+		assertTrue(cache2.contains("key4"));
+		assertTrue(cache2.contains("key5"));
+		assertTrue(cache2.contains("key6"));
+		assertTrue(cache2.contains("key7"));
+	}
 
-    @Test
-    public void testLruCacheSerializablePerformance() throws Exception {
-        for (int i = 0; i < 10000; i++) {
-            testLruCacheSerializable();
-        }
-    }
+	@Test
+	public void testLruCacheSerializablePerformance() throws Exception {
+		for (int i = 0; i < 10000; i++) {
+			testLruCacheSerializable();
+		}
+	}
 
-    private static class NonEncodingResponse extends TesterHttpServletResponse {
+	private static class NonEncodingResponse extends TesterHttpServletResponse {
 
-        @Override
-        public String encodeRedirectURL(String url) {
-            return url;
-        }
+		@Override
+		public String encodeRedirectURL(String url) {
+			return url;
+		}
 
-        @Override
-        public String encodeRedirectUrl(String url) {
-            return url;
-        }
+		@Override
+		public String encodeRedirectUrl(String url) {
+			return url;
+		}
 
-        @Override
-        public String encodeURL(String url) {
-            return url;
-        }
+		@Override
+		public String encodeURL(String url) {
+			return url;
+		}
 
-        @Override
-        public String encodeUrl(String url) {
-            return url;
-        }
-    }
+		@Override
+		public String encodeUrl(String url) {
+			return url;
+		}
+	}
 }

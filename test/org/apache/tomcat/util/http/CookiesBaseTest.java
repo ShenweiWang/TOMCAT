@@ -36,60 +36,59 @@ import org.apache.catalina.startup.TomcatBaseTest;
  */
 public abstract class CookiesBaseTest extends TomcatBaseTest {
 
-    /**
-     * Servlet for cookie naming test.
-     */
-    public static class CookieServlet extends HttpServlet {
+	/**
+	 * Servlet for cookie naming test.
+	 */
+	public static class CookieServlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        private final String cookieName;
-        private final String cookieValue;
+		private final String cookieName;
+		private final String cookieValue;
 
-        public CookieServlet(String cookieName, String cookieValue) {
-            this.cookieName = cookieName;
-            this.cookieValue = cookieValue;
-        }
+		public CookieServlet(String cookieName, String cookieValue) {
+			this.cookieName = cookieName;
+			this.cookieValue = cookieValue;
+		}
 
-        @Override
-        public void doGet(HttpServletRequest req, HttpServletResponse res)
-                throws IOException {
-            try {
-                Cookie cookie = new Cookie(cookieName, cookieValue);
-                res.addCookie(cookie);
-                res.getWriter().write("Cookie name ok");
-            } catch (IllegalArgumentException iae) {
-                res.getWriter().write("Cookie name fail");
-            }
-        }
+		@Override
+		public void doGet(HttpServletRequest req, HttpServletResponse res)
+				throws IOException {
+			try {
+				Cookie cookie = new Cookie(cookieName, cookieValue);
+				res.addCookie(cookie);
+				res.getWriter().write("Cookie name ok");
+			} catch (IllegalArgumentException iae) {
+				res.getWriter().write("Cookie name fail");
+			}
+		}
 
-    }
+	}
 
+	public static void addServlets(Tomcat tomcat) {
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-    public static void addServlets(Tomcat tomcat) {
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+		Tomcat.addServlet(ctx, "invalid", new CookieServlet("na;me", "value"));
+		ctx.addServletMapping("/invalid", "invalid");
+		Tomcat.addServlet(ctx, "null", new CookieServlet(null, "value"));
+		ctx.addServletMapping("/null", "null");
+		Tomcat.addServlet(ctx, "blank", new CookieServlet("", "value"));
+		ctx.addServletMapping("/blank", "blank");
+		Tomcat.addServlet(ctx, "invalidFwd",
+				new CookieServlet("na/me", "value"));
+		ctx.addServletMapping("/invalidFwd", "invalidFwd");
+		Tomcat.addServlet(ctx, "invalidStrict", new CookieServlet("na?me",
+				"value"));
+		ctx.addServletMapping("/invalidStrict", "invalidStrict");
+		Tomcat.addServlet(ctx, "valid", new CookieServlet("name", "value"));
+		ctx.addServletMapping("/valid", "valid");
+		Tomcat.addServlet(ctx, "switch", new CookieServlet("name", "val?ue"));
+		ctx.addServletMapping("/switch", "switch");
 
-        Tomcat.addServlet(ctx, "invalid", new CookieServlet("na;me", "value"));
-        ctx.addServletMapping("/invalid", "invalid");
-        Tomcat.addServlet(ctx, "null", new CookieServlet(null, "value"));
-        ctx.addServletMapping("/null", "null");
-        Tomcat.addServlet(ctx, "blank", new CookieServlet("", "value"));
-        ctx.addServletMapping("/blank", "blank");
-        Tomcat.addServlet(ctx, "invalidFwd",
-                new CookieServlet("na/me", "value"));
-        ctx.addServletMapping("/invalidFwd", "invalidFwd");
-        Tomcat.addServlet(ctx, "invalidStrict",
-                new CookieServlet("na?me", "value"));
-        ctx.addServletMapping("/invalidStrict", "invalidStrict");
-        Tomcat.addServlet(ctx, "valid", new CookieServlet("name", "value"));
-        ctx.addServletMapping("/valid", "valid");
-        Tomcat.addServlet(ctx, "switch", new CookieServlet("name", "val?ue"));
-        ctx.addServletMapping("/switch", "switch");
+	}
 
-    }
-
-    public abstract void testCookiesInstance() throws Exception;
+	public abstract void testCookiesInstance() throws Exception;
 
 }

@@ -22,23 +22,23 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
+/**
  * This class represents a constant pool reference to a field.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class ConstantFieldref extends ConstantCP {
 
+	private static final long serialVersionUID = -8062332095934294437L;
 
-    private static final long serialVersionUID = -8062332095934294437L;
-
-    /**
-     * Initialize instance from file data.
-     *
-     * @param file input stream
-     * @throws IOException
-     */
-    ConstantFieldref(DataInputStream file) throws IOException {
-        super(Constants.CONSTANT_Fieldref, file);
-    }
+	/**
+	 * Initialize instance from file data.
+	 *
+	 * @param file
+	 *            input stream
+	 * @throws IOException
+	 */
+	ConstantFieldref(DataInputStream file) throws IOException {
+		super(Constants.CONSTANT_Fieldref, file);
+	}
 }

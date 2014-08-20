@@ -34,109 +34,106 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestKeepAliveCount extends TomcatBaseTest {
 
-    @Test
-    public void testHttp10() throws Exception {
-        TestKeepAliveClient client = new TestKeepAliveClient();
-        client.doHttp10Request();
-    }
+	@Test
+	public void testHttp10() throws Exception {
+		TestKeepAliveClient client = new TestKeepAliveClient();
+		client.doHttp10Request();
+	}
 
-    @Test
-    public void testHttp11() throws Exception {
-        TestKeepAliveClient client = new TestKeepAliveClient();
-        client.doHttp11Request();
-    }
+	@Test
+	public void testHttp11() throws Exception {
+		TestKeepAliveClient client = new TestKeepAliveClient();
+		client.doHttp11Request();
+	}
 
+	private class TestKeepAliveClient extends SimpleHttpClient {
 
-    private class TestKeepAliveClient extends SimpleHttpClient {
+		private boolean init;
 
+		private synchronized void init() {
+			if (init)
+				return;
 
-        private boolean init;
+			Tomcat tomcat = getTomcatInstance();
+			Context root = tomcat.addContext("", TEMP_DIR);
+			Tomcat.addServlet(root, "Simple", new SimpleServlet());
+			root.addServletMapping("/test", "Simple");
+			tomcat.getConnector().setProperty("maxKeepAliveRequests", "5");
+			tomcat.getConnector().setProperty("soTimeout", "20000");
+			tomcat.getConnector().setProperty("keepAliveTimeout", "50000");
+			init = true;
+		}
 
-        private synchronized void init() {
-            if (init) return;
+		private void doHttp10Request() throws Exception {
+			Tomcat tomcat = getTomcatInstance();
+			init();
+			tomcat.start();
+			setPort(tomcat.getConnector().getLocalPort());
 
-            Tomcat tomcat = getTomcatInstance();
-            Context root = tomcat.addContext("", TEMP_DIR);
-            Tomcat.addServlet(root, "Simple", new SimpleServlet());
-            root.addServletMapping("/test", "Simple");
-            tomcat.getConnector().setProperty("maxKeepAliveRequests", "5");
-            tomcat.getConnector().setProperty("soTimeout", "20000");
-            tomcat.getConnector().setProperty("keepAliveTimeout", "50000");
-            init = true;
-        }
+			// Open connection
+			connect();
 
-        private void doHttp10Request() throws Exception {
-            Tomcat tomcat = getTomcatInstance();
-            init();
-            tomcat.start();
-            setPort(tomcat.getConnector().getLocalPort());
+			// Send request in two parts
+			String[] request = new String[1];
+			request[0] = "GET /test HTTP/1.0" + CRLF + CRLF;
+			setRequest(request);
+			processRequest(false); // blocks until response has been read
+			boolean passed = (this.readLine() == null);
+			// Close the connection
+			disconnect();
+			reset();
+			tomcat.stop();
+			assertTrue(passed);
+		}
 
-            // Open connection
-            connect();
+		private void doHttp11Request() throws Exception {
+			Tomcat tomcat = getTomcatInstance();
+			init();
+			tomcat.start();
+			setPort(tomcat.getConnector().getLocalPort());
 
-            // Send request in two parts
-            String[] request = new String[1];
-            request[0] =
-                "GET /test HTTP/1.0" + CRLF + CRLF;
-            setRequest(request);
-            processRequest(false); // blocks until response has been read
-            boolean passed = (this.readLine()==null);
-            // Close the connection
-            disconnect();
-            reset();
-            tomcat.stop();
-            assertTrue(passed);
-        }
+			// Open connection
+			connect();
 
-        private void doHttp11Request() throws Exception {
-            Tomcat tomcat = getTomcatInstance();
-            init();
-            tomcat.start();
-            setPort(tomcat.getConnector().getLocalPort());
+			// Send request in two parts
+			String[] request = new String[1];
+			request[0] = "GET /test HTTP/1.1" + CRLF + "Host: localhost" + CRLF
+					+ "Connection: Keep-Alive" + CRLF + "Keep-Alive: 300"
+					+ CRLF + CRLF;
 
-            // Open connection
-            connect();
+			setRequest(request);
 
-            // Send request in two parts
-            String[] request = new String[1];
-            request[0] =
-                "GET /test HTTP/1.1" + CRLF +
-                "Host: localhost" + CRLF +
-                "Connection: Keep-Alive" + CRLF+
-                "Keep-Alive: 300"+ CRLF+ CRLF;
+			for (int i = 0; i < 5; i++) {
+				processRequest(false); // blocks until response has been read
+				assertTrue(getResponseLine() != null
+						&& getResponseLine().trim().startsWith("HTTP/1.1 200"));
+			}
+			boolean passed = (this.readLine() == null);
+			// Close the connection
+			disconnect();
+			reset();
+			tomcat.stop();
+			assertTrue(passed);
+		}
 
-            setRequest(request);
+		@Override
+		public boolean isResponseBodyOK() {
+			return true;
+		}
 
-            for (int i=0; i<5; i++) {
-                processRequest(false); // blocks until response has been read
-                assertTrue(getResponseLine()!=null && getResponseLine().trim().startsWith("HTTP/1.1 200"));
-            }
-            boolean passed = (this.readLine()==null);
-            // Close the connection
-            disconnect();
-            reset();
-            tomcat.stop();
-            assertTrue(passed);
-        }
+	}
 
-        @Override
-        public boolean isResponseBodyOK() {
-            return true;
-        }
+	private static class SimpleServlet extends HttpServlet {
 
-    }
+		private static final long serialVersionUID = 1L;
 
+		@Override
+		protected void service(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			resp.setContentLength(0);
+			resp.flushBuffer();
+		}
 
-    private static class SimpleServlet extends HttpServlet {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            resp.setContentLength(0);
-            resp.flushBuffer();
-        }
-
-    }
+	}
 
 }

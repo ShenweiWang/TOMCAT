@@ -35,23 +35,23 @@ import java.lang.annotation.Target;
  * 
  * @since Servlet 3.0
  */
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface WebInitParam {
 
-    /**
-     * @return name of the initialization parameter
-     */
-    String name();
+	/**
+	 * @return name of the initialization parameter
+	 */
+	String name();
 
-    /**
-     * @return value of the initialization parameter
-     */
-    String value();
+	/**
+	 * @return value of the initialization parameter
+	 */
+	String value();
 
-    /**
-     * @return description of the initialization parameter
-     */
-    String description() default "";
+	/**
+	 * @return description of the initialization parameter
+	 */
+	String description() default "";
 }

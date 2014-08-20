@@ -35,7 +35,6 @@ import javax.websocket.server.ServerEndpointConfig;
 import org.junit.Assert;
 import org.junit.Test;
 
-
 import org.apache.catalina.Context;
 import org.apache.catalina.servlets.DefaultServlet;
 import org.apache.catalina.startup.Tomcat;
@@ -46,88 +45,89 @@ import org.apache.tomcat.websocket.server.WsContextListener;
 
 public class TestWsSubprotocols extends TomcatBaseTest {
 
-    @Test
-    public void testWsSubprotocols() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        // Must have a real docBase - just use temp
-        Context ctx = tomcat.addContext("",
-                System.getProperty("java.io.tmpdir"));
-        ctx.addApplicationListener(Config.class.getName());
+	@Test
+	public void testWsSubprotocols() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
+		ctx.addApplicationListener(Config.class.getName());
 
-        Tomcat.addServlet(ctx, "default", new DefaultServlet());
-        ctx.addServletMapping("/", "default");
+		Tomcat.addServlet(ctx, "default", new DefaultServlet());
+		ctx.addServletMapping("/", "default");
 
-        tomcat.start();
+		tomcat.start();
 
-        WebSocketContainer wsContainer = ContainerProvider
-                .getWebSocketContainer();
+		WebSocketContainer wsContainer = ContainerProvider
+				.getWebSocketContainer();
 
-        tomcat.start();
+		tomcat.start();
 
-        Session wsSession = wsContainer.connectToServer(
-                TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
-                        .create().preferredSubprotocols(Arrays.asList("sp3"))
-                        .build(), new URI("ws://localhost:" + getPort()
-                        + SubProtocolsEndpoint.PATH_BASIC));
+		Session wsSession = wsContainer.connectToServer(
+				TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
+						.create().preferredSubprotocols(Arrays.asList("sp3"))
+						.build(), new URI("ws://localhost:" + getPort()
+						+ SubProtocolsEndpoint.PATH_BASIC));
 
-        Assert.assertTrue(wsSession.isOpen());
-        if (wsSession.getNegotiatedSubprotocol() != null) {
-            Assert.assertTrue(wsSession.getNegotiatedSubprotocol().isEmpty());
-        }
-        wsSession.close();
-        SubProtocolsEndpoint.recycle();
+		Assert.assertTrue(wsSession.isOpen());
+		if (wsSession.getNegotiatedSubprotocol() != null) {
+			Assert.assertTrue(wsSession.getNegotiatedSubprotocol().isEmpty());
+		}
+		wsSession.close();
+		SubProtocolsEndpoint.recycle();
 
-        wsSession = wsContainer.connectToServer(
-                TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
-                        .create().preferredSubprotocols(Arrays.asList("sp2"))
-                        .build(), new URI("ws://localhost:" + getPort()
-                        + SubProtocolsEndpoint.PATH_BASIC));
+		wsSession = wsContainer.connectToServer(
+				TesterProgrammaticEndpoint.class, ClientEndpointConfig.Builder
+						.create().preferredSubprotocols(Arrays.asList("sp2"))
+						.build(), new URI("ws://localhost:" + getPort()
+						+ SubProtocolsEndpoint.PATH_BASIC));
 
-        Assert.assertTrue(wsSession.isOpen());
-        Assert.assertEquals("sp2", wsSession.getNegotiatedSubprotocol());
-        // Client thread might move faster than server. Wait for upto 5s for the
-        // subProtocols to be set
-        int count = 0;
-        while (count < 50 && SubProtocolsEndpoint.subprotocols == null) {
-            count++;
-            Thread.sleep(100);
-        }
-        Assert.assertNotNull(SubProtocolsEndpoint.subprotocols);
-        Assert.assertArrayEquals(new String[]{"sp1","sp2"},
-                SubProtocolsEndpoint.subprotocols.toArray(new String[2]));
-        wsSession.close();
-        SubProtocolsEndpoint.recycle();
-    }
+		Assert.assertTrue(wsSession.isOpen());
+		Assert.assertEquals("sp2", wsSession.getNegotiatedSubprotocol());
+		// Client thread might move faster than server. Wait for upto 5s for the
+		// subProtocols to be set
+		int count = 0;
+		while (count < 50 && SubProtocolsEndpoint.subprotocols == null) {
+			count++;
+			Thread.sleep(100);
+		}
+		Assert.assertNotNull(SubProtocolsEndpoint.subprotocols);
+		Assert.assertArrayEquals(new String[] { "sp1", "sp2" },
+				SubProtocolsEndpoint.subprotocols.toArray(new String[2]));
+		wsSession.close();
+		SubProtocolsEndpoint.recycle();
+	}
 
-    @ServerEndpoint(value = "/echo", subprotocols = {"sp1","sp2"})
-    public static class SubProtocolsEndpoint {
-        public static String PATH_BASIC = "/echo";
-        public static volatile List<String> subprotocols;
+	@ServerEndpoint(value = "/echo", subprotocols = { "sp1", "sp2" })
+	public static class SubProtocolsEndpoint {
+		public static String PATH_BASIC = "/echo";
+		public static volatile List<String> subprotocols;
 
-        @OnOpen
-        public void processOpen(@SuppressWarnings("unused") Session session,
-                EndpointConfig  epc) {
-            subprotocols = ((ServerEndpointConfig)epc).getSubprotocols();
-        }
+		@OnOpen
+		public void processOpen(@SuppressWarnings("unused") Session session,
+				EndpointConfig epc) {
+			subprotocols = ((ServerEndpointConfig) epc).getSubprotocols();
+		}
 
-        public static void recycle() {
-            subprotocols = null;
-        }
+		public static void recycle() {
+			subprotocols = null;
+		}
 
-    }
+	}
 
-    public static class Config extends WsContextListener {
-        @Override
-        public void contextInitialized(ServletContextEvent sce) {
-            super.contextInitialized(sce);
-            ServerContainer sc = (ServerContainer) sce.getServletContext()
-                    .getAttribute(Constants.
-                            SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
-            try {
-                sc.addEndpoint(SubProtocolsEndpoint.class);
-            } catch (DeploymentException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-    }
+	public static class Config extends WsContextListener {
+		@Override
+		public void contextInitialized(ServletContextEvent sce) {
+			super.contextInitialized(sce);
+			ServerContainer sc = (ServerContainer) sce
+					.getServletContext()
+					.getAttribute(
+							Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
+			try {
+				sc.addEndpoint(SubProtocolsEndpoint.class);
+			} catch (DeploymentException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
 }

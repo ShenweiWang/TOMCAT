@@ -27,18 +27,17 @@ import org.apache.tomcat.util.buf.ByteChunk;
 
 public class TestJspReader extends TomcatBaseTest {
 
-    @Test
-    public void testBug53986() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug53986() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir =
-            new File("test/webapp-3.0");
-        tomcat.addWebapp(null, "", appDir.getAbsolutePath());
+		File appDir = new File("test/webapp-3.0");
+		tomcat.addWebapp(null, "", appDir.getAbsolutePath());
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk res = getUrl("http://localhost:" + getPort() +
-                "/bug5nnnn/bug53986.jsp");
-        Assert.assertTrue(res.toString().contains("OK"));
-    }
+		ByteChunk res = getUrl("http://localhost:" + getPort()
+				+ "/bug5nnnn/bug53986.jsp");
+		Assert.assertTrue(res.toString().contains("OK"));
+	}
 }

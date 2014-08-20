@@ -18,16 +18,15 @@ package org.apache.tomcat.util.net;
 
 public class Constants {
 
-    /**
-     * Name of the system property containing
-     * the tomcat instance installation path
-     */
-    public static final String CATALINA_BASE_PROP = "catalina.base";
+	/**
+	 * Name of the system property containing the tomcat instance installation
+	 * path
+	 */
+	public static final String CATALINA_BASE_PROP = "catalina.base";
 
-
-    /**
-     * Has security been turned on?
-     */
-    public static final boolean IS_SECURITY_ENABLED =
-        (System.getSecurityManager() != null);
+	/**
+	 * Has security been turned on?
+	 */
+	public static final boolean IS_SECURITY_ENABLED = (System
+			.getSecurityManager() != null);
 }

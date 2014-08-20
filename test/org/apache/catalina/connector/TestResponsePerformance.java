@@ -22,28 +22,28 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 public class TestResponsePerformance {
-    @Test
-    public void testToAbsolutePerformance() throws Exception {
-        Request req = new TesterRequest();
-        Response resp = new Response();
-        resp.setRequest(req);
+	@Test
+	public void testToAbsolutePerformance() throws Exception {
+		Request req = new TesterRequest();
+		Response resp = new Response();
+		resp.setRequest(req);
 
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
-            resp.toAbsolute("bar.html");
-        }
-        long homebrew = System.currentTimeMillis() - start;
+		long start = System.currentTimeMillis();
+		for (int i = 0; i < 100000; i++) {
+			resp.toAbsolute("bar.html");
+		}
+		long homebrew = System.currentTimeMillis() - start;
 
-        start = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
-            URI base = URI.create(
-                    "http://localhost:8080/level1/level2/foo.html");
-            base.resolve(URI.create("bar.html")).toASCIIString();
-        }
-        long uri = System.currentTimeMillis() - start;
+		start = System.currentTimeMillis();
+		for (int i = 0; i < 100000; i++) {
+			URI base = URI
+					.create("http://localhost:8080/level1/level2/foo.html");
+			base.resolve(URI.create("bar.html")).toASCIIString();
+		}
+		long uri = System.currentTimeMillis() - start;
 
-        System.out.println("Current 'home-brew': " + homebrew +
-                "ms, Using URI: " + uri + "ms");
-        assertTrue(homebrew < uri);
-    }
+		System.out.println("Current 'home-brew': " + homebrew
+				+ "ms, Using URI: " + uri + "ms");
+		assertTrue(homebrew < uri);
+	}
 }

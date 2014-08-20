@@ -32,25 +32,23 @@ import javax.servlet.annotation.WebFilter;
  * @author Peter Rossbach
  *
  */
-@WebFilter(value = "/param", filterName="paramDFilter",
-        urlPatterns = { "/param1" , "/param2" })
+@WebFilter(value = "/param", filterName = "paramDFilter", urlPatterns = {
+		"/param1", "/param2" })
 public class DuplicateMappingParamFilter implements Filter {
 
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+		// NO-OP
+	}
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        // NO-OP
-    }
+	@Override
+	public void doFilter(ServletRequest req, ServletResponse res,
+			FilterChain chain) throws ServletException, IOException {
+		chain.doFilter(req, res);
+	}
 
-    @Override
-    public void doFilter(ServletRequest req, ServletResponse res,
-            FilterChain chain) throws ServletException, IOException {
-        chain.doFilter(req, res);
-    }
-
-    @Override
-    public void destroy() {
-        // destroy
-    }
+	@Override
+	public void destroy() {
+		// destroy
+	}
 }
-

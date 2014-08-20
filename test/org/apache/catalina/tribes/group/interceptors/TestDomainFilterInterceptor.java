@@ -32,98 +32,111 @@ import org.apache.catalina.tribes.group.GroupChannel;
 import org.apache.catalina.tribes.util.UUIDGenerator;
 
 public class TestDomainFilterInterceptor {
-    private static int count = 10;
-    private ManagedChannel[] channels = new ManagedChannel[count];
-    private TestMbrListener[] listeners = new TestMbrListener[count];
+	private static int count = 10;
+	private ManagedChannel[] channels = new ManagedChannel[count];
+	private TestMbrListener[] listeners = new TestMbrListener[count];
 
-    @Before
-    public void setUp() throws Exception {
-        for (int i = 0; i < channels.length; i++) {
-            channels[i] = new GroupChannel();
-            channels[i].getMembershipService().setPayload( ("Channel-" + (i + 1)).getBytes("ASCII"));
-            listeners[i] = new TestMbrListener( ("Listener-" + (i + 1)));
-            channels[i].addMembershipListener(listeners[i]);
-            DomainFilterInterceptor filter = new DomainFilterInterceptor();
-            filter.setDomain(UUIDGenerator.randomUUID(false));
-            channels[i].addInterceptor(filter);
-        }
-    }
+	@Before
+	public void setUp() throws Exception {
+		for (int i = 0; i < channels.length; i++) {
+			channels[i] = new GroupChannel();
+			channels[i].getMembershipService().setPayload(
+					("Channel-" + (i + 1)).getBytes("ASCII"));
+			listeners[i] = new TestMbrListener(("Listener-" + (i + 1)));
+			channels[i].addMembershipListener(listeners[i]);
+			DomainFilterInterceptor filter = new DomainFilterInterceptor();
+			filter.setDomain(UUIDGenerator.randomUUID(false));
+			channels[i].addInterceptor(filter);
+		}
+	}
 
-    public void clear() {
-        for (int i = 0; i < channels.length; i++) {
-            listeners[i].members.clear();
-        }
-    }
+	public void clear() {
+		for (int i = 0; i < channels.length; i++) {
+			listeners[i].members.clear();
+		}
+	}
 
-    @Test
-    public void testMemberArrival() throws Exception {
-        //purpose of this test is to make sure that we have received all the members
-        //that we can expect before the start method returns
-        Thread[] threads = new Thread[channels.length];
-        for (int i=0; i<channels.length; i++ ) {
-            final Channel channel = channels[i];
-            Thread t = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        channel.start(Channel.DEFAULT);
-                    }catch ( Exception x ) {
-                        throw new RuntimeException(x);
-                    }
-                }
-            };
-            threads[i] = t;
-        }
-        for (int i=0; i<threads.length; i++ ) threads[i].start();
-        for (int i=0; i<threads.length; i++ ) threads[i].join();
-        System.out.println("All channels started.");
-        for (int i=listeners.length-1; i>=0; i-- ) assertEquals("Checking member arrival length",0,listeners[i].members.size());
-    }
+	@Test
+	public void testMemberArrival() throws Exception {
+		// purpose of this test is to make sure that we have received all the
+		// members
+		// that we can expect before the start method returns
+		Thread[] threads = new Thread[channels.length];
+		for (int i = 0; i < channels.length; i++) {
+			final Channel channel = channels[i];
+			Thread t = new Thread() {
+				@Override
+				public void run() {
+					try {
+						channel.start(Channel.DEFAULT);
+					} catch (Exception x) {
+						throw new RuntimeException(x);
+					}
+				}
+			};
+			threads[i] = t;
+		}
+		for (int i = 0; i < threads.length; i++)
+			threads[i].start();
+		for (int i = 0; i < threads.length; i++)
+			threads[i].join();
+		System.out.println("All channels started.");
+		for (int i = listeners.length - 1; i >= 0; i--)
+			assertEquals("Checking member arrival length", 0,
+					listeners[i].members.size());
+	}
 
-    @After
-    public void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 
-        for (int i = 0; i < channels.length; i++) {
-            try {
-                channels[i].stop(Channel.DEFAULT);
-            } catch (Exception ignore) {
-                // Ignore
-            }
-        }
-    }
+		for (int i = 0; i < channels.length; i++) {
+			try {
+				channels[i].stop(Channel.DEFAULT);
+			} catch (Exception ignore) {
+				// Ignore
+			}
+		}
+	}
 
-    public static class TestMbrListener
-        implements MembershipListener {
-        public String name = null;
-        public TestMbrListener(String name) {
-            this.name = name;
-        }
+	public static class TestMbrListener implements MembershipListener {
+		public String name = null;
 
-        public ArrayList<Member> members = new ArrayList<Member>();
-        @Override
-        public void memberAdded(Member member) {
-            if (!members.contains(member)) {
-                members.add(member);
-                try {
-                    System.out.println(name + ":member added[" + new String(member.getPayload(), "ASCII") + "; Thread:"+Thread.currentThread().getName()+"]");
-                } catch (Exception x) {
-                    System.out.println(name + ":member added[unknown]");
-                }
-            }
-        }
+		public TestMbrListener(String name) {
+			this.name = name;
+		}
 
-        @Override
-        public void memberDisappeared(Member member) {
-            if (members.contains(member)) {
-                members.remove(member);
-                try {
-                    System.out.println(name + ":member disappeared[" + new String(member.getPayload(), "ASCII") + "; Thread:"+Thread.currentThread().getName()+"]");
-                } catch (Exception x) {
-                    System.out.println(name + ":member disappeared[unknown]");
-                }
-            }
-        }
+		public ArrayList<Member> members = new ArrayList<Member>();
 
-    }
+		@Override
+		public void memberAdded(Member member) {
+			if (!members.contains(member)) {
+				members.add(member);
+				try {
+					System.out.println(name + ":member added["
+							+ new String(member.getPayload(), "ASCII")
+							+ "; Thread:" + Thread.currentThread().getName()
+							+ "]");
+				} catch (Exception x) {
+					System.out.println(name + ":member added[unknown]");
+				}
+			}
+		}
+
+		@Override
+		public void memberDisappeared(Member member) {
+			if (members.contains(member)) {
+				members.remove(member);
+				try {
+					System.out.println(name + ":member disappeared["
+							+ new String(member.getPayload(), "ASCII")
+							+ "; Thread:" + Thread.currentThread().getName()
+							+ "]");
+				} catch (Exception x) {
+					System.out.println(name + ":member disappeared[unknown]");
+				}
+			}
+		}
+
+	}
 
 }

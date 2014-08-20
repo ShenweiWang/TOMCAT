@@ -35,61 +35,59 @@ import org.apache.tomcat.util.buf.ByteChunk;
  */
 public class TestConnector extends TomcatBaseTest {
 
-    @Test
-    public void testStop() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testStop() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        Context root = tomcat.addContext("", TEMP_DIR);
-        Wrapper w =
-            Tomcat.addServlet(root, "tester", new TesterServlet());
-        w.setAsyncSupported(true);
-        root.addServletMapping("/", "tester");
+		Context root = tomcat.addContext("", TEMP_DIR);
+		Wrapper w = Tomcat.addServlet(root, "tester", new TesterServlet());
+		w.setAsyncSupported(true);
+		root.addServletMapping("/", "tester");
 
-        Connector connector = tomcat.getConnector();
+		Connector connector = tomcat.getConnector();
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk bc = new ByteChunk();
-        int rc = getUrl("http://localhost:" + getPort() + "/", bc, null, null);
+		ByteChunk bc = new ByteChunk();
+		int rc = getUrl("http://localhost:" + getPort() + "/", bc, null, null);
 
-        assertEquals(200, rc);
-        assertEquals("OK", bc.toString());
+		assertEquals(200, rc);
+		assertEquals("OK", bc.toString());
 
-        rc = -1;
-        bc.recycle();
+		rc = -1;
+		bc.recycle();
 
-        connector.stop();
+		connector.stop();
 
-        try {
-            rc = getUrl("http://localhost:" + getPort() + "/", bc, 1000,
-                    null, null);
-        } catch (SocketTimeoutException ste) {
-            // May also see this with NIO
-            // Make sure the test passes if we do
-            rc = 503;
-        }
-        assertEquals(503, rc);
-    }
+		try {
+			rc = getUrl("http://localhost:" + getPort() + "/", bc, 1000, null,
+					null);
+		} catch (SocketTimeoutException ste) {
+			// May also see this with NIO
+			// Make sure the test passes if we do
+			rc = 503;
+		}
+		assertEquals(503, rc);
+	}
 
+	@Test
+	public void testPort() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-    @Test
-    public void testPort() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+		Connector connector1 = tomcat.getConnector();
+		connector1.setPort(0);
 
-        Connector connector1 = tomcat.getConnector();
-        connector1.setPort(0);
+		Connector connector2 = new Connector();
+		connector2.setPort(0);
 
-        Connector connector2 = new Connector();
-        connector2.setPort(0);
+		tomcat.getService().addConnector(connector2);
 
-        tomcat.getService().addConnector(connector2);
+		tomcat.start();
 
-        tomcat.start();
+		int localPort1 = connector1.getLocalPort();
+		int localPort2 = connector2.getLocalPort();
 
-        int localPort1 = connector1.getLocalPort();
-        int localPort2 = connector2.getLocalPort();
-
-        assertTrue(localPort1 > 0);
-        assertTrue(localPort2 > 0);
-    }
+		assertTrue(localPort1 > 0);
+		assertTrue(localPort2 > 0);
+	}
 }

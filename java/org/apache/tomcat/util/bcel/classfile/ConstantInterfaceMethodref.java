@@ -22,23 +22,23 @@ import java.io.IOException;
 
 import org.apache.tomcat.util.bcel.Constants;
 
-/** 
+/**
  * This class represents a constant pool reference to an interface method.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
  */
 public final class ConstantInterfaceMethodref extends ConstantCP {
 
+	private static final long serialVersionUID = -8587605570227841891L;
 
-    private static final long serialVersionUID = -8587605570227841891L;
-
-    /**
-     * Initialize instance from file data.
-     *
-     * @param file input stream
-     * @throws IOException
-     */
-    ConstantInterfaceMethodref(DataInputStream file) throws IOException {
-        super(Constants.CONSTANT_InterfaceMethodref, file);
-    }
+	/**
+	 * Initialize instance from file data.
+	 *
+	 * @param file
+	 *            input stream
+	 * @throws IOException
+	 */
+	ConstantInterfaceMethodref(DataInputStream file) throws IOException {
+		super(Constants.CONSTANT_InterfaceMethodref, file);
+	}
 }

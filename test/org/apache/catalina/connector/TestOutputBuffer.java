@@ -33,121 +33,119 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.TomcatBaseTest;
 import org.apache.tomcat.util.buf.ByteChunk;
 
-public class TestOutputBuffer extends TomcatBaseTest{
+public class TestOutputBuffer extends TomcatBaseTest {
 
-    @Test
-    public void testWriteSpeed() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testWriteSpeed() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        Context root = tomcat.addContext("", TEMP_DIR);
+		Context root = tomcat.addContext("", TEMP_DIR);
 
-        for (int i = 1; i <= WritingServlet.EXPECTED_CONTENT_LENGTH; i*=10) {
-            WritingServlet servlet = new WritingServlet(i);
-            Tomcat.addServlet(root, "servlet" + i, servlet);
-            root.addServletMapping("/servlet" + i, "servlet" + i);
-        }
+		for (int i = 1; i <= WritingServlet.EXPECTED_CONTENT_LENGTH; i *= 10) {
+			WritingServlet servlet = new WritingServlet(i);
+			Tomcat.addServlet(root, "servlet" + i, servlet);
+			root.addServletMapping("/servlet" + i, "servlet" + i);
+		}
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk bc = new ByteChunk();
+		ByteChunk bc = new ByteChunk();
 
-        for (int i = 1; i <= WritingServlet.EXPECTED_CONTENT_LENGTH; i*=10) {
-            int rc = getUrl("http://localhost:" + getPort() +
-                    "/servlet" + i, bc, null, null);
-            assertEquals(HttpServletResponse.SC_OK, rc);
-            assertEquals(
-                    WritingServlet.EXPECTED_CONTENT_LENGTH, bc.getLength());
+		for (int i = 1; i <= WritingServlet.EXPECTED_CONTENT_LENGTH; i *= 10) {
+			int rc = getUrl("http://localhost:" + getPort() + "/servlet" + i,
+					bc, null, null);
+			assertEquals(HttpServletResponse.SC_OK, rc);
+			assertEquals(WritingServlet.EXPECTED_CONTENT_LENGTH, bc.getLength());
 
-            bc.recycle();
+			bc.recycle();
 
-            rc = getUrl("http://localhost:" + getPort() +
-                    "/servlet" + i + "?useBuffer=y", bc, null, null);
-            assertEquals(HttpServletResponse.SC_OK, rc);
-            assertEquals(
-                    WritingServlet.EXPECTED_CONTENT_LENGTH, bc.getLength());
+			rc = getUrl("http://localhost:" + getPort() + "/servlet" + i
+					+ "?useBuffer=y", bc, null, null);
+			assertEquals(HttpServletResponse.SC_OK, rc);
+			assertEquals(WritingServlet.EXPECTED_CONTENT_LENGTH, bc.getLength());
 
-            bc.recycle();
-        }
-    }
+			bc.recycle();
+		}
+	}
 
-    @Test
-    public void testBug52577() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug52577() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        Context root = tomcat.addContext("", TEMP_DIR);
+		Context root = tomcat.addContext("", TEMP_DIR);
 
-        Bug52577Servlet bug52577 = new Bug52577Servlet();
-        Tomcat.addServlet(root, "bug52577", bug52577);
-        root.addServletMapping("/", "bug52577");
+		Bug52577Servlet bug52577 = new Bug52577Servlet();
+		Tomcat.addServlet(root, "bug52577", bug52577);
+		root.addServletMapping("/", "bug52577");
 
-        tomcat.start();
+		tomcat.start();
 
-        ByteChunk bc = new ByteChunk();
+		ByteChunk bc = new ByteChunk();
 
-        int rc = getUrl("http://localhost:" + getPort() + "/", bc, null, null);
-        assertEquals(HttpServletResponse.SC_OK, rc);
-        assertEquals("OK", bc.toString());
-    }
+		int rc = getUrl("http://localhost:" + getPort() + "/", bc, null, null);
+		assertEquals(HttpServletResponse.SC_OK, rc);
+		assertEquals("OK", bc.toString());
+	}
 
-    private static class WritingServlet extends HttpServlet {
+	private static class WritingServlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        protected static final int EXPECTED_CONTENT_LENGTH = 100000;
+		protected static final int EXPECTED_CONTENT_LENGTH = 100000;
 
-        private final String writeString;
-        private final int writeCount;
+		private final String writeString;
+		private final int writeCount;
 
-        public WritingServlet(int writeLength) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < writeLength; i++) {
-                sb.append('x');
-            }
-            writeString = sb.toString();
-            writeCount = EXPECTED_CONTENT_LENGTH / writeLength;
-        }
+		public WritingServlet(int writeLength) {
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < writeLength; i++) {
+				sb.append('x');
+			}
+			writeString = sb.toString();
+			writeCount = EXPECTED_CONTENT_LENGTH / writeLength;
+		}
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
 
-            resp.setContentType("text/plain");
-            resp.setCharacterEncoding("ISO-8859-1");
+			resp.setContentType("text/plain");
+			resp.setCharacterEncoding("ISO-8859-1");
 
-            Writer w = resp.getWriter();
+			Writer w = resp.getWriter();
 
-            // Wrap with a buffer if necessary
-            String useBufferStr = req.getParameter("useBuffer");
-            if (useBufferStr != null) {
-                w = new BufferedWriter(w);
-            }
+			// Wrap with a buffer if necessary
+			String useBufferStr = req.getParameter("useBuffer");
+			if (useBufferStr != null) {
+				w = new BufferedWriter(w);
+			}
 
-            long start = System.nanoTime();
-            for (int i = 0; i < writeCount; i++) {
-                w.write(writeString);
-            }
-            if (useBufferStr != null) {
-                w.flush();
-            }
-            long lastRunNano = System.nanoTime() - start;
+			long start = System.nanoTime();
+			for (int i = 0; i < writeCount; i++) {
+				w.write(writeString);
+			}
+			if (useBufferStr != null) {
+				w.flush();
+			}
+			long lastRunNano = System.nanoTime() - start;
 
-            System.out.println("Write length: " + writeString.length() +
-                    ", Buffered: " + (useBufferStr == null ? "n" : "y") +
-                    ", Time: " + lastRunNano + "ns");
-        }
-    }
+			System.out.println("Write length: " + writeString.length()
+					+ ", Buffered: " + (useBufferStr == null ? "n" : "y")
+					+ ", Time: " + lastRunNano + "ns");
+		}
+	}
 
-    private static class Bug52577Servlet extends HttpServlet {
+	private static class Bug52577Servlet extends HttpServlet {
 
-        private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-                throws ServletException, IOException {
-            Writer w = resp.getWriter();
-            w.write("OK");
-            resp.resetBuffer();
-            w.write("OK");
-        }
-    }
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			Writer w = resp.getWriter();
+			w.write("OK");
+			resp.resetBuffer();
+			w.write("OK");
+		}
+	}
 }

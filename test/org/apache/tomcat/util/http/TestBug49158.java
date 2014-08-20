@@ -43,45 +43,45 @@ import org.apache.tomcat.util.buf.ByteChunk;
  * to facilitate this when running the unit tests via Ant.
  */
 public class TestBug49158 extends CookiesBaseTest {
-    public static final String path = "49158";
+	public static final String path = "49158";
 
-    @Override
-    @Test
-    public void testCookiesInstance() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
-        addServlets(tomcat);
-        tomcat.start();
-        Map<String,List<String>> headers = new HashMap<String,List<String>>();
-        ByteChunk res = new ByteChunk();
-        getUrl("http://localhost:" + getPort() + "/"+path, res, headers);
-        List<String> cookieHeaders = headers.get("Set-Cookie");
-        assertEquals("There should only be one Set-Cookie header in this test",
-                1, cookieHeaders.size());
-    }
+	@Override
+	@Test
+	public void testCookiesInstance() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
+		addServlets(tomcat);
+		tomcat.start();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		ByteChunk res = new ByteChunk();
+		getUrl("http://localhost:" + getPort() + "/" + path, res, headers);
+		List<String> cookieHeaders = headers.get("Set-Cookie");
+		assertEquals("There should only be one Set-Cookie header in this test",
+				1, cookieHeaders.size());
+	}
 
-    public static void addServlets(Tomcat tomcat) {
-        // Must have a real docBase - just use temp
-        Context ctx =
-            tomcat.addContext("", System.getProperty("java.io.tmpdir"));
+	public static void addServlets(Tomcat tomcat) {
+		// Must have a real docBase - just use temp
+		Context ctx = tomcat.addContext("",
+				System.getProperty("java.io.tmpdir"));
 
-        Tomcat.addServlet(ctx, path, new TestBug49158Servlet());
-        ctx.addServletMapping("/"+path, path);
-    }
+		Tomcat.addServlet(ctx, path, new TestBug49158Servlet());
+		ctx.addServletMapping("/" + path, path);
+	}
 
-    public static class TestBug49158Servlet extends HttpServlet {
+	public static class TestBug49158Servlet extends HttpServlet {
 
-        private static final long serialVersionUID = 2725990508758127399L;
+		private static final long serialVersionUID = 2725990508758127399L;
 
-        @Override
-        public void service(HttpServletRequest req, HttpServletResponse res)
-                throws ServletException, IOException {
-            HttpSession session = req.getSession();
-            session.invalidate();
-            session = req.getSession();
-            session.invalidate();
-            req.getSession();
-        }
+		@Override
+		public void service(HttpServletRequest req, HttpServletResponse res)
+				throws ServletException, IOException {
+			HttpSession session = req.getSession();
+			session.invalidate();
+			session = req.getSession();
+			session.invalidate();
+			req.getSession();
+		}
 
-    }
+	}
 
 }

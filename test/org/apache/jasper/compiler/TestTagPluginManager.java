@@ -34,42 +34,42 @@ import org.apache.catalina.startup.TomcatBaseTest;
  */
 public class TestTagPluginManager extends TomcatBaseTest {
 
-    private static TagInfo tagInfo = new TagInfo("ATag",
-            "org.apache.jasper.compiler.ATagSupport", "", "", null, null, null);
+	private static TagInfo tagInfo = new TagInfo("ATag",
+			"org.apache.jasper.compiler.ATagSupport", "", "", null, null, null);
 
-    @Test
-    public void testBug54240() throws Exception {
-        Tomcat tomcat = getTomcatInstance();
+	@Test
+	public void testBug54240() throws Exception {
+		Tomcat tomcat = getTomcatInstance();
 
-        File appDir = new File("test/webapp-3.0");
-        Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
-        tomcat.start();
+		File appDir = new File("test/webapp-3.0");
+		Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+		tomcat.start();
 
-        ServletContext context = ctx.getServletContext();
+		ServletContext context = ctx.getServletContext();
 
-        TagPluginManager manager = new TagPluginManager(context);
+		TagPluginManager manager = new TagPluginManager(context);
 
-        Node.Nodes nodes = new Node.Nodes();
-        Node.CustomTag c = new Node.CustomTag("test:ATag", "test", "ATag",
-                "http://tomcat.apache.org/jasper", null, null, null, null, null,
-                new TagFileInfo("ATag", "http://tomcat.apache.org/jasper",
-                        tagInfo));
-        c.setTagHandlerClass(TesterTag.class);
-        nodes.add(c);
-        manager.apply(nodes, null, null);
+		Node.Nodes nodes = new Node.Nodes();
+		Node.CustomTag c = new Node.CustomTag("test:ATag", "test", "ATag",
+				"http://tomcat.apache.org/jasper", null, null, null, null,
+				null, new TagFileInfo("ATag",
+						"http://tomcat.apache.org/jasper", tagInfo));
+		c.setTagHandlerClass(TesterTag.class);
+		nodes.add(c);
+		manager.apply(nodes, null, null);
 
-        Node n = nodes.getNode(0);
-        Assert.assertNotNull(n);
-        Assert.assertTrue(n instanceof Node.CustomTag);
+		Node n = nodes.getNode(0);
+		Assert.assertNotNull(n);
+		Assert.assertTrue(n instanceof Node.CustomTag);
 
-        Node.CustomTag t = (Node.CustomTag)n;
-        Assert.assertNotNull(t.getAtSTag());
+		Node.CustomTag t = (Node.CustomTag) n;
+		Assert.assertNotNull(t.getAtSTag());
 
-        Node.Nodes sTag = c.getAtSTag();
-        Node scriptlet = sTag.getNode(0);
-        Assert.assertNotNull(scriptlet);
-        Assert.assertTrue(scriptlet instanceof Node.Scriptlet);
-        Node.Scriptlet s = (Node.Scriptlet)scriptlet;
-        Assert.assertEquals("//Just a comment", s.getText());
-    }
+		Node.Nodes sTag = c.getAtSTag();
+		Node scriptlet = sTag.getNode(0);
+		Assert.assertNotNull(scriptlet);
+		Assert.assertTrue(scriptlet instanceof Node.Scriptlet);
+		Node.Scriptlet s = (Node.Scriptlet) scriptlet;
+		Assert.assertEquals("//Just a comment", s.getText());
+	}
 }

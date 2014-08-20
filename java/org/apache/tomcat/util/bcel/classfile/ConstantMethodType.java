@@ -23,58 +23,54 @@ import java.io.IOException;
 import org.apache.tomcat.util.bcel.Constants;
 
 /**
- * This class is derived from the abstract
- * <A HREF="org.apache.bcel.classfile.Constant.html">Constant</A> class
- * and represents a reference to a method type.
+ * This class is derived from the abstract <A
+ * HREF="org.apache.bcel.classfile.Constant.html">Constant</A> class and
+ * represents a reference to a method type.
  *
- * @see     Constant
+ * @see Constant
  */
 public final class ConstantMethodType extends Constant {
 
-    private static final long serialVersionUID = 6750768220616618881L;
-    private int descriptor_index;
+	private static final long serialVersionUID = 6750768220616618881L;
+	private int descriptor_index;
 
+	/**
+	 * Initialize from another object.
+	 */
+	public ConstantMethodType(ConstantMethodType c) {
+		this(c.getDescriptorIndex());
+	}
 
-    /**
-     * Initialize from another object.
-     */
-    public ConstantMethodType(ConstantMethodType c) {
-        this(c.getDescriptorIndex());
-    }
+	/**
+	 * Initialize instance from file data.
+	 *
+	 * @param file
+	 *            Input stream
+	 * @throws IOException
+	 */
+	ConstantMethodType(DataInput file) throws IOException {
+		this(file.readUnsignedShort());
+	}
 
+	public ConstantMethodType(int descriptor_index) {
+		super(Constants.CONSTANT_MethodType);
+		this.descriptor_index = descriptor_index;
+	}
 
-    /**
-     * Initialize instance from file data.
-     *
-     * @param file Input stream
-     * @throws IOException
-     */
-    ConstantMethodType(DataInput file) throws IOException {
-        this(file.readUnsignedShort());
-    }
+	public int getDescriptorIndex() {
+		return descriptor_index;
+	}
 
+	public void setDescriptorIndex(int descriptor_index) {
+		this.descriptor_index = descriptor_index;
+	}
 
-    public ConstantMethodType(int descriptor_index) {
-        super(Constants.CONSTANT_MethodType);
-        this.descriptor_index = descriptor_index;
-    }
-
-
-    public int getDescriptorIndex() {
-        return descriptor_index;
-    }
-
-
-    public void setDescriptorIndex(int descriptor_index) {
-        this.descriptor_index = descriptor_index;
-    }
-
-
-    /**
-     * @return String representation
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(descriptor_index = " + descriptor_index + ")";
-    }
+	/**
+	 * @return String representation
+	 */
+	@Override
+	public final String toString() {
+		return super.toString() + "(descriptor_index = " + descriptor_index
+				+ ")";
+	}
 }

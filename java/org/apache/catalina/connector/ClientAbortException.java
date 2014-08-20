@@ -19,128 +19,120 @@ package org.apache.catalina.connector;
 import java.io.IOException;
 
 /**
- * Wrap an IOException identifying it as being caused by an abort
- * of a request by a remote client.
+ * Wrap an IOException identifying it as being caused by an abort of a request
+ * by a remote client.
  *
  * @author Glenn L. Nielsen
  */
 
 public final class ClientAbortException extends IOException {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
+	// ------------------------------------------------------------ Constructors
 
-    //------------------------------------------------------------ Constructors
+	/**
+	 * Construct a new ClientAbortException with no other information.
+	 */
+	public ClientAbortException() {
 
-    /**
-     * Construct a new ClientAbortException with no other information.
-     */
-    public ClientAbortException() {
+		this(null, null);
 
-        this(null, null);
+	}
 
-    }
+	/**
+	 * Construct a new ClientAbortException for the specified message.
+	 *
+	 * @param message
+	 *            Message describing this exception
+	 */
+	public ClientAbortException(String message) {
 
+		this(message, null);
 
-    /**
-     * Construct a new ClientAbortException for the specified message.
-     *
-     * @param message Message describing this exception
-     */
-    public ClientAbortException(String message) {
+	}
 
-        this(message, null);
+	/**
+	 * Construct a new ClientAbortException for the specified throwable.
+	 *
+	 * @param throwable
+	 *            Throwable that caused this exception
+	 */
+	public ClientAbortException(Throwable throwable) {
 
-    }
+		this(null, throwable);
 
+	}
 
-    /**
-     * Construct a new ClientAbortException for the specified throwable.
-     *
-     * @param throwable Throwable that caused this exception
-     */
-    public ClientAbortException(Throwable throwable) {
+	/**
+	 * Construct a new ClientAbortException for the specified message and
+	 * throwable.
+	 *
+	 * @param message
+	 *            Message describing this exception
+	 * @param throwable
+	 *            Throwable that caused this exception
+	 */
+	public ClientAbortException(String message, Throwable throwable) {
 
-        this(null, throwable);
+		super();
+		this.message = message;
+		this.throwable = throwable;
 
-    }
+	}
 
+	// ------------------------------------------------------ Instance Variables
 
-    /**
-     * Construct a new ClientAbortException for the specified message
-     * and throwable.
-     *
-     * @param message Message describing this exception
-     * @param throwable Throwable that caused this exception
-     */
-    public ClientAbortException(String message, Throwable throwable) {
+	/**
+	 * The error message passed to our constructor (if any)
+	 */
+	protected String message = null;
 
-        super();
-        this.message = message;
-        this.throwable = throwable;
+	/**
+	 * The underlying exception or error passed to our constructor (if any)
+	 */
+	protected Throwable throwable = null;
 
-    }
+	// ---------------------------------------------------------- Public Methods
 
+	/**
+	 * Returns the message associated with this exception, if any.
+	 */
+	@Override
+	public String getMessage() {
 
-    //------------------------------------------------------ Instance Variables
+		return (message);
 
+	}
 
-    /**
-     * The error message passed to our constructor (if any)
-     */
-    protected String message = null;
+	/**
+	 * Returns the cause that caused this exception, if any.
+	 */
+	@Override
+	public Throwable getCause() {
 
+		return (throwable);
 
-    /**
-     * The underlying exception or error passed to our constructor (if any)
-     */
-    protected Throwable throwable = null;
+	}
 
+	/**
+	 * Return a formatted string that describes this exception.
+	 */
+	@Override
+	public String toString() {
 
-    //---------------------------------------------------------- Public Methods
+		StringBuilder sb = new StringBuilder("ClientAbortException:  ");
+		if (message != null) {
+			sb.append(message);
+			if (throwable != null) {
+				sb.append(":  ");
+			}
+		}
+		if (throwable != null) {
+			sb.append(throwable.toString());
+		}
+		return (sb.toString());
 
-
-    /**
-     * Returns the message associated with this exception, if any.
-     */
-    @Override
-    public String getMessage() {
-
-        return (message);
-
-    }
-
-
-    /**
-     * Returns the cause that caused this exception, if any.
-     */
-    @Override
-    public Throwable getCause() {
-
-        return (throwable);
-
-    }
-
-
-    /**
-     * Return a formatted string that describes this exception.
-     */
-    @Override
-    public String toString() {
-
-        StringBuilder sb = new StringBuilder("ClientAbortException:  ");
-        if (message != null) {
-            sb.append(message);
-            if (throwable != null) {
-                sb.append(":  ");
-            }
-        }
-        if (throwable != null) {
-            sb.append(throwable.toString());
-        }
-        return (sb.toString());
-
-    }
-
+	}
 
 }

@@ -20,13 +20,13 @@ import org.junit.Test;
 
 public class TestELContext {
 
-    /**
-     * Tests that a null key results in an NPE as per EL Javadoc.
-     */
-    @Test(expected = NullPointerException.class)
-    public void testGetContext() {
-        ELContext elContext = new TesterELContext();
-        elContext.getContext(null);
-    }
+	/**
+	 * Tests that a null key results in an NPE as per EL Javadoc.
+	 */
+	@Test(expected = NullPointerException.class)
+	public void testGetContext() {
+		ELContext elContext = new TesterELContext();
+		elContext.getContext(null);
+	}
 
 }

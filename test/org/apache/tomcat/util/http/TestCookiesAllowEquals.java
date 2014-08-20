@@ -35,75 +35,72 @@ import org.apache.catalina.startup.TomcatBaseTest;
 
 public class TestCookiesAllowEquals extends TomcatBaseTest {
 
-    private static final String COOKIE_WITH_EQUALS_1 = "name=equals=middle";
-    private static final String COOKIE_WITH_EQUALS_2 = "name==equalsstart";
-    private static final String COOKIE_WITH_EQUALS_3 = "name=equalsend=";
+	private static final String COOKIE_WITH_EQUALS_1 = "name=equals=middle";
+	private static final String COOKIE_WITH_EQUALS_2 = "name==equalsstart";
+	private static final String COOKIE_WITH_EQUALS_3 = "name=equalsend=";
 
-    @Test
-    public void testWithEquals() throws Exception {
-        System.setProperty(
-                "org.apache.tomcat.util.http.ServerCookie.ALLOW_EQUALS_IN_VALUE",
-                "true");
+	@Test
+	public void testWithEquals() throws Exception {
+		System.setProperty(
+				"org.apache.tomcat.util.http.ServerCookie.ALLOW_EQUALS_IN_VALUE",
+				"true");
 
-        TestCookieEqualsClient client = new TestCookieEqualsClient();
-        client.doRequest();
-    }
+		TestCookieEqualsClient client = new TestCookieEqualsClient();
+		client.doRequest();
+	}
 
-    private class TestCookieEqualsClient extends SimpleHttpClient {
+	private class TestCookieEqualsClient extends SimpleHttpClient {
 
+		private void doRequest() throws Exception {
+			Tomcat tomcat = getTomcatInstance();
+			Context root = tomcat.addContext("", TEMP_DIR);
+			Tomcat.addServlet(root, "Simple", new SimpleServlet());
+			root.addServletMapping("/test", "Simple");
 
-        private void doRequest() throws Exception {
-            Tomcat tomcat = getTomcatInstance();
-            Context root = tomcat.addContext("", TEMP_DIR);
-            Tomcat.addServlet(root, "Simple", new SimpleServlet());
-            root.addServletMapping("/test", "Simple");
+			tomcat.start();
+			// Open connection
+			setPort(tomcat.getConnector().getLocalPort());
+			connect();
 
-            tomcat.start();
-            // Open connection
-            setPort(tomcat.getConnector().getLocalPort());
-            connect();
+			String[] request = new String[1];
+			request[0] = "GET /test HTTP/1.0" + CRLF + "Cookie: "
+					+ COOKIE_WITH_EQUALS_1 + CRLF + "Cookie: "
+					+ COOKIE_WITH_EQUALS_2 + CRLF + "Cookie: "
+					+ COOKIE_WITH_EQUALS_3 + CRLF + CRLF;
+			setRequest(request);
+			processRequest(true); // blocks until response has been read
+			String response = getResponseBody();
 
-            String[] request = new String[1];
-            request[0] =
-                "GET /test HTTP/1.0" + CRLF +
-                "Cookie: " + COOKIE_WITH_EQUALS_1 + CRLF +
-                "Cookie: " + COOKIE_WITH_EQUALS_2 + CRLF +
-                "Cookie: " + COOKIE_WITH_EQUALS_3 + CRLF + CRLF;
-            setRequest(request);
-            processRequest(true); // blocks until response has been read
-            String response = getResponseBody();
+			// Close the connection
+			disconnect();
+			reset();
+			tomcat.stop();
+			assertEquals(COOKIE_WITH_EQUALS_1 + COOKIE_WITH_EQUALS_2
+					+ COOKIE_WITH_EQUALS_3, response);
+		}
 
-            // Close the connection
-            disconnect();
-            reset();
-            tomcat.stop();
-            assertEquals(COOKIE_WITH_EQUALS_1 + COOKIE_WITH_EQUALS_2 +
-                    COOKIE_WITH_EQUALS_3, response);
-        }
+		@Override
+		public boolean isResponseBodyOK() {
+			return true;
+		}
 
-        @Override
-        public boolean isResponseBodyOK() {
-            return true;
-        }
+	}
 
-    }
+	private static class SimpleServlet extends HttpServlet {
 
+		private static final long serialVersionUID = 1L;
 
-    private static class SimpleServlet extends HttpServlet {
+		@Override
+		protected void service(HttpServletRequest req, HttpServletResponse resp)
+				throws ServletException, IOException {
+			Cookie cookies[] = req.getCookies();
+			for (Cookie cookie : cookies) {
+				resp.getWriter().write(
+						cookie.getName() + "=" + cookie.getValue());
+			}
+			resp.flushBuffer();
+		}
 
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected void service(HttpServletRequest req, HttpServletResponse resp)
-        throws ServletException, IOException {
-            Cookie cookies[] = req.getCookies();
-            for (Cookie cookie : cookies) {
-                resp.getWriter().write(cookie.getName() + "=" +
-                        cookie.getValue());
-            }
-            resp.flushBuffer();
-        }
-
-    }
+	}
 
 }

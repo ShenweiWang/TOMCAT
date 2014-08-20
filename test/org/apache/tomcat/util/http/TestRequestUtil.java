@@ -22,12 +22,12 @@ import org.junit.Test;
 
 public class TestRequestUtil {
 
-    @Test
-    public void testNormalizeString() {
-        assertEquals("/something",RequestUtil.normalize("//something"));
-        assertEquals("/some/thing",RequestUtil.normalize("some//thing"));
-        assertEquals("/something/",RequestUtil.normalize("something//"));
-        assertEquals("/",RequestUtil.normalize("//"));
-    }
+	@Test
+	public void testNormalizeString() {
+		assertEquals("/something", RequestUtil.normalize("//something"));
+		assertEquals("/some/thing", RequestUtil.normalize("some//thing"));
+		assertEquals("/something/", RequestUtil.normalize("something//"));
+		assertEquals("/", RequestUtil.normalize("//"));
+	}
 
 }

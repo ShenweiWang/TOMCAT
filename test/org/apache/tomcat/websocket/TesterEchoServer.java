@@ -31,159 +31,153 @@ import org.apache.tomcat.websocket.server.WsContextListener;
 
 public class TesterEchoServer {
 
-    public static class Config extends WsContextListener {
+	public static class Config extends WsContextListener {
 
-        public static final String PATH_ASYNC = "/echoAsync";
-        public static final String PATH_BASIC = "/echoBasic";
-        public static final String PATH_BASIC_LIMIT_LOW = "/echoBasicLimitLow";
-        public static final String PATH_BASIC_LIMIT_HIGH = "/echoBasicLimitHigh";
+		public static final String PATH_ASYNC = "/echoAsync";
+		public static final String PATH_BASIC = "/echoBasic";
+		public static final String PATH_BASIC_LIMIT_LOW = "/echoBasicLimitLow";
+		public static final String PATH_BASIC_LIMIT_HIGH = "/echoBasicLimitHigh";
 
-        @Override
-        public void contextInitialized(ServletContextEvent sce) {
-            super.contextInitialized(sce);
-            ServerContainer sc =
-                    (ServerContainer) sce.getServletContext().getAttribute(
-                            Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
-            try {
-                sc.addEndpoint(Async.class);
-                sc.addEndpoint(Basic.class);
-                sc.addEndpoint(BasicLimitLow.class);
-                sc.addEndpoint(BasicLimitHigh.class);
-            } catch (DeploymentException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-    }
+		@Override
+		public void contextInitialized(ServletContextEvent sce) {
+			super.contextInitialized(sce);
+			ServerContainer sc = (ServerContainer) sce
+					.getServletContext()
+					.getAttribute(
+							Constants.SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE);
+			try {
+				sc.addEndpoint(Async.class);
+				sc.addEndpoint(Basic.class);
+				sc.addEndpoint(BasicLimitLow.class);
+				sc.addEndpoint(BasicLimitHigh.class);
+			} catch (DeploymentException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
 
-    @ServerEndpoint("/echoAsync")
-    public static class Async {
+	@ServerEndpoint("/echoAsync")
+	public static class Async {
 
-        @OnMessage
-        public void echoTextMessage(Session session, String msg, boolean last) {
-            try {
-                session.getBasicRemote().sendText(msg, last);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
+		@OnMessage
+		public void echoTextMessage(Session session, String msg, boolean last) {
+			try {
+				session.getBasicRemote().sendText(msg, last);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
 
+		@OnMessage
+		public void echoBinaryMessage(Session session, ByteBuffer msg,
+				boolean last) {
+			try {
+				session.getBasicRemote().sendBinary(msg, last);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
+	}
 
-        @OnMessage
-        public void echoBinaryMessage(Session session, ByteBuffer msg,
-                boolean last) {
-            try {
-                session.getBasicRemote().sendBinary(msg, last);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-    }
+	@ServerEndpoint("/echoBasic")
+	public static class Basic {
+		@OnMessage
+		public void echoTextMessage(Session session, String msg) {
+			try {
+				session.getBasicRemote().sendText(msg);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
 
+		@OnMessage
+		public void echoBinaryMessage(Session session, ByteBuffer msg) {
+			try {
+				session.getBasicRemote().sendBinary(msg);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
+	}
 
-    @ServerEndpoint("/echoBasic")
-    public static class Basic {
-        @OnMessage
-        public void echoTextMessage(Session session, String msg) {
-            try {
-                session.getBasicRemote().sendText(msg);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
+	@ServerEndpoint("/echoBasicLimitLow")
+	public static class BasicLimitLow {
 
+		public static final long MAX_SIZE = 10;
 
-        @OnMessage
-        public void echoBinaryMessage(Session session, ByteBuffer msg) {
-            try {
-                session.getBasicRemote().sendBinary(msg);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-    }
+		@OnMessage(maxMessageSize = MAX_SIZE)
+		public void echoTextMessage(Session session, String msg) {
+			try {
+				session.getBasicRemote().sendText(msg);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
 
+		@OnMessage(maxMessageSize = MAX_SIZE)
+		public void echoBinaryMessage(Session session, ByteBuffer msg) {
+			try {
+				session.getBasicRemote().sendBinary(msg);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
+	}
 
-    @ServerEndpoint("/echoBasicLimitLow")
-    public static class BasicLimitLow {
+	@ServerEndpoint("/echoBasicLimitHigh")
+	public static class BasicLimitHigh {
 
-        public static final long MAX_SIZE = 10;
+		public static final long MAX_SIZE = 32 * 1024;
 
-        @OnMessage(maxMessageSize = MAX_SIZE)
-        public void echoTextMessage(Session session, String msg) {
-            try {
-                session.getBasicRemote().sendText(msg);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
+		@OnMessage(maxMessageSize = MAX_SIZE)
+		public void echoTextMessage(Session session, String msg) {
+			try {
+				session.getBasicRemote().sendText(msg);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
 
-
-        @OnMessage(maxMessageSize = MAX_SIZE)
-        public void echoBinaryMessage(Session session, ByteBuffer msg) {
-            try {
-                session.getBasicRemote().sendBinary(msg);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-    }
-
-
-    @ServerEndpoint("/echoBasicLimitHigh")
-    public static class BasicLimitHigh {
-
-        public static final long MAX_SIZE = 32 * 1024;
-
-        @OnMessage(maxMessageSize = MAX_SIZE)
-        public void echoTextMessage(Session session, String msg) {
-            try {
-                session.getBasicRemote().sendText(msg);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-
-
-        @OnMessage(maxMessageSize = MAX_SIZE)
-        public void echoBinaryMessage(Session session, ByteBuffer msg) {
-            try {
-                session.getBasicRemote().sendBinary(msg);
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-    }
+		@OnMessage(maxMessageSize = MAX_SIZE)
+		public void echoBinaryMessage(Session session, ByteBuffer msg) {
+			try {
+				session.getBasicRemote().sendBinary(msg);
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
+	}
 
 }

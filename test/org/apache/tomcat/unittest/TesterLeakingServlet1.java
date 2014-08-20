@@ -25,31 +25,30 @@ import javax.servlet.http.HttpServletResponse;
 
 public class TesterLeakingServlet1 extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private ThreadLocal<TesterCounter> myThreadLocal = new ThreadLocal<TesterCounter>();
+	private ThreadLocal<TesterCounter> myThreadLocal = new ThreadLocal<TesterCounter>();
 
-    @Override
-    protected void doGet(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException,
-            IOException {
+	@Override
+	protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
 
-        TesterCounter counter = myThreadLocal.get();
-        if (counter == null) {
-            counter = new TesterCounter();
-            myThreadLocal.set(counter);
-        }
+		TesterCounter counter = myThreadLocal.get();
+		if (counter == null) {
+			counter = new TesterCounter();
+			myThreadLocal.set(counter);
+		}
 
-        counter.increment();
-        response.getWriter().println(
-                "The current thread served this servlet "
-                        + counter.getCount() + " times");
-    }
+		counter.increment();
+		response.getWriter().println(
+				"The current thread served this servlet " + counter.getCount()
+						+ " times");
+	}
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        // normally not needed, just to make my point
-        myThreadLocal = null;
-    }
+	@Override
+	public void destroy() {
+		super.destroy();
+		// normally not needed, just to make my point
+		myThreadLocal = null;
+	}
 }

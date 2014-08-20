@@ -18,26 +18,26 @@ package javax.el;
 
 public class TesterBean {
 
-    private String name;
+	private String name;
 
-    public TesterBean(String name) {
-        this.name = name;
-    }
+	public TesterBean(String name) {
+		this.name = name;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    @Override
-    public String toString() {
-        return getName();
-    }
+	@Override
+	public String toString() {
+		return getName();
+	}
 
-    public String getValueA() throws Exception {
-        throw new Exception();
-    }
+	public String getValueA() throws Exception {
+		throw new Exception();
+	}
 }

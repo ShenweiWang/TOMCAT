@@ -37,152 +37,143 @@ import org.apache.tomcat.util.ExceptionUtils;
  */
 public class TesterWsClientAutobahn {
 
-    private static final String HOST = "localhost";
-    private static final int PORT = 9001;
-    private static final String USER_AGENT = "ApacheTomcat8WebSocketClient";
+	private static final String HOST = "localhost";
+	private static final int PORT = 9001;
+	private static final String USER_AGENT = "ApacheTomcat8WebSocketClient";
 
+	public static void main(String[] args) throws Exception {
 
-    public static void main(String[] args) throws Exception {
+		WebSocketContainer wsc = ContainerProvider.getWebSocketContainer();
 
-        WebSocketContainer wsc = ContainerProvider.getWebSocketContainer();
+		int testCaseCount = getTestCaseCount(wsc);
+		System.out.println("There are " + testCaseCount + " test cases");
+		for (int testCase = 1; testCase <= testCaseCount; testCase++) {
+			if (testCase % 50 == 0) {
+				System.out.println(testCase);
+			} else {
+				System.out.print('.');
+			}
+			try {
+				executeTestCase(wsc, testCase);
+			} catch (Throwable t) {
+				ExceptionUtils.handleThrowable(t);
+				t.printStackTrace();
+			}
 
-        int testCaseCount = getTestCaseCount(wsc);
-        System.out.println("There are " + testCaseCount + " test cases");
-        for (int testCase = 1; testCase <= testCaseCount; testCase++) {
-            if (testCase % 50 == 0) {
-                System.out.println(testCase);
-            } else {
-                System.out.print('.');
-            }
-            try {
-                executeTestCase(wsc, testCase);
-            } catch (Throwable t) {
-                ExceptionUtils.handleThrowable(t);
-                t.printStackTrace();
-            }
+		}
+		System.out.println("Testing complete");
+		updateReports(wsc);
+	}
 
-        }
-        System.out.println("Testing complete");
-        updateReports(wsc);
-    }
+	private static int getTestCaseCount(WebSocketContainer wsc)
+			throws Exception {
 
+		URI uri = new URI("ws://" + HOST + ":" + PORT + "/getCaseCount");
+		CaseCountClient caseCountClient = new CaseCountClient();
+		wsc.connectToServer(caseCountClient, uri);
+		return caseCountClient.getCaseCount();
+	}
 
-    private static int getTestCaseCount(WebSocketContainer wsc)
-            throws Exception {
+	private static void executeTestCase(WebSocketContainer wsc, int testCase)
+			throws Exception {
+		URI uri = new URI("ws://" + HOST + ":" + PORT + "/runCase?case="
+				+ testCase + "&agent=" + USER_AGENT);
+		TestCaseClient testCaseClient = new TestCaseClient();
+		wsc.connectToServer(testCaseClient, uri);
+		testCaseClient.waitForClose();
+	}
 
-        URI uri = new URI("ws://" + HOST + ":" + PORT + "/getCaseCount");
-        CaseCountClient caseCountClient = new CaseCountClient();
-        wsc.connectToServer(caseCountClient, uri);
-        return caseCountClient.getCaseCount();
-    }
+	private static void updateReports(WebSocketContainer wsc) throws Exception {
 
+		URI uri = new URI("ws://" + HOST + ":" + PORT + "/updateReports?agent="
+				+ USER_AGENT);
+		UpdateReportsClient updateReportsClient = new UpdateReportsClient();
+		wsc.connectToServer(updateReportsClient, uri);
+	}
 
-    private static void executeTestCase(WebSocketContainer wsc, int testCase)
-            throws Exception {
-        URI uri = new URI("ws://" + HOST + ":" + PORT + "/runCase?case=" +
-                testCase + "&agent=" + USER_AGENT);
-        TestCaseClient testCaseClient = new TestCaseClient();
-        wsc.connectToServer(testCaseClient, uri);
-        testCaseClient.waitForClose();
-    }
+	@ClientEndpoint
+	public static class CaseCountClient {
 
+		private final CountDownLatch latch = new CountDownLatch(1);
+		private volatile int caseCount = 0;
 
-    private static void updateReports(WebSocketContainer wsc)
-            throws Exception {
+		// Need to wait for message
+		public int getCaseCount() throws InterruptedException {
+			latch.await();
+			return caseCount;
+		}
 
-        URI uri = new URI("ws://" + HOST + ":" + PORT +
-                "/updateReports?agent=" + USER_AGENT);
-        UpdateReportsClient updateReportsClient = new UpdateReportsClient();
-        wsc.connectToServer(updateReportsClient, uri);
-    }
+		@OnMessage
+		public void onMessage(String msg) {
+			latch.countDown();
+			caseCount = Integer.valueOf(msg).intValue();
+		}
 
+		@OnError
+		public void onError(Throwable t) {
+			latch.countDown();
+			t.printStackTrace();
+		}
+	}
 
-    @ClientEndpoint
-    public static class CaseCountClient {
+	@ClientEndpoint
+	public static class TestCaseClient {
 
-        private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile int caseCount = 0;
+		private final CountDownLatch latch = new CountDownLatch(1);
 
-        // Need to wait for message
-        public int getCaseCount() throws InterruptedException {
-            latch.await();
-            return caseCount;
-        }
+		public void waitForClose() throws InterruptedException {
+			latch.await();
+		}
 
-        @OnMessage
-        public void onMessage(String msg) {
-            latch.countDown();
-            caseCount = Integer.valueOf(msg).intValue();
-        }
+		@OnMessage
+		public void echoTextMessage(Session session, String msg, boolean last) {
+			try {
+				if (session.isOpen()) {
+					session.getBasicRemote().sendText(msg, last);
+				}
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
 
+		@OnMessage
+		public void echoBinaryMessage(Session session, ByteBuffer bb,
+				boolean last) {
+			try {
+				if (session.isOpen()) {
+					session.getBasicRemote().sendBinary(bb, last);
+				}
+			} catch (IOException e) {
+				try {
+					session.close();
+				} catch (IOException e1) {
+					// Ignore
+				}
+			}
+		}
 
-        @OnError
-        public void onError(Throwable t) {
-            latch.countDown();
-            t.printStackTrace();
-        }
-    }
+		@OnClose
+		public void releaseLatch() {
+			latch.countDown();
+		}
+	}
 
+	@ClientEndpoint
+	public static class UpdateReportsClient {
 
-    @ClientEndpoint
-    public static class TestCaseClient {
+		private final CountDownLatch latch = new CountDownLatch(1);
 
-        private final CountDownLatch latch = new CountDownLatch(1);
+		public void waitForClose() throws InterruptedException {
+			latch.await();
+		}
 
-        public void waitForClose() throws InterruptedException {
-            latch.await();
-        }
-
-        @OnMessage
-        public void echoTextMessage(Session session, String msg, boolean last) {
-            try {
-                if (session.isOpen()) {
-                    session.getBasicRemote().sendText(msg, last);
-                }
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-
-        @OnMessage
-        public void echoBinaryMessage(Session session, ByteBuffer bb,
-                boolean last) {
-            try {
-                if (session.isOpen()) {
-                    session.getBasicRemote().sendBinary(bb, last);
-                }
-            } catch (IOException e) {
-                try {
-                    session.close();
-                } catch (IOException e1) {
-                    // Ignore
-                }
-            }
-        }
-
-        @OnClose
-        public void releaseLatch() {
-            latch.countDown();
-        }
-    }
-
-
-    @ClientEndpoint
-    public static class UpdateReportsClient {
-
-        private final CountDownLatch latch = new CountDownLatch(1);
-
-        public void waitForClose() throws InterruptedException {
-            latch.await();
-        }
-
-        @OnClose
-        public void onClose() {
-            latch.countDown();
-        }
-    }
+		@OnClose
+		public void onClose() {
+			latch.countDown();
+		}
+	}
 }

@@ -32,186 +32,181 @@ import org.apache.tomcat.util.res.StringManager;
  */
 public abstract class AbstractProcessor<S> implements ActionHook, Processor<S> {
 
-    protected static final StringManager sm = StringManager.getManager(Constants.Package);
+	protected static final StringManager sm = StringManager
+			.getManager(Constants.Package);
 
-    protected Adapter adapter;
-    protected AsyncStateMachine<S> asyncStateMachine;
-    protected AbstractEndpoint<S> endpoint;
-    protected Request request;
-    protected Response response;
-    protected SocketWrapper<S> socketWrapper = null;
+	protected Adapter adapter;
+	protected AsyncStateMachine<S> asyncStateMachine;
+	protected AbstractEndpoint<S> endpoint;
+	protected Request request;
+	protected Response response;
+	protected SocketWrapper<S> socketWrapper = null;
 
-    /**
-     * Error state for the request/response currently being processed.
-     */
-    private ErrorState errorState = ErrorState.NONE;
+	/**
+	 * Error state for the request/response currently being processed.
+	 */
+	private ErrorState errorState = ErrorState.NONE;
 
+	/**
+	 * Intended for use by the Upgrade sub-classes that have no need to
+	 * initialise the request, response, etc.
+	 */
+	protected AbstractProcessor() {
+		// NOOP
+	}
 
-    /**
-     * Intended for use by the Upgrade sub-classes that have no need to
-     * initialise the request, response, etc.
-     */
-    protected AbstractProcessor() {
-        // NOOP
-    }
+	public AbstractProcessor(AbstractEndpoint<S> endpoint) {
+		this.endpoint = endpoint;
+		asyncStateMachine = new AsyncStateMachine<S>(this);
+		request = new Request();
+		response = new Response();
+		response.setHook(this);
+		request.setResponse(response);
+	}
 
-    public AbstractProcessor(AbstractEndpoint<S> endpoint) {
-        this.endpoint = endpoint;
-        asyncStateMachine = new AsyncStateMachine<S>(this);
-        request = new Request();
-        response = new Response();
-        response.setHook(this);
-        request.setResponse(response);
-    }
+	/**
+	 * Update the current error state to the new error state if the new error
+	 * state is more severe than the current error state.
+	 */
+	protected void setErrorState(ErrorState errorState, Throwable t) {
+		boolean blockIo = this.errorState.isIoAllowed()
+				&& !errorState.isIoAllowed();
+		this.errorState = this.errorState.getMostSevere(errorState);
+		if (blockIo && !ContainerThreadMarker.isContainerThread()) {
+			// The error occurred on a non-container thread which means not all
+			// of the necessary clean-up will have been completed. Dispatch to
+			// a container thread to do the clean-up. Need to do it this way to
+			// ensure that all the necessary clean-up is performed.
+			if (response.getStatus() < 400) {
+				response.setStatus(500);
+			}
+			getLog().info(
+					sm.getString("abstractProcessor.nonContainerThreadError"),
+					t);
+			getEndpoint().processSocketAsync(socketWrapper,
+					SocketStatus.CLOSE_NOW);
+		}
+	}
 
+	protected void resetErrorState() {
+		errorState = ErrorState.NONE;
+	}
 
-    /**
-     * Update the current error state to the new error state if the new error
-     * state is more severe than the current error state.
-     */
-    protected void setErrorState(ErrorState errorState, Throwable t) {
-        boolean blockIo = this.errorState.isIoAllowed() && !errorState.isIoAllowed();
-        this.errorState = this.errorState.getMostSevere(errorState);
-        if (blockIo && !ContainerThreadMarker.isContainerThread()) {
-            // The error occurred on a non-container thread which means not all
-            // of the necessary clean-up will have been completed. Dispatch to
-            // a container thread to do the clean-up. Need to do it this way to
-            // ensure that all the necessary clean-up is performed.
-            if (response.getStatus() < 400) {
-                response.setStatus(500);
-            }
-            getLog().info(sm.getString("abstractProcessor.nonContainerThreadError"), t);
-            getEndpoint().processSocketAsync(socketWrapper, SocketStatus.CLOSE_NOW);
-        }
-    }
+	protected ErrorState getErrorState() {
+		return errorState;
+	}
 
+	/**
+	 * The endpoint receiving connections that are handled by this processor.
+	 */
+	protected AbstractEndpoint<S> getEndpoint() {
+		return endpoint;
+	}
 
-    protected void resetErrorState() {
-        errorState = ErrorState.NONE;
-    }
+	/**
+	 * The request associated with this processor.
+	 */
+	@Override
+	public Request getRequest() {
+		return request;
+	}
 
+	/**
+	 * Set the associated adapter.
+	 *
+	 * @param adapter
+	 *            the new adapter
+	 */
+	public void setAdapter(Adapter adapter) {
+		this.adapter = adapter;
+	}
 
-    protected ErrorState getErrorState() {
-        return errorState;
-    }
+	/**
+	 * Get the associated adapter.
+	 *
+	 * @return the associated adapter
+	 */
+	public Adapter getAdapter() {
+		return adapter;
+	}
 
-    /**
-     * The endpoint receiving connections that are handled by this processor.
-     */
-    protected AbstractEndpoint<S> getEndpoint() {
-        return endpoint;
-    }
+	/**
+	 * Set the socket wrapper being used.
+	 */
+	protected final void setSocketWrapper(SocketWrapper<S> socketWrapper) {
+		this.socketWrapper = socketWrapper;
+	}
 
+	/**
+	 * Get the socket wrapper being used.
+	 */
+	protected final SocketWrapper<S> getSocketWrapper() {
+		return socketWrapper;
+	}
 
-    /**
-     * The request associated with this processor.
-     */
-    @Override
-    public Request getRequest() {
-        return request;
-    }
+	/**
+	 * Obtain the Executor used by the underlying endpoint.
+	 */
+	@Override
+	public Executor getExecutor() {
+		return endpoint.getExecutor();
+	}
 
+	@Override
+	public boolean isAsync() {
+		return (asyncStateMachine != null && asyncStateMachine.isAsync());
+	}
 
-    /**
-     * Set the associated adapter.
-     *
-     * @param adapter the new adapter
-     */
-    public void setAdapter(Adapter adapter) {
-        this.adapter = adapter;
-    }
+	@Override
+	public SocketState asyncPostProcess() {
+		return asyncStateMachine.asyncPostProcess();
+	}
 
+	@Override
+	public void errorDispatch() {
+		getAdapter().errorDispatch(request, response);
+	}
 
-    /**
-     * Get the associated adapter.
-     *
-     * @return the associated adapter
-     */
-    public Adapter getAdapter() {
-        return adapter;
-    }
+	@Override
+	public abstract boolean isComet();
 
+	@Override
+	public abstract boolean isUpgrade();
 
-    /**
-     * Set the socket wrapper being used.
-     */
-    protected final void setSocketWrapper(SocketWrapper<S> socketWrapper) {
-        this.socketWrapper = socketWrapper;
-    }
+	/**
+	 * Process HTTP requests. All requests are treated as HTTP requests to start
+	 * with although they may change type during processing.
+	 */
+	@Override
+	public abstract SocketState process(SocketWrapper<S> socket)
+			throws IOException;
 
+	/**
+	 * Process in-progress Comet requests. These will start as HTTP requests.
+	 */
+	@Override
+	public abstract SocketState event(SocketStatus status) throws IOException;
 
-    /**
-     * Get the socket wrapper being used.
-     */
-    protected final SocketWrapper<S> getSocketWrapper() {
-        return socketWrapper;
-    }
+	/**
+	 * Process in-progress Servlet 3.0 Async requests. These will start as HTTP
+	 * requests.
+	 */
+	@Override
+	public abstract SocketState asyncDispatch(SocketStatus status);
 
+	/**
+	 * Processes data received on a connection that has been through an HTTP
+	 * upgrade.
+	 */
+	@Override
+	public abstract SocketState upgradeDispatch() throws IOException;
 
-    /**
-     * Obtain the Executor used by the underlying endpoint.
-     */
-    @Override
-    public Executor getExecutor() {
-        return endpoint.getExecutor();
-    }
-    
-    
-    @Override
-    public boolean isAsync() {
-        return (asyncStateMachine != null && asyncStateMachine.isAsync());
-    }
+	/**
+	 * @deprecated Will be removed in Tomcat 8.0.x.
+	 */
+	@Deprecated
+	@Override
+	public abstract org.apache.coyote.http11.upgrade.UpgradeInbound getUpgradeInbound();
 
-
-    @Override
-    public SocketState asyncPostProcess() {
-        return asyncStateMachine.asyncPostProcess();
-    }
-
-    @Override
-    public void errorDispatch() {
-        getAdapter().errorDispatch(request, response);
-    }
-
-    @Override
-    public abstract boolean isComet();
-
-    @Override
-    public abstract boolean isUpgrade();
-
-    /**
-     * Process HTTP requests. All requests are treated as HTTP requests to start
-     * with although they may change type during processing.
-     */
-    @Override
-    public abstract SocketState process(SocketWrapper<S> socket) throws IOException;
-
-    /**
-     * Process in-progress Comet requests. These will start as HTTP requests.
-     */
-    @Override
-    public abstract SocketState event(SocketStatus status) throws IOException;
-
-    /**
-     * Process in-progress Servlet 3.0 Async requests. These will start as HTTP
-     * requests.
-     */
-    @Override
-    public abstract SocketState asyncDispatch(SocketStatus status);
-
-    /**
-     * Processes data received on a connection that has been through an HTTP
-     * upgrade.
-     */
-    @Override
-    public abstract SocketState upgradeDispatch() throws IOException;
-
-    /**
-     * @deprecated  Will be removed in Tomcat 8.0.x.
-     */
-    @Deprecated
-    @Override
-    public abstract org.apache.coyote.http11.upgrade.UpgradeInbound getUpgradeInbound();
-
-    protected abstract Log getLog();
+	protected abstract Log getLog();
 }

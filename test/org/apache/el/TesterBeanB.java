@@ -18,21 +18,21 @@
 package org.apache.el;
 
 public class TesterBeanB {
-    private String name;
+	private String name;
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String sayHello() {
-        return "Hello from " + name;
-    }
+	public String sayHello() {
+		return "Hello from " + name;
+	}
 
-    public String sayHello(String to) {
-        return "Hello " + to + " from " + name;
-    }
+	public String sayHello(String to) {
+		return "Hello " + to + " from " + name;
+	}
 }

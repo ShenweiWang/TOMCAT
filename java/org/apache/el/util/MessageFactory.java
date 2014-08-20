@@ -24,24 +24,24 @@ import java.util.ResourceBundle;
  */
 public final class MessageFactory {
 
-    protected static final ResourceBundle bundle =
-            ResourceBundle.getBundle("org.apache.el.Messages");
+	protected static final ResourceBundle bundle = ResourceBundle
+			.getBundle("org.apache.el.Messages");
 
-    public MessageFactory() {
-        super();
-    }
+	public MessageFactory() {
+		super();
+	}
 
-    public static String get(final String key) {
-        return bundle.getString(key);
-    }
+	public static String get(final String key) {
+		return bundle.getString(key);
+	}
 
-    public static String get(final String key, final Object... args) {
-        String value = get(key);
-        if (value == null) {
-            value = key;
-        }
+	public static String get(final String key, final Object... args) {
+		String value = get(key);
+		if (value == null) {
+			value = key;
+		}
 
-        MessageFormat mf = new MessageFormat(value);
-        return mf.format(args, new StringBuffer(), null).toString();
-    }
+		MessageFormat mf = new MessageFormat(value);
+		return mf.format(args, new StringBuffer(), null).toString();
+	}
 }

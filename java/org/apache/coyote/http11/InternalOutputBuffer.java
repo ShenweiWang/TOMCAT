@@ -33,223 +33,201 @@ import org.apache.tomcat.util.net.SocketWrapper;
  * @author <a href="mailto:remm@apache.org">Remy Maucherat</a>
  */
 public class InternalOutputBuffer extends AbstractOutputBuffer<Socket>
-    implements ByteChunk.ByteOutputChannel {
+		implements ByteChunk.ByteOutputChannel {
 
-    // ----------------------------------------------------------- Constructors
+	// ----------------------------------------------------------- Constructors
 
-    /**
-     * Default constructor.
-     */
-    public InternalOutputBuffer(Response response, int headerBufferSize) {
+	/**
+	 * Default constructor.
+	 */
+	public InternalOutputBuffer(Response response, int headerBufferSize) {
 
-        this.response = response;
+		this.response = response;
 
-        buf = new byte[headerBufferSize];
+		buf = new byte[headerBufferSize];
 
-        outputStreamOutputBuffer = new OutputStreamOutputBuffer();
+		outputStreamOutputBuffer = new OutputStreamOutputBuffer();
 
-        filterLibrary = new OutputFilter[0];
-        activeFilters = new OutputFilter[0];
-        lastActiveFilter = -1;
+		filterLibrary = new OutputFilter[0];
+		activeFilters = new OutputFilter[0];
+		lastActiveFilter = -1;
 
-        socketBuffer = new ByteChunk();
-        socketBuffer.setByteOutputChannel(this);
+		socketBuffer = new ByteChunk();
+		socketBuffer.setByteOutputChannel(this);
 
-        committed = false;
-        finished = false;
+		committed = false;
+		finished = false;
 
-    }
+	}
 
-    /**
-     * Underlying output stream. Note: protected to assist with unit testing
-     */
-    protected OutputStream outputStream;
+	/**
+	 * Underlying output stream. Note: protected to assist with unit testing
+	 */
+	protected OutputStream outputStream;
 
+	/**
+	 * Socket buffer.
+	 */
+	private ByteChunk socketBuffer;
 
-    /**
-     * Socket buffer.
-     */
-    private ByteChunk socketBuffer;
+	/**
+	 * Socket buffer (extra buffering to reduce number of packets sent).
+	 */
+	private boolean useSocketBuffer = false;
 
+	/**
+	 * Set the socket buffer size.
+	 */
+	public void setSocketBuffer(int socketBufferSize) {
 
-    /**
-     * Socket buffer (extra buffering to reduce number of packets sent).
-     */
-    private boolean useSocketBuffer = false;    
-    
+		if (socketBufferSize > 500) {
+			useSocketBuffer = true;
+			socketBuffer.allocate(socketBufferSize, socketBufferSize);
+		} else {
+			useSocketBuffer = false;
+		}
 
-    /**
-     * Set the socket buffer size.
-     */
-    public void setSocketBuffer(int socketBufferSize) {
+	}
 
-        if (socketBufferSize > 500) {
-            useSocketBuffer = true;
-            socketBuffer.allocate(socketBufferSize, socketBufferSize);
-        } else {
-            useSocketBuffer = false;
-        }
+	// --------------------------------------------------------- Public Methods
 
-    }
+	@Override
+	public void init(SocketWrapper<Socket> socketWrapper,
+			AbstractEndpoint<Socket> endpoint) throws IOException {
 
+		outputStream = socketWrapper.getSocket().getOutputStream();
+	}
 
-    // --------------------------------------------------------- Public Methods
+	/**
+	 * Flush the response.
+	 * 
+	 * @throws IOException
+	 *             an underlying I/O error occurred
+	 */
+	@Override
+	public void flush() throws IOException {
 
-    @Override
-    public void init(SocketWrapper<Socket> socketWrapper,
-            AbstractEndpoint<Socket> endpoint) throws IOException {
+		super.flush();
 
-        outputStream = socketWrapper.getSocket().getOutputStream();
-    }
+		// Flush the current buffer
+		if (useSocketBuffer) {
+			socketBuffer.flushBuffer();
+		}
 
+	}
 
-    /**
-     * Flush the response.
-     * 
-     * @throws IOException an underlying I/O error occurred
-     */
-    @Override
-    public void flush()
-        throws IOException {
+	/**
+	 * Recycle the output buffer. This should be called when closing the
+	 * connection.
+	 */
+	@Override
+	public void recycle() {
+		super.recycle();
+		outputStream = null;
+	}
 
-        super.flush();
-        
-        // Flush the current buffer
-        if (useSocketBuffer) {
-            socketBuffer.flushBuffer();
-        }
+	/**
+	 * End processing of current HTTP request. Note: All bytes of the current
+	 * request should have been already consumed. This method only resets all
+	 * the pointers so that we are ready to parse the next HTTP request.
+	 */
+	@Override
+	public void nextRequest() {
+		super.nextRequest();
+		socketBuffer.recycle();
+	}
 
-    }
+	/**
+	 * End request.
+	 * 
+	 * @throws IOException
+	 *             an underlying I/O error occurred
+	 */
+	@Override
+	public void endRequest() throws IOException {
+		super.endRequest();
+		if (useSocketBuffer) {
+			socketBuffer.flushBuffer();
+		}
+	}
 
+	// ------------------------------------------------ HTTP/1.1 Output Methods
 
-    /**
-     * Recycle the output buffer. This should be called when closing the 
-     * connection.
-     */
-    @Override
-    public void recycle() {
-        super.recycle();
-        outputStream = null;
-    }
+	/**
+	 * Send an acknowledgment.
+	 */
+	@Override
+	public void sendAck() throws IOException {
 
+		if (!committed)
+			outputStream.write(Constants.ACK_BYTES);
 
-    /**
-     * End processing of current HTTP request.
-     * Note: All bytes of the current request should have been already 
-     * consumed. This method only resets all the pointers so that we are ready
-     * to parse the next HTTP request.
-     */
-    @Override
-    public void nextRequest() {
-        super.nextRequest();
-        socketBuffer.recycle();
-    }
+	}
 
+	// ------------------------------------------------------ Protected Methods
 
-    /**
-     * End request.
-     * 
-     * @throws IOException an underlying I/O error occurred
-     */
-    @Override
-    public void endRequest()
-        throws IOException {
-        super.endRequest();
-        if (useSocketBuffer) {
-            socketBuffer.flushBuffer();
-        }
-    }
+	/**
+	 * Commit the response.
+	 * 
+	 * @throws IOException
+	 *             an underlying I/O error occurred
+	 */
+	@Override
+	protected void commit() throws IOException {
 
+		// The response is now committed
+		committed = true;
+		response.setCommitted(true);
 
-    // ------------------------------------------------ HTTP/1.1 Output Methods
+		if (pos > 0) {
+			// Sending the response header buffer
+			if (useSocketBuffer) {
+				socketBuffer.append(buf, 0, pos);
+			} else {
+				outputStream.write(buf, 0, pos);
+			}
+		}
 
+	}
 
-    /**
-     * Send an acknowledgment.
-     */
-    @Override
-    public void sendAck()
-        throws IOException {
+	/**
+	 * Callback to write data from the buffer.
+	 */
+	@Override
+	public void realWriteBytes(byte cbuf[], int off, int len)
+			throws IOException {
+		if (len > 0) {
+			outputStream.write(cbuf, off, len);
+		}
+	}
 
-        if (!committed)
-            outputStream.write(Constants.ACK_BYTES);
+	// ----------------------------------- OutputStreamOutputBuffer Inner Class
 
-    }
+	/**
+	 * This class is an output buffer which will write data to an output stream.
+	 */
+	protected class OutputStreamOutputBuffer implements OutputBuffer {
 
+		/**
+		 * Write chunk.
+		 */
+		@Override
+		public int doWrite(ByteChunk chunk, Response res) throws IOException {
 
-    // ------------------------------------------------------ Protected Methods
+			int length = chunk.getLength();
+			if (useSocketBuffer) {
+				socketBuffer
+						.append(chunk.getBuffer(), chunk.getStart(), length);
+			} else {
+				outputStream.write(chunk.getBuffer(), chunk.getStart(), length);
+			}
+			byteCount += chunk.getLength();
+			return chunk.getLength();
+		}
 
-
-    /**
-     * Commit the response.
-     * 
-     * @throws IOException an underlying I/O error occurred
-     */
-    @Override
-    protected void commit()
-        throws IOException {
-
-        // The response is now committed
-        committed = true;
-        response.setCommitted(true);
-
-        if (pos > 0) {
-            // Sending the response header buffer
-            if (useSocketBuffer) {
-                socketBuffer.append(buf, 0, pos);
-            } else {
-                outputStream.write(buf, 0, pos);
-            }
-        }
-
-    }
-
-
-    /**
-     * Callback to write data from the buffer.
-     */
-    @Override
-    public void realWriteBytes(byte cbuf[], int off, int len)
-        throws IOException {
-        if (len > 0) {
-            outputStream.write(cbuf, off, len);
-        }
-    }
-
-
-    // ----------------------------------- OutputStreamOutputBuffer Inner Class
-
-
-    /**
-     * This class is an output buffer which will write data to an output
-     * stream.
-     */
-    protected class OutputStreamOutputBuffer 
-        implements OutputBuffer {
-
-
-        /**
-         * Write chunk.
-         */
-        @Override
-        public int doWrite(ByteChunk chunk, Response res) 
-            throws IOException {
-
-            int length = chunk.getLength();
-            if (useSocketBuffer) {
-                socketBuffer.append(chunk.getBuffer(), chunk.getStart(), 
-                                    length);
-            } else {
-                outputStream.write(chunk.getBuffer(), chunk.getStart(), 
-                                   length);
-            }
-            byteCount += chunk.getLength();
-            return chunk.getLength();
-        }
-
-        @Override
-        public long getBytesWritten() {
-            return byteCount;
-        }
-    }
+		@Override
+		public long getBytesWritten() {
+			return byteCount;
+		}
+	}
 }

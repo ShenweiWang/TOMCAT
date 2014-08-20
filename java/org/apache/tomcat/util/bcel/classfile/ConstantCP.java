@@ -20,67 +20,67 @@ package org.apache.tomcat.util.bcel.classfile;
 import java.io.DataInput;
 import java.io.IOException;
 
-/** 
+/**
  * Abstract super class for Fieldref and Methodref constants.
  *
- * @author  <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
- * @see     ConstantFieldref
- * @see     ConstantMethodref
- * @see     ConstantInterfaceMethodref
+ * @author <A HREF="mailto:m.dahm@gmx.de">M. Dahm</A>
+ * @see ConstantFieldref
+ * @see ConstantMethodref
+ * @see ConstantInterfaceMethodref
  */
 public abstract class ConstantCP extends Constant {
 
-    private static final long serialVersionUID = 7282382456501145526L;
-    /** References to the constants containing the class and the field signature
-     */
-    protected int class_index, name_and_type_index;
+	private static final long serialVersionUID = 7282382456501145526L;
+	/**
+	 * References to the constants containing the class and the field signature
+	 */
+	protected int class_index, name_and_type_index;
 
+	/**
+	 * Initialize instance from file data.
+	 *
+	 * @param tag
+	 *            Constant type tag
+	 * @param file
+	 *            Input stream
+	 * @throws IOException
+	 */
+	ConstantCP(byte tag, DataInput file) throws IOException {
+		this(tag, file.readUnsignedShort(), file.readUnsignedShort());
+	}
 
-    /**
-     * Initialize instance from file data.
-     *
-     * @param tag  Constant type tag
-     * @param file Input stream
-     * @throws IOException
-     */
-    ConstantCP(byte tag, DataInput file) throws IOException {
-        this(tag, file.readUnsignedShort(), file.readUnsignedShort());
-    }
+	/**
+	 * @param class_index
+	 *            Reference to the class containing the field
+	 * @param name_and_type_index
+	 *            and the field signature
+	 */
+	protected ConstantCP(byte tag, int class_index, int name_and_type_index) {
+		super(tag);
+		this.class_index = class_index;
+		this.name_and_type_index = name_and_type_index;
+	}
 
+	/**
+	 * @return Reference (index) to class this field or method belongs to.
+	 */
+	public final int getClassIndex() {
+		return class_index;
+	}
 
-    /**
-     * @param class_index Reference to the class containing the field
-     * @param name_and_type_index and the field signature
-     */
-    protected ConstantCP(byte tag, int class_index, int name_and_type_index) {
-        super(tag);
-        this.class_index = class_index;
-        this.name_and_type_index = name_and_type_index;
-    }
+	/**
+	 * @return Reference (index) to signature of the field.
+	 */
+	public final int getNameAndTypeIndex() {
+		return name_and_type_index;
+	}
 
-
-    /** 
-     * @return Reference (index) to class this field or method belongs to.
-     */
-    public final int getClassIndex() {
-        return class_index;
-    }
-
-
-    /**
-     * @return Reference (index) to signature of the field.
-     */
-    public final int getNameAndTypeIndex() {
-        return name_and_type_index;
-    }
-
-
-    /**
-     * @return String representation.
-     */
-    @Override
-    public final String toString() {
-        return super.toString() + "(class_index = " + class_index + ", name_and_type_index = "
-                + name_and_type_index + ")";
-    }
+	/**
+	 * @return String representation.
+	 */
+	@Override
+	public final String toString() {
+		return super.toString() + "(class_index = " + class_index
+				+ ", name_and_type_index = " + name_and_type_index + ")";
+	}
 }

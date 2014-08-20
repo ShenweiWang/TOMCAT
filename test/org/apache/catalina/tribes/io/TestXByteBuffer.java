@@ -24,18 +24,18 @@ import org.junit.Test;
 
 public class TestXByteBuffer {
 
-    @Test
-    public void testEmptyArray() throws Exception {
-        Object obj = XByteBuffer.deserialize(new byte[0]);
-        assertNull(obj);
-    }
+	@Test
+	public void testEmptyArray() throws Exception {
+		Object obj = XByteBuffer.deserialize(new byte[0]);
+		assertNull(obj);
+	}
 
-    @Test
-    public void testSerializationString() throws Exception {
-        String test = "This is as test.";
-        byte[] msg = XByteBuffer.serialize(test);
-        Object obj = XByteBuffer.deserialize(msg);
-        assertTrue(obj instanceof String);
-        assertEquals(test, obj);
-    }
+	@Test
+	public void testSerializationString() throws Exception {
+		String test = "This is as test.";
+		byte[] msg = XByteBuffer.serialize(test);
+		Object obj = XByteBuffer.deserialize(msg);
+		assertTrue(obj instanceof String);
+		assertEquals(test, obj);
+	}
 }

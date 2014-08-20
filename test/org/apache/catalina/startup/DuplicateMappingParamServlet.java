@@ -32,17 +32,17 @@ import javax.servlet.http.HttpServletResponse;
  * @author Peter Rossbach
  */
 @WebServlet(value = "/annotation/overwrite", urlPatterns = { "/param2" }, name = "param", initParams = {
-        @WebInitParam(name = "foo", value = "Hello"),
-        @WebInitParam(name = "bar", value = "World!") })
+		@WebInitParam(name = "foo", value = "Hello"),
+		@WebInitParam(name = "bar", value = "World!") })
 public class DuplicateMappingParamServlet extends HttpServlet {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse res)
-            throws IOException, ServletException {
-        PrintWriter out = res.getWriter();
-        out.print("<p>" + getInitParameter("foo") + " "
-                + getInitParameter("bar") + "</p>");
-    }
+	@Override
+	public void doGet(HttpServletRequest req, HttpServletResponse res)
+			throws IOException, ServletException {
+		PrintWriter out = res.getWriter();
+		out.print("<p>" + getInitParameter("foo") + " "
+				+ getInitParameter("bar") + "</p>");
+	}
 }
